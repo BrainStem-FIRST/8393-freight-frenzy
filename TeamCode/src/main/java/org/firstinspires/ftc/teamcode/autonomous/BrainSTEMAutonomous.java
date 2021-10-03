@@ -12,6 +12,7 @@ import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import org.firstinspires.ftc.teamcode.robot.BrainSTEMRobot;
 import org.firstinspires.ftc.teamcode.teleop.ToggleButton;
+import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 
 import java.util.List;
 
@@ -19,29 +20,57 @@ import java.util.List;
 public class BrainSTEMAutonomous extends LinearOpMode {
     private static final int CYCLE_TIMES = 1;
     protected AllianceColor color = AllianceColor.BLUE;
+    protected StartLocation startLocation = StartLocation.WAREHOUSE;
     private BarcodePattern pattern = BarcodePattern.LEVELTHREE;
-    private StartLocation startLocation = StartLocation.WAREHOUSE;
 
     public void runOpMode() throws InterruptedException {
         BrainSTEMRobot robot = new BrainSTEMRobot(this);
-        BrainSTEMAutonomousCoordinates coordinates = new BrainSTEMAutonomousCoordinates();
-
-        ToggleButton startButton = new ToggleButton();
+        BrainSTEMAutonomousCoordinates coordinates = new BrainSTEMAutonomousCoordinates(color, startLocation);
 
         VuforiaLocalizer vuforia = initVuforia();
         TFObjectDetector tfod = initTfod(vuforia);
+
+        TrajectorySequence startSequence = robot.drive.trajectorySequenceBuilder(coordinates.startPos())
+                .lineTo(coordinates.shippingElementCollect().vec())
+                .addDisplacementMarker(() -> {/*Grab shipping element*/})
+                .waitSeconds(2)
+                .addDisplacementMarker(0.5, 0, () -> {/*turn turret to proper angle*/})
+                .splineTo(coordinates.deposit().vec(), coordinates.preloadDepositTangent())
+                .addDisplacementMarker(() -> {/*Deposit preload*/})
+                .waitSeconds(1.5)
+                .build();
+
+        TrajectorySequence cycleSequence = robot.drive.trajectorySequenceBuilder(coordinates.deposit())
+                .addDisplacementMarker(0.25, 0, () -> {/*Turn on collector, reset turret, lift down, etc.*/})
+                .splineTo(coordinates.cycleCollect().vec(), coordinates.cycleCollectTangent())
+                .waitSeconds(2)
+                .addDisplacementMarker(0.25, 0, () -> {/*Turn off collector, turn turret, lift up, etc.*/})
+                .splineTo(coordinates.deposit().vec(), coordinates.cycleDepositTangent())
+                .waitSeconds(1.5)
+                .build();
+
+        TrajectorySequence deliverySequence = robot.drive.trajectorySequenceBuilder(coordinates.deposit())
+                .addDisplacementMarker(0.4, 0, () -> {/*Turn on carousel wheel, reset turret, lift down, etc.*/})
+                .splineTo(coordinates.carouselWaypoint().vec(), coordinates.carouselWaypointTangent())
+                .splineTo(coordinates.carouselDelivery().vec(), coordinates.carouselDeliveryTangent())
+                .addDisplacementMarker(() -> {/*Deliver duck*/})
+                .waitSeconds(5)
+                .addDisplacementMarker(() -> {/*Turn off carousel wheel*/})
+                .build();
+
+        TrajectorySequence parkSequence = robot.drive.trajectorySequenceBuilder(coordinates.parkPathStart())
+                .addDisplacementMarker(0.5, 0, () -> {/*Reset turret,  etc.*/})
+                .splineTo(coordinates.park().vec(), coordinates.parkTangent())
+                .build();
 
         while (!opModeIsActive() && !isStopRequested()) {
             if (tfod != null) {
                 List<Recognition> recognitions = tfod.getRecognitions();
             }
 
-            startButton.update(gamepad1.a);
-
             telemetry.addData("Status", "Waiting...");
 //            telemetry.addData("IMU Calibrated during Loop?", robot.drive.getCalibrated());
             telemetry.addData("Barcode Pattern", pattern);
-            telemetry.addData("Gamepad A: Robot Start Location", startLocation);
             telemetry.update();
         }
 
@@ -53,59 +82,17 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             tfod.shutdown();
         }
 
-        coordinates.update(color, startLocation);
-
-        robot.drive.setPoseEstimate(coordinates.startPos());
-
         robot.start();
 
-        Trajectory toShippingElementCollect = robot.drive.trajectoryBuilder()
-                .lineTo(coordinates.shippingElementCollect().vec())
-                .build();
-
-        robot.drive.followTrajectory(toShippingElementCollect);
-
-        /*
-        Grab shipping element collect with "jewel arm"
-         */
-
-        Trajectory toPreloadDeposit = robot.drive.trajectoryBuilder()
-                .addTemporalMarker(0.5, () -> {/*Turn turret*/})
-                .splineTo(coordinates.preloadDeposit().vec(), coordinates.preloadDepositTangent())
-                .build();
-
-        robot.drive.followTrajectory(toShippingElementCollect);
-
-        /*
-        Deposit preload on proper level
-         */
-
-        for (int i = 0; i < CYCLE_TIMES; i++) {
-            Trajectory toCycleCollect = robot.drive.trajectoryBuilder()
-                    .addTemporalMarker(0.5, () -> {/*Turn on collector, reset turret, etc.*/})
-                    .splineTo(coordinates.cycleCollect().vec(), coordinates.cycleCollectTangent())
-                    .build();
-
-            robot.drive.followTrajectory(toCycleCollect);
-
-            /*
-            Wait until collect confirmed?
-             */
-
-            Trajectory toCycleDeposit = robot.drive.trajectoryBuilder()
-                    .addTemporalMarker(0.5, () -> {/*Turn off collector, turn turret, etc.*/})
-                    .splineTo(coordinates.cycleDeposit().vec(), coordinates.cycleDepositTangent())
-                    .build();
-
-            robot.drive.followTrajectory(toCycleDeposit);
+        robot.drive.followTrajectorySequence(startSequence);
+        if (startLocation == StartLocation.WAREHOUSE) {
+            for (int i = 0; i < CYCLE_TIMES; i++) {
+                robot.drive.followTrajectorySequence(cycleSequence);
+            }
+        } else {
+            robot.drive.followTrajectorySequence(deliverySequence);
         }
-
-        Trajectory toPark = robot.drive.trajectoryBuilder()
-                .addTemporalMarker(0.5, () -> {/*Reset turret, etc.*/})
-                .splineTo(coordinates.park().vec(), coordinates.parkTangent())
-                .build();
-
-        robot.drive.followTrajectory(toPark);
+        robot.drive.followTrajectorySequence(parkSequence);
     }
 
     private VuforiaLocalizer initVuforia() {
