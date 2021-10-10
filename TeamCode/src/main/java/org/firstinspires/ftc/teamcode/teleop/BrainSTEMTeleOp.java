@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.firstinspires.ftc.teamcode.autonomous.AllianceColor;
 import org.firstinspires.ftc.teamcode.robot.BrainSTEMRobot;
+import org.firstinspires.ftc.teamcode.robot.DepositorLift;
 
 import java.util.List;
 
@@ -29,11 +30,11 @@ public class BrainSTEMTeleOp extends LinearOpMode {
     private double theta;
     private double turning;
 
-    private double driveInterpolationFactor = 4;
+    private double driveInterpolationFactor = 3;
 
-    private ToggleButton tb = new ToggleButton();
+    private ToggleButton collectOnButton = new ToggleButton();
 
-    private StickyButton sb = new StickyButton();
+    private StickyButton depositButton = new StickyButton();
 
     private Driver1 driver1 = new Driver1();
     private Driver2 driver2 = new Driver2();
@@ -44,15 +45,22 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 
     private static final double THRESHOLD = 0;
 
+    private boolean extended = false;
+
     private class Driver1 {
         private boolean toggleReverseDrive;
-        private boolean toggle;
-        private boolean collect;
-        private double drive, strafe, turn;
+        private boolean collectOn;
+        private boolean reverseCollect;
+        private boolean raiseLift;
+        private boolean lowerLift;
+        private boolean retract;
+        private double drive, turn;
     }
 
     private class Driver2 {
-
+        private boolean spinCarousel;
+        private double aimTurret;
+        private boolean depositNear, depositFar;
     }
 
     @Override
@@ -77,34 +85,60 @@ public class BrainSTEMTeleOp extends LinearOpMode {
     public void runLoop() {
         mapControls(driver1, driver2);
 
-        if ((Math.abs(leftStickX) > THRESHOLD) || Math.abs(rightStickX) > THRESHOLD) {
-            //Set r equal to the magnitude of the input of the y stick in both x and y directions
-            r = Math.pow(Math.sqrt(Math.pow(leftStickX, driveInterpolationFactor) + Math.pow(leftStickY, driveInterpolationFactor)), driveInterpolationFactor);
+        if ((Math.abs(leftStickY) > THRESHOLD) || Math.abs(rightStickX) > THRESHOLD) {
+           double leftPower = Math.pow(leftStickY, driveInterpolationFactor) + rightStickX;
+           double rightPower = Math.pow(leftStickY, driveInterpolationFactor) - rightStickX;
 
-            //Calculate the angle between the y value of the left stick and the x value of the left stick
-            theta = Math.atan2(leftStickY, leftStickX);
-            //Calculate how much the robot needs to turn by, by determining if the right stick is above
-            //the dead zone THRESHOLD
-            turning = Math.abs(rightStickX) > THRESHOLD ? rightStickX : 0;
+           double max = Math.max(Math.abs(leftPower), Math.abs(rightPower));
+           if (max > 1) {
+               leftPower /= max;
+               rightPower /= max;
+           }
 
-            //Set the speeds of the motors using the magnitude of the speed and the angle
-//            robot.drive.setPower(r, theta, turning);
-        } else
-            robot.drive.setMotorPowers(0, 0);
+            telemetry.addData("Left Power", leftPower);
+            telemetry.addData("Right Power", rightPower);
+            robot.drive.setMotorPowers(leftPower, rightPower);
+        } else robot.drive.setMotorPowers(0, 0);
 
 
-        if(driver1.collect) {
-
-        } else {
-
-        }
-
-        if(tb.getState()) {
-
-        } else {
-
-        }
-
+//        if(driver1.collectOn) {
+//            robot.collector.startCollection();
+//        } else {
+//            robot.collector.stopCollection();
+//        }
+//
+//        if (driver1.reverseCollect) {
+//            robot.collector.reverse();
+//        }
+//
+//        if (driver2.depositNear) {
+//            robot.depositorLift.setDepositLocation(DepositorLift.Location.NEAR);
+//        } else if (driver2.depositFar) {
+//            robot.depositorLift.setDepositLocation(DepositorLift.Location.FAR);
+//        }
+//
+//        if(depositButton.getState()) {
+//            if (extended) {
+//                robot.depositorLift.deposit();
+//                extended = false;
+//            } else {
+//                robot.depositorLift.extend();
+//                extended = true;
+//            }
+//        }
+//
+//        if (driver1.retract) {
+//            robot.depositorLift.retractDeposit();
+//            robot.depositorLift.retractExtension();
+//        }
+//
+//        if(driver1.raiseLift) {
+//            robot.depositorLift.setGoal(DepositorLift.Goal.UP);
+//        } else if (driver1.lowerLift) {
+//            robot.depositorLift.setGoal(DepositorLift.Goal.DOWN);
+//        }
+//
+//        robot.turret.autoSpinTurret(Math.toDegrees(driver2.aimTurret));
 
         telemetry.addData("Running", "Now");
         telemetry.update();
@@ -115,50 +149,42 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         //DRIVER 1//
         ////////////
 
-        /*
-        Right trigger: both collect on
-        Left trigger: front collect reverse
-        Left bumper: transfer + shooter on/off toggle
-        Right bumper: shooter trigger
-        y: tilt up
-        a: tilt down
-        Left stick button: turret left
-        Right stick button: turret right
-         */
-
-        /*
-        Left trigger: turret left
-        Right trigger: turret right
-        y: tilt up
-        a: tilt down
-         */
-
         //driver1.toggleReverseDrive = reverseDriveToggle.update(gamepad1.dpad_up);
 
         driver1.drive = gamepad1.left_stick_y;
-        driver1.strafe = gamepad1.left_stick_x;
         driver1.turn = gamepad1.right_stick_x;
 
         //Reverse the inputs of the joysticks so that front and back switch
         if (!driver1.toggleReverseDrive) {
-            leftStickX = leftXTuning * driver1.strafe;
             leftStickY = -leftYTuning * driver1.drive;
         } else {
-            leftStickX = -leftXTuning * driver1.strafe;
             leftStickY = leftYTuning * driver1.drive;
         }
 
         //Scale the input of the right stick in the x direction
         rightStickX = rightXTuning * driver1.turn;
 
-        driver1.collect = gamepad1.a;
-        sb.update(gamepad1.left_stick_button);
-        driver1.toggle = tb.update(gamepad1.b);
+        driver1.collectOn = collectOnButton.update(gamepad1.right_trigger > THRESHOLD);
+        driver1.reverseCollect = gamepad1.left_trigger > THRESHOLD;
+        driver1.raiseLift = gamepad1.right_bumper;
+        driver1.lowerLift = gamepad1.left_bumper;
+
+        depositButton.update(gamepad1.x);
+        driver1.retract = gamepad1.b;
 
         ////////////
         //DRIVER 2//
         ////////////
 
-
+        driver2.depositNear = gamepad2.dpad_down;
+        driver2.depositFar = gamepad2.dpad_up;
+        driver2.spinCarousel = gamepad2.right_bumper;
+        if (gamepad2.right_stick_x > 0) {
+            driver2.aimTurret = Math.atan(gamepad2.right_stick_y / gamepad2.right_stick_x);
+        } else if (gamepad2.right_stick_x < 0) {
+            driver2.aimTurret = Math.atan(gamepad2.right_stick_y / gamepad2.right_stick_x) + Math.PI;
+        } else {
+            driver2.aimTurret = Math.PI / 2;
+        }
     }
 }
