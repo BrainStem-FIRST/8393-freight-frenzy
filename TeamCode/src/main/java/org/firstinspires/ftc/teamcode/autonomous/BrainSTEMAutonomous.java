@@ -1,8 +1,5 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
-import com.acmerobotics.roadrunner.trajectory.Trajectory;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
@@ -11,12 +8,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import org.firstinspires.ftc.teamcode.robot.BrainSTEMRobot;
-import org.firstinspires.ftc.teamcode.teleop.ToggleButton;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 
 import java.util.List;
 
-@Autonomous
 public class BrainSTEMAutonomous extends LinearOpMode {
     private static final int CYCLE_TIMES = 1;
     protected AllianceColor color = AllianceColor.BLUE;
@@ -31,6 +26,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         TFObjectDetector tfod = initTfod(vuforia);
 
         TrajectorySequence startSequence = robot.drive.trajectorySequenceBuilder(coordinates.startPos())
+                .setReversed(true)
                 .lineTo(coordinates.shippingElementCollect().vec())
                 .addDisplacementMarker(() -> {/*Grab shipping element*/})
                 .waitSeconds(2)
@@ -44,6 +40,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                 .addDisplacementMarker(0.25, 0, () -> {/*Turn on collector, reset turret, lift down, etc.*/})
                 .splineTo(coordinates.cycleCollect().vec(), coordinates.cycleCollectTangent())
                 .waitSeconds(2)
+                .setReversed(true)
                 .addDisplacementMarker(0.25, 0, () -> {/*Turn off collector, turn turret, lift up, etc.*/})
                 .splineTo(coordinates.deposit().vec(), coordinates.cycleDepositTangent())
                 .waitSeconds(1.5)
@@ -52,6 +49,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         TrajectorySequence deliverySequence = robot.drive.trajectorySequenceBuilder(coordinates.deposit())
                 .addDisplacementMarker(0.4, 0, () -> {/*Turn on carousel wheel, reset turret, lift down, etc.*/})
                 .splineTo(coordinates.carouselWaypoint().vec(), coordinates.carouselWaypointTangent())
+                .setReversed(true)
                 .splineTo(coordinates.carouselDelivery().vec(), coordinates.carouselDeliveryTangent())
                 .addDisplacementMarker(() -> {/*Deliver duck*/})
                 .waitSeconds(5)

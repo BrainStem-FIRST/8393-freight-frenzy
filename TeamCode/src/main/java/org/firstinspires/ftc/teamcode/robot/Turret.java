@@ -55,20 +55,16 @@ public class Turret implements Component{
         turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
-    public void autoSpinTurret(double theta) { //theta is in degrees, relative to 0 being straight on, positive to left, negative to right
+    public void autoSpinTurret(double theta) { //theta is in degrees, following the unit circle (0 is facing right on the x-axis)
         theta = Angle.normDelta(theta);
         if (theta < MIN_ANGLE || theta > MAX_ANGLE) {
             turret.setPower(0);
             return;
         }
 
-        double targetPosition;
-        if (theta == 0) {
-            targetPosition = -TURRET_ENCODER_RANGE / 2;
-        } else {
-            theta += TURRET_DEGREE_RANGE / 2;
-            targetPosition = -theta * TURRET_ENCODER_RANGE / TURRET_DEGREE_RANGE;
-        }
+        //TODO: negate theta if needed
+        double targetPosition = theta * TURRET_ENCODER_RANGE / TURRET_DEGREE_RANGE;
+
 
         turret.setTargetPosition((int) Math.round(targetPosition));
         turret.setPower(TURRET_POWER);
