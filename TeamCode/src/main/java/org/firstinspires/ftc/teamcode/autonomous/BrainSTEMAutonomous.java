@@ -61,6 +61,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                 .splineTo(coordinates.park().vec(), coordinates.parkTangent())
                 .build();
 
+        robot.reset();
         while (!opModeIsActive() && !isStopRequested()) {
             if (tfod != null) {
                 List<Recognition> recognitions = tfod.getRecognitions();
@@ -79,8 +80,6 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         if (tfod != null) {
             tfod.shutdown();
         }
-
-        robot.start();
 
         robot.drive.followTrajectorySequence(startSequence);
         if (startLocation == StartLocation.WAREHOUSE) {
