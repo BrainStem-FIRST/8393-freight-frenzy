@@ -43,9 +43,8 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 
     protected AllianceColor color = null;
 
-    private static final double THRESHOLD = 0;
-
     private boolean extended = false;
+
 
     private class Driver1 {
         private boolean toggleReverseDrive;
@@ -67,7 +66,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         robot = new BrainSTEMRobot(this);
 
-        robot.init();
+        robot.reset();
         while (!opModeIsActive() && !isStopRequested()) {
             //Status to show if telemetry was initialized
             telemetry.addData("Status", "Initialized");
@@ -75,31 +74,32 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             telemetry.update();
         }
 
-        robot.start();
         while(opModeIsActive()) {
+            robot.update();
+            mapControls(driver1, driver2);
             runLoop();
         }
     }
 
     //Loop
     public void runLoop() {
-        mapControls(driver1, driver2);
+        double drive = -gamepad1.left_stick_y;
+        double turn  = -gamepad1.right_stick_x;
 
-        if ((Math.abs(leftStickY) > THRESHOLD) || Math.abs(rightStickX) > THRESHOLD) {
-           double leftPower = Math.pow(leftStickY, driveInterpolationFactor) + rightStickX;
-           double rightPower = Math.pow(leftStickY, driveInterpolationFactor) - rightStickX;
+        // Combine drive and turn for blended motion.
+        double left  = drive + turn;
+        double right = drive - turn;
 
-           double max = Math.max(Math.abs(leftPower), Math.abs(rightPower));
-           if (max > 1) {
-               leftPower /= max;
-               rightPower /= max;
-           }
+        // Normalize the values so neither exceed +/- 1.0
+        double max = Math.max(Math.abs(left), Math.abs(right));
+        if (max > 1.0)
+        {
+            left /= max;
+            right /= max;
+        }
 
-            telemetry.addData("Left Power", leftPower);
-            telemetry.addData("Right Power", rightPower);
-            robot.drive.setMotorPowers(leftPower, rightPower);
-        } else robot.drive.setMotorPowers(0, 0);
-
+        // Output the safe vales to the motor drives.
+        robot.drive.setMotorPowers(Math.pow(left, driveInterpolationFactor), Math.pow(right, driveInterpolationFactor));
 
 //        if(driver1.collectOn) {
 //            robot.collector.startCollection();
@@ -149,23 +149,12 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         //DRIVER 1//
         ////////////
 
-        //driver1.toggleReverseDrive = reverseDriveToggle.update(gamepad1.dpad_up);
-
         driver1.drive = gamepad1.left_stick_y;
         driver1.turn = gamepad1.right_stick_x;
 
-        //Reverse the inputs of the joysticks so that front and back switch
-        if (!driver1.toggleReverseDrive) {
-            leftStickY = -leftYTuning * driver1.drive;
-        } else {
-            leftStickY = leftYTuning * driver1.drive;
-        }
-
         //Scale the input of the right stick in the x direction
-        rightStickX = rightXTuning * driver1.turn;
-
-        driver1.collectOn = collectOnButton.update(gamepad1.right_trigger > THRESHOLD);
-        driver1.reverseCollect = gamepad1.left_trigger > THRESHOLD;
+        driver1.collectOn = collectOnButton.update(gamepad1.right_trigger > 0);
+        driver1.reverseCollect = gamepad1.left_trigger > 0;
         driver1.raiseLift = gamepad1.right_bumper;
         driver1.lowerLift = gamepad1.left_bumper;
 

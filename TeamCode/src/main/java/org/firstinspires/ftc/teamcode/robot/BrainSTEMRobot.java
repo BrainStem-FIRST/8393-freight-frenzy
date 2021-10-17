@@ -13,12 +13,12 @@ import java.util.List;
 
 import static java.lang.Thread.sleep;
 
-public class BrainSTEMRobot implements Runnable {
+public class BrainSTEMRobot implements Component {
     //Various components of the  robot
-    public SampleTankDrive drive;
     public CarouselSpin carouselSpin;
     public Collector collector;
     public DepositorLift depositorLift;
+    public SampleTankDrive drive;
     public Turret turret;
 
     //Instance of linear opmode to use for hwMap
@@ -42,36 +42,25 @@ public class BrainSTEMRobot implements Runnable {
         //Get instance of hardware map and telemetry
         HardwareMap map = opMode.hardwareMap;
 
+        drive = new SampleTankDrive(opMode.hardwareMap, this);
+
         components = new ArrayList<>();
 
         //Initialize robot components
-        drive = new SampleTankDrive(map);
-//        carouselSpin = new CarouselSpin(map);
-//        collector = new Collector(map);
-//        depositorLift = new DepositorLift(map, opMode.telemetry);
-//        turret = new Turret(map);
+        carouselSpin = new CarouselSpin(map);
+        collector = new Collector(map);
+        depositorLift = new DepositorLift(map, opMode.telemetry);
+        turret = new Turret(map);
 
         //Add all components to an array list so they can be easily initialized
-        components.add(drive);
-//        components.add(carouselSpin);
-//        components.add(collector);
-//        components.add(depositorLift);
-//        components.add(turret);
-    }
-
-    public void start()
-    {
-        if (!started)
-        {
-            updateThread = new Thread(this);
-            updateThread.start();
-            updateThread.setPriority(Thread.MAX_PRIORITY);
-            started = true;
-        }
+        components.add(carouselSpin);
+        components.add(collector);
+        components.add(depositorLift);
+        components.add(turret);
     }
 
     @Override
-    public synchronized void run()
+    public void update()
     {
         List<LynxModule> allHubs = opMode.hardwareMap.getAll(LynxModule.class);
         for (LynxModule m : allHubs) {
@@ -108,11 +97,8 @@ public class BrainSTEMRobot implements Runnable {
         started = false;
     }
 
-    /**
-     * Initialize robot
-     */
-    public void init()
-    {
+    @Override
+    public void reset() {
         for (Component component : components)
             component.reset();
     }
