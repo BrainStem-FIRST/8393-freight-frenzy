@@ -21,11 +21,13 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
+import org.firstinspires.ftc.teamcode.robot.BrainSTEMRobot;
 import org.firstinspires.ftc.teamcode.robot.Component;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceBuilder;
@@ -51,7 +53,7 @@ import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kV;
  * Simple tank drive hardware implementation for REV hardware.
  */
 @Config
-public class SampleTankDrive extends TankDrive implements Component {
+public class SampleTankDrive extends TankDrive {
     public static PIDCoefficients AXIAL_PID = new PIDCoefficients(0, 0, 0);
     public static PIDCoefficients CROSS_TRACK_PID = new PIDCoefficients(0, 0, 0);
     public static PIDCoefficients HEADING_PID = new PIDCoefficients(0, 0, 0);
@@ -70,9 +72,15 @@ public class SampleTankDrive extends TankDrive implements Component {
     private BNO055IMU imu;
 
     private VoltageSensor batteryVoltageSensor;
+    private Component component;
 
     public SampleTankDrive(HardwareMap hardwareMap) {
+        this(hardwareMap, null);
+    }
+
+    public SampleTankDrive(HardwareMap hardwareMap, Component component) {
         super(kV, kA, kStatic, TRACK_WIDTH);
+        this.component = component;
 
         follower = new TankPIDVAFollower(AXIAL_PID, CROSS_TRACK_PID,
                 new Pose2d(0.5, 0.5, Math.toRadians(5.0)), 0.5);
@@ -122,6 +130,9 @@ public class SampleTankDrive extends TankDrive implements Component {
         }
 
         // TODO: reverse any motors using DcMotor.setDirection()
+        for (DcMotorEx motor: rightMotors) {
+            motor.setDirection(DcMotorSimple.Direction.REVERSE);
+        }
 
         // TODO: if desired, use setLocalizer() to change the localization method
         // for instance, setLocalizer(new ThreeTrackingWheelLocalizer(...));
@@ -192,21 +203,11 @@ public class SampleTankDrive extends TankDrive implements Component {
         return trajectorySequenceRunner.getLastPoseError();
     }
 
-
-    @Override
-    public void reset() {
-
-    }
-
     public void update() {
         updatePoseEstimate();
         DriveSignal signal = trajectorySequenceRunner.update(getPoseEstimate(), getPoseVelocity());
         if (signal != null) setDriveSignal(signal);
-    }
-
-    @Override
-    public String test() {
-        return null;
+        if (component != null) component.update();
     }
 
     public void waitForIdle() {
