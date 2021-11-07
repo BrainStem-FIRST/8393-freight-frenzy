@@ -12,6 +12,7 @@ import org.firstinspires.ftc.teamcode.util.CachingServo;
 
 public class Collector implements Component {
     private DcMotorEx collector;
+    private ServoImplEx collectorUp;
     private ServoImplEx deploy;
     private ServoImplEx gate;
 
@@ -21,8 +22,10 @@ public class Collector implements Component {
         collector = new CachingMotor(map.get(DcMotorEx.class, "collectMotor"));
         deploy = new CachingServo(map.get(ServoImplEx.class, "collectorDeploy"));
         gate = new CachingServo(map.get(ServoImplEx.class, "collectorGate"));
+        collectorUp = new CachingServo(map.get(ServoImplEx.class, "collectorUp"));
 
         collector.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        collectorUp.setPwmRange(new PwmControl.PwmRange(0,0));
         deploy.setPwmRange(new PwmControl.PwmRange(0,0));
         gate.setPwmRange(new PwmControl.PwmRange(0,0));
     }
@@ -70,6 +73,10 @@ public class Collector implements Component {
     public void open() {
         gate.setPosition(0);
     }
+
+    public void up() { collectorUp.setPosition(1);}
+
+    public void down() { collectorUp.setPosition(0);}
 
     public void startCollection() {
         close();
