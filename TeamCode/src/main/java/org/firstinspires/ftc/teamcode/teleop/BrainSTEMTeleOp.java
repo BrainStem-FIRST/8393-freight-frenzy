@@ -52,6 +52,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         private boolean reverseCollect;
         private boolean raiseLift;
         private boolean lowerLift;
+        public boolean upCollector = false;
         private boolean retract;
         private double drive, turn;
     }
@@ -101,15 +102,23 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         // Output the safe vales to the motor drives.
         robot.drive.setMotorPowers(Math.pow(left, driveInterpolationFactor), Math.pow(right, driveInterpolationFactor));
 
-//        if(driver1.collectOn) {
-//            robot.collector.startCollection();
-//        } else {
-//            robot.collector.stopCollection();
-//        }
-//
-//        if (driver1.reverseCollect) {
-//            robot.collector.reverse();
-//        }
+        if(driver1.collectOn) {
+            robot.collector.startCollection();
+        } else {
+            robot.collector.stopCollection();
+        }
+
+        if (driver1.reverseCollect) {
+            robot.collector.reverse();
+        }
+
+        /* Temporary Controls */
+        if(driver1.upCollector) {
+            robot.collector.up();
+        }
+        else {
+            robot.collector.down();
+        }
 //
 //        if (driver2.depositNear) {
 //            robot.depositorLift.setDepositLocation(DepositorLift.Location.NEAR);
@@ -157,9 +166,19 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         driver1.reverseCollect = gamepad1.left_trigger > 0;
         driver1.raiseLift = gamepad1.right_bumper;
         driver1.lowerLift = gamepad1.left_bumper;
-
         depositButton.update(gamepad1.x);
         driver1.retract = gamepad1.b;
+
+        /* temporary controls */
+        if(gamepad1.dpad_left)
+        {
+            driver1.upCollector = true;
+        }
+        if(gamepad1.dpad_right)
+        {
+            driver1.upCollector = false;
+        }
+
 
         ////////////
         //DRIVER 2//
