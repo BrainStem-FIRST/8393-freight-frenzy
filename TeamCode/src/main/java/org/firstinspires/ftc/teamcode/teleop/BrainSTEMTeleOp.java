@@ -172,11 +172,11 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         /* temporary controls */
         if(gamepad1.dpad_left)
         {
-            driver1.upCollector = true;
+            driver1.upCollector = false;
         }
         if(gamepad1.dpad_right)
         {
-            driver1.upCollector = false;
+            driver1.upCollector = true;
         }
 
 
