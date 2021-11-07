@@ -47,16 +47,16 @@ public class BrainSTEMRobot implements Component {
         components = new ArrayList<>();
 
         //Initialize robot components
-        carouselSpin = new CarouselSpin(map);
-        collector = new Collector(map);
-        depositorLift = new DepositorLift(map, opMode.telemetry);
-        turret = new Turret(map);
+//        carouselSpin = new CarouselSpin(map);
+//        collector = new Collector(map);
+//        depositorLift = new DepositorLift(map, opMode.telemetry);
+//        turret = new Turret(map);
 
         //Add all components to an array list so they can be easily initialized
-        components.add(carouselSpin);
-        components.add(collector);
-        components.add(depositorLift);
-        components.add(turret);
+//        components.add(carouselSpin);
+//        components.add(collector);
+//        components.add(depositorLift);
+//        components.add(turret);
     }
 
     @Override

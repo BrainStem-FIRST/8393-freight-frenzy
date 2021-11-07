@@ -100,7 +100,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         }
 
         // Output the safe vales to the motor drives.
-        robot.drive.setMotorPowers(Math.pow(left, driveInterpolationFactor), Math.pow(right, driveInterpolationFactor));
+        robot.drive.setMotorPowers(left, right);
 
         if(driver1.collectOn) {
             robot.collector.startCollection();
