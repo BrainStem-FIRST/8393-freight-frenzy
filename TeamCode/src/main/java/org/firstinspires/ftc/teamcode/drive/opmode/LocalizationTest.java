@@ -40,6 +40,10 @@ public class LocalizationTest extends LinearOpMode {
             telemetry.addData("x", poseEstimate.getX());
             telemetry.addData("y", poseEstimate.getY());
             telemetry.addData("heading", poseEstimate.getHeading());
+            telemetry.addData("fl", drive.getAllWheelPositions().get(0));
+            telemetry.addData("fr", drive.getAllWheelPositions().get(2));
+            telemetry.addData("fl ticks", drive.getWheelTicks().get(0));
+            telemetry.addData("fr ticks", drive.getWheelTicks().get(1));
             telemetry.update();
         }
     }

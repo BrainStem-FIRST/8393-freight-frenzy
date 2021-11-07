@@ -34,6 +34,7 @@ import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceBuild
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceRunner;
 import org.firstinspires.ftc.teamcode.util.LynxModuleUtil;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -119,8 +120,11 @@ public class SampleTankDrive extends TankDrive {
             motor.setMotorType(motorConfigurationType);
         }
 
+        setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         if (RUN_USING_ENCODER) {
             setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        } else {
+            setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
 
         setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -130,7 +134,7 @@ public class SampleTankDrive extends TankDrive {
         }
 
         // TODO: reverse any motors using DcMotor.setDirection()
-        for (DcMotorEx motor: rightMotors) {
+        for (DcMotorEx motor: leftMotors) {
             motor.setDirection(DcMotorSimple.Direction.REVERSE);
         }
 
@@ -262,25 +266,43 @@ public class SampleTankDrive extends TankDrive {
     @NonNull
     @Override
     public List<Double> getWheelPositions() {
-        double leftSum = 0, rightSum = 0;
+//        double leftSum = 0, rightSum = 0;
+//        for (DcMotorEx leftMotor : leftMotors) {
+//            leftSum += encoderTicksToInches(leftMotor.getCurrentPosition());
+//        }
+//        for (DcMotorEx rightMotor : rightMotors) {
+//            rightSum += encoderTicksToInches(rightMotor.getCurrentPosition());
+//        }
+//        return Arrays.asList(leftSum / leftMotors.size(), rightSum / rightMotors.size());
+        return Arrays.asList(encoderTicksToInches(leftMotors.get(0).getCurrentPosition()),
+                encoderTicksToInches(rightMotors.get(0).getCurrentPosition()));
+    }
+
+    public List<Double> getAllWheelPositions() {
+        List<Double> list = new ArrayList<>();
         for (DcMotorEx leftMotor : leftMotors) {
-            leftSum += encoderTicksToInches(leftMotor.getCurrentPosition());
+            list.add(encoderTicksToInches(leftMotor.getCurrentPosition()));
         }
         for (DcMotorEx rightMotor : rightMotors) {
-            rightSum += encoderTicksToInches(rightMotor.getCurrentPosition());
+            list.add(encoderTicksToInches(rightMotor.getCurrentPosition()));
         }
-        return Arrays.asList(leftSum / leftMotors.size(), rightSum / rightMotors.size());
+        return list;
+    }
+
+    public List<Integer> getWheelTicks() {
+        return Arrays.asList(leftMotors.get(0).getCurrentPosition(), rightMotors.get(0).getCurrentPosition());
     }
 
     public List<Double> getWheelVelocities() {
-        double leftSum = 0, rightSum = 0;
-        for (DcMotorEx leftMotor : leftMotors) {
-            leftSum += encoderTicksToInches(leftMotor.getVelocity());
-        }
-        for (DcMotorEx rightMotor : rightMotors) {
-            rightSum += encoderTicksToInches(rightMotor.getVelocity());
-        }
-        return Arrays.asList(leftSum / leftMotors.size(), rightSum / rightMotors.size());
+//        double leftSum = 0, rightSum = 0;
+//        for (DcMotorEx leftMotor : leftMotors) {
+//            leftSum += encoderTicksToInches(leftMotor.getVelocity());
+//        }
+//        for (DcMotorEx rightMotor : rightMotors) {
+//            rightSum += encoderTicksToInches(rightMotor.getVelocity());
+//        }
+        return Arrays.asList(encoderTicksToInches(leftMotors.get(0).getVelocity()),
+                encoderTicksToInches(rightMotors.get(0).getVelocity()));
     }
 
     @Override
