@@ -101,6 +101,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         } else
             robot.drive.setMotorPowers(0, 0, 0, 0);
 
+        robot.collector.on();
         if(driver1.collectOn) {
             retractFirstTime = false;
             if (!deployFirstTime) {
