@@ -85,7 +85,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
     //Loop
     public void runLoop() {
         double drive = -gamepad1.left_stick_y;
-        double turn  = -gamepad1.right_stick_x;
+        double turn  = gamepad1.right_stick_x;
 
         // Combine drive and turn for blended motion.
         double left  = drive + turn;
@@ -102,23 +102,22 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         // Output the safe vales to the motor drives.
         robot.drive.setMotorPowers(left, right);
 
+        robot.collector.on();
         if(driver1.collectOn) {
             robot.collector.startCollection();
+            telemetry.addData("Collector", "On");
         } else {
             robot.collector.stopCollection();
+            telemetry.addData("Collector", "Off");
         }
 
         if (driver1.reverseCollect) {
-            robot.collector.reverse();
+            robot.collector.setSign(-1);
+        } else {
+            robot.collector.setSign(1);
         }
 
-        /* Temporary Controls */
-        if(driver1.upCollector) {
-            robot.collector.up();
-        }
-        else {
-            robot.collector.down();
-        }
+
 //
 //        if (driver2.depositNear) {
 //            robot.depositorLift.setDepositLocation(DepositorLift.Location.NEAR);
@@ -168,17 +167,6 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         driver1.lowerLift = gamepad1.left_bumper;
         depositButton.update(gamepad1.x);
         driver1.retract = gamepad1.b;
-
-        /* temporary controls */
-        if(gamepad1.dpad_left)
-        {
-            driver1.upCollector = false;
-        }
-        if(gamepad1.dpad_right)
-        {
-            driver1.upCollector = true;
-        }
-
 
         ////////////
         //DRIVER 2//
