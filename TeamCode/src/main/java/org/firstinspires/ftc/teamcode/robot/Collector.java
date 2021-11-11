@@ -12,26 +12,27 @@ import org.firstinspires.ftc.teamcode.util.CachingServo;
 
 public class Collector implements Component {
     private DcMotorEx collector;
-    private ServoImplEx collectorUp;
     private ServoImplEx deploy;
     private ServoImplEx gate;
 
     private static final double COLLECT_POWER = 1;
+    private int sign = 1;
 
     public Collector(HardwareMap map) {
         collector = new CachingMotor(map.get(DcMotorEx.class, "collectMotor"));
         deploy = new CachingServo(map.get(ServoImplEx.class, "collectorDeploy"));
         gate = new CachingServo(map.get(ServoImplEx.class, "collectorGate"));
-        collectorUp = new CachingServo(map.get(ServoImplEx.class, "collectorUp"));
 
         collector.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        collectorUp.setPwmRange(new PwmControl.PwmRange(0,0));
-        deploy.setPwmRange(new PwmControl.PwmRange(0,0));
+        deploy.setPwmRange(new PwmControl.PwmRange(1560,2315));
         gate.setPwmRange(new PwmControl.PwmRange(0,0));
+
+        collector.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     @Override
     public void reset() {
+//        close();
         off();
         retract();
     }
@@ -47,11 +48,7 @@ public class Collector implements Component {
     }
 
     public void on() {
-        collector.setPower(COLLECT_POWER);
-    }
-
-    public void reverse() {
-        collector.setPower(-COLLECT_POWER);
+        collector.setPower(Math.signum(sign) * COLLECT_POWER);
     }
 
     public void off() {
@@ -59,11 +56,11 @@ public class Collector implements Component {
     }
 
     public void deploy() {
-        deploy.setPosition(1);
+        deploy.setPosition(0);
     }
 
     public void retract() {
-        deploy.setPosition(0);
+        deploy.setPosition(1);
     }
 
     public void close() {
@@ -74,19 +71,17 @@ public class Collector implements Component {
         gate.setPosition(0);
     }
 
-    public void up() { collectorUp.setPosition(1);}
-
-    public void down() { collectorUp.setPosition(0);}
-
     public void startCollection() {
-        close();
+//        close();
         deploy();
-        on();
     }
 
     public void stopCollection() {
-        off();
+//        open();
         retract();
-        open();
+    }
+
+    public void setSign(int sign) {
+        this.sign = sign;
     }
 }
