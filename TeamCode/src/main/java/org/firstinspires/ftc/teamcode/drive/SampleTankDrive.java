@@ -27,11 +27,14 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.teamcode.robot.BrainSTEMRobot;
 import org.firstinspires.ftc.teamcode.robot.Component;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceBuilder;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceRunner;
+import org.firstinspires.ftc.teamcode.util.AxesSigns;
+import org.firstinspires.ftc.teamcode.util.BNO055IMUUtil;
 import org.firstinspires.ftc.teamcode.util.LynxModuleUtil;
 
 import java.util.ArrayList;
@@ -61,6 +64,11 @@ public class SampleTankDrive extends TankDrive {
 
     public static double VX_WEIGHT = 1;
     public static double OMEGA_WEIGHT = 1;
+    public static double LEFT_MULTIPLIER = 1;//
+    public static double RIGHT_MULTIPLIER = 1;//
+    /*
+
+     */
 
     private TrajectorySequenceRunner trajectorySequenceRunner;
 
@@ -102,7 +110,7 @@ public class SampleTankDrive extends TankDrive {
 
         // TODO: if your hub is mounted vertically, remap the IMU axes so that the z-axis points
         // upward (normal to the floor) using a command like the following:
-        // BNO055IMUUtil.remapAxes(imu, AxesOrder.XYZ, AxesSigns.NPN);
+         BNO055IMUUtil.remapAxes(imu, AxesOrder.XZY, AxesSigns.NPN);
 
         // add/remove motors depending on your robot (e.g., 6WD)
         DcMotorEx leftFront = hardwareMap.get(DcMotorEx.class, "fl");
@@ -274,8 +282,8 @@ public class SampleTankDrive extends TankDrive {
 //            rightSum += encoderTicksToInches(rightMotor.getCurrentPosition());
 //        }
 //        return Arrays.asList(leftSum / leftMotors.size(), rightSum / rightMotors.size());
-        return Arrays.asList(encoderTicksToInches(leftMotors.get(0).getCurrentPosition()),
-                encoderTicksToInches(rightMotors.get(0).getCurrentPosition()));
+        return Arrays.asList(LEFT_MULTIPLIER * encoderTicksToInches(leftMotors.get(0).getCurrentPosition()),
+                RIGHT_MULTIPLIER * encoderTicksToInches(rightMotors.get(0).getCurrentPosition()));
     }
 
     public List<Double> getAllWheelPositions() {
@@ -301,8 +309,8 @@ public class SampleTankDrive extends TankDrive {
 //        for (DcMotorEx rightMotor : rightMotors) {
 //            rightSum += encoderTicksToInches(rightMotor.getVelocity());
 //        }
-        return Arrays.asList(encoderTicksToInches(leftMotors.get(0).getVelocity()),
-                encoderTicksToInches(rightMotors.get(0).getVelocity()));
+        return Arrays.asList(LEFT_MULTIPLIER * encoderTicksToInches(leftMotors.get(0).getVelocity()),
+                RIGHT_MULTIPLIER * encoderTicksToInches(rightMotors.get(0).getVelocity()));
     }
 
     @Override

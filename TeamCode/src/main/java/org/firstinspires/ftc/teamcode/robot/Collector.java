@@ -12,27 +12,27 @@ import org.firstinspires.ftc.teamcode.util.CachingServo;
 
 public class Collector implements Component {
     private DcMotorEx collector;
-    private ServoImplEx deploy;
+    private ServoImplEx tilt;
     private ServoImplEx gate;
 
     private static final double COLLECT_POWER = 1;
     private int sign = 1;
 
     public Collector(HardwareMap map) {
-        collector = new CachingMotor(map.get(DcMotorEx.class, "collectMotor"));
-        deploy = new CachingServo(map.get(ServoImplEx.class, "collectorDeploy"));
+        collector = new CachingMotor(map.get(DcMotorEx.class, "collect"));
+        tilt = new CachingServo(map.get(ServoImplEx.class, "collectorTilt"));
         gate = new CachingServo(map.get(ServoImplEx.class, "collectorGate"));
 
         collector.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        deploy.setPwmRange(new PwmControl.PwmRange(1560,2315));
-        gate.setPwmRange(new PwmControl.PwmRange(0,0));
+        tilt.setPwmRange(new PwmControl.PwmRange(970,1670));
+        gate.setPwmRange(new PwmControl.PwmRange(787,1475));
 
         collector.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     @Override
     public void reset() {
-//        close();
+        close();
         off();
         retract();
     }
@@ -56,11 +56,11 @@ public class Collector implements Component {
     }
 
     public void deploy() {
-        deploy.setPosition(0);
+        tilt.setPosition(0);
     }
 
     public void retract() {
-        deploy.setPosition(1);
+        tilt.setPosition(1);
     }
 
     public void close() {
@@ -71,16 +71,24 @@ public class Collector implements Component {
         gate.setPosition(0);
     }
 
+<<<<<<< HEAD
     public void
     startCollection() {
 //        close();
+=======
+    public void startCollection() {
+        close();
+>>>>>>> e53989e (testing robot subsystems)
         deploy();
+        on();
     }
 
     public void stopCollection() {
-//        open();
+        off();
         retract();
+//        open();
     }
+
 
     public void setSign(int sign) {
         this.sign = sign;
