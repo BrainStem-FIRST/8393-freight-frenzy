@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
@@ -22,31 +23,33 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         BrainSTEMRobot robot = new BrainSTEMRobot(this);
         BrainSTEMAutonomousCoordinates coordinates = new BrainSTEMAutonomousCoordinates(color, startLocation);
 
-        VuforiaLocalizer vuforia = initVuforia();
-        TFObjectDetector tfod = initTfod(vuforia);
+//        VuforiaLocalizer vuforia = initVuforia();
+//        TFObjectDetector tfod = initTfod(vuforia);
 
-        TrajectorySequence startSequence = robot.drive.trajectorySequenceBuilder(coordinates.startPos())
-                .setReversed(true)
+        Trajectory startTrajectory = robot.drive.trajectoryBuilder(coordinates.startPos(), true)
                 .lineTo(coordinates.shippingElementCollect().vec())
-                .addDisplacementMarker(() -> {/*Grab shipping element*/})
-                .waitSeconds(2)
-                .addDisplacementMarker(0.5, 0, () -> {/*turn turret to proper angle*/})
-                .splineTo(coordinates.deposit().vec(), coordinates.preloadDepositTangent())
-                .addDisplacementMarker(() -> {/*Deposit preload*/})
-                .waitSeconds(1.5)
                 .build();
 
-        TrajectorySequence cycleSequence = robot.drive.trajectorySequenceBuilder(coordinates.deposit())
+        Trajectory depositTrajectory = robot.drive.trajectoryBuilder(coordinates.shippingElementCollect(), true)
+                .addDisplacementMarker(0.5, 0, () -> {/*turn turret to proper angle*/})
+                .splineTo(coordinates.deposit().vec(), coordinates.depositTangent())
+                .build();
+
+        TrajectorySequence warehouseSequence = robot.drive.trajectorySequenceBuilder(coordinates.shippingElementCollect())
                 .addDisplacementMarker(0.25, 0, () -> {/*Turn on collector, reset turret, lift down, etc.*/})
-                .splineTo(coordinates.cycleCollect().vec(), coordinates.cycleCollectTangent())
+                .splineTo(coordinates.cycleWaypoint().vec(), coordinates.cycleParkTangent())
+                .lineTo(coordinates.cycleCollect().vec())
                 .waitSeconds(2)
                 .setReversed(true)
                 .addDisplacementMarker(0.25, 0, () -> {/*Turn off collector, turn turret, lift up, etc.*/})
-                .splineTo(coordinates.deposit().vec(), coordinates.cycleDepositTangent())
+                .lineTo(coordinates.cycleWaypoint().vec())
+                .splineTo(coordinates.deposit().vec(), coordinates.depositTangent())
                 .waitSeconds(1.5)
                 .build();
 
-        TrajectorySequence deliverySequence = robot.drive.trajectorySequenceBuilder(coordinates.deposit())
+        TrajectorySequence carouselSequence = robot.drive.trajectorySequenceBuilder(coordinates.shippingElementCollect())
+                .addDisplacementMarker(0.5, 0, () -> {/*turn turret to proper angle*/})
+                .splineTo(coordinates.deposit().vec(), coordinates.depositTangent())
                 .addDisplacementMarker(0.4, 0, () -> {/*Turn on carousel wheel, reset turret, lift down, etc.*/})
                 .splineTo(coordinates.carouselWaypoint().vec(), coordinates.carouselWaypointTangent())
                 .setReversed(true)
@@ -58,14 +61,15 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 
         TrajectorySequence parkSequence = robot.drive.trajectorySequenceBuilder(coordinates.parkPathStart())
                 .addDisplacementMarker(0.5, 0, () -> {/*Reset turret,  etc.*/})
-                .splineTo(coordinates.park().vec(), coordinates.parkTangent())
+                .splineTo(coordinates.cycleWaypoint().vec(), coordinates.cycleParkTangent())
+                .splineTo(coordinates.park().vec(), coordinates.cycleParkTangent())
                 .build();
 
-        robot.reset();
+//        robot.reset();
         while (!opModeIsActive() && !isStopRequested()) {
-            if (tfod != null) {
-                List<Recognition> recognitions = tfod.getRecognitions();
-            }
+//            if (tfod != null) {
+//                List<Recognition> recognitions = tfod.getRecognitions();
+//            }
 
             telemetry.addData("Status", "Waiting...");
 //            telemetry.addData("IMU Calibrated during Loop?", robot.drive.getCalibrated());
@@ -77,17 +81,22 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             return;
         }
 
-        if (tfod != null) {
-            tfod.shutdown();
-        }
+//        if (tfod != null) {
+//            tfod.shutdown();
+//        }
 
-        robot.drive.followTrajectorySequence(startSequence);
+        robot.drive.setPoseEstimate(coordinates.startPos());
+
+        robot.drive.followTrajectory(startTrajectory);
         if (startLocation == StartLocation.WAREHOUSE) {
+            robot.drive.turn(coordinates.warehouseTurnAngle());
+            robot.drive.followTrajectory(depositTrajectory);
             for (int i = 0; i < CYCLE_TIMES; i++) {
-                robot.drive.followTrajectorySequence(cycleSequence);
+                robot.drive.followTrajectorySequence(warehouseSequence);
             }
         } else {
-            robot.drive.followTrajectorySequence(deliverySequence);
+            robot.drive.followTrajectory(depositTrajectory);
+            robot.drive.followTrajectorySequence(carouselSequence);
         }
         robot.drive.followTrajectorySequence(parkSequence);
     }

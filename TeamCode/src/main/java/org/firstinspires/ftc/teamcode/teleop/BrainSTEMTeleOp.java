@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
+import android.util.Log;
+
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -45,13 +47,12 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 
     private boolean extended = false;
 
-
     private class Driver1 {
         private boolean toggleReverseDrive;
         private boolean collectOn;
         private boolean reverseCollect;
-        private boolean raiseLift;
-        private boolean lowerLift;
+        private float raiseLift;
+        private float lowerLift;
         public boolean upCollector = false;
         private boolean retract;
         private double drive, turn;
@@ -99,10 +100,9 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             right /= max;
         }
 
-        // Output the safe vales to the motor drives.
+        // Output the safe values to the motor drives.
         robot.drive.setMotorPowers(left, right);
 
-        robot.collector.on();
         if(driver1.collectOn) {
             robot.collector.startCollection();
             telemetry.addData("Collector", "On");
@@ -111,41 +111,52 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             telemetry.addData("Collector", "Off");
         }
 
+        if (gamepad1.dpad_up) {
+            robot.collector.open();
+        }
+
         if (driver1.reverseCollect) {
             robot.collector.setSign(-1);
         } else {
             robot.collector.setSign(1);
         }
 
+        if(depositButton.getState()) {
+            Log.d("DepositorLog", extended + "");
+            if (extended) {
+                robot.depositorLift.open();
+                extended = false;
+            } else {
+                robot.depositorLift.deployDeposit();
+                extended = true;
+            }
+        }
 
-//
-//        if (driver2.depositNear) {
-//            robot.depositorLift.setDepositLocation(DepositorLift.Location.NEAR);
-//        } else if (driver2.depositFar) {
-//            robot.depositorLift.setDepositLocation(DepositorLift.Location.FAR);
-//        }
-//
-//        if(depositButton.getState()) {
-//            if (extended) {
-//                robot.depositorLift.deposit();
-//                extended = false;
-//            } else {
-//                robot.depositorLift.extend();
-//                extended = true;
-//            }
-//        }
-//
-//        if (driver1.retract) {
-//            robot.depositorLift.retractDeposit();
-//            robot.depositorLift.retractExtension();
-//        }
-//
-//        if(driver1.raiseLift) {
-//            robot.depositorLift.setGoal(DepositorLift.Goal.UP);
-//        } else if (driver1.lowerLift) {
-//            robot.depositorLift.setGoal(DepositorLift.Goal.DOWN);
-//        }
-//
+        if (driver1.retract) {
+            robot.depositorLift.retractDeposit();
+            extended = false;
+        }
+
+        if (gamepad1.dpad_left) {
+            robot.depositorLift.open();
+        }
+
+        if (gamepad1.dpad_right) {
+            robot.depositorLift.close();
+        }
+
+        if (driver1.raiseLift > 0) {
+            robot.depositorLift.liftUp();
+        } else if (driver1.lowerLift > 0) {
+            robot.depositorLift.liftDown();
+        } else {
+            robot.depositorLift.stopLift();
+        }
+
+        if (driver2.spinCarousel) {
+            robot.carouselSpin.runSpinSequence(0.4);
+        }
+
 //        robot.turret.autoSpinTurret(Math.toDegrees(driver2.aimTurret));
 
         telemetry.addData("Running", "Now");
@@ -161,10 +172,10 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         driver1.turn = gamepad1.right_stick_x;
 
         //Scale the input of the right stick in the x direction
-        driver1.collectOn = collectOnButton.update(gamepad1.right_trigger > 0);
-        driver1.reverseCollect = gamepad1.left_trigger > 0;
-        driver1.raiseLift = gamepad1.right_bumper;
-        driver1.lowerLift = gamepad1.left_bumper;
+        driver1.collectOn = collectOnButton.update(gamepad1.right_bumper);
+        driver1.reverseCollect = gamepad1.left_bumper;
+        driver1.raiseLift = gamepad1.right_trigger;
+        driver1.lowerLift = gamepad1.left_trigger;
         depositButton.update(gamepad1.x);
         driver1.retract = gamepad1.b;
 

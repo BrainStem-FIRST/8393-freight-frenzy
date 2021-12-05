@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.robot;
 import com.qualcomm.hardware.rev.RevTouchSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
@@ -28,15 +29,13 @@ public class DepositorLift implements Component {
     }
 
     private DcMotorEx lift;
-    private ServoImplEx depositNear;
-    private ServoImplEx depositFar;
+    private ServoImplEx gate;
+    private ServoImplEx flip;
     private ServoImplEx extend;
     private ServoImplEx shippingElementGrab;
-    private DigitalChannel magnetSensor;
-    private RevTouchSensor touchSensor;
 
-    private static final double LIFT_UP_POWER = 0.85;
-    private static final double LIFT_DOWN_POWER = 0.4;
+    private static final double LIFT_UP_POWER = 0.4; //0.85
+    private static final double LIFT_DOWN_POWER = -0.2; //0.4
     private static final int LIFT_TIMEOUT = 3000;
 
     private TimerCanceller liftCanceller = new TimerCanceller(LIFT_TIMEOUT);
@@ -50,68 +49,67 @@ public class DepositorLift implements Component {
 
     public DepositorLift(HardwareMap map, Telemetry telemetry) {
         lift = new CachingMotor(map.get(DcMotorEx.class, "lift"));
-        depositNear = new CachingServo(map.get(ServoImplEx.class, "depositNearServo"));
-        depositFar = new CachingServo(map.get(ServoImplEx.class, "depositFarServo"));
-        extend = new CachingServo(map.get(ServoImplEx.class, "extendServo"));
-        shippingElementGrab = new CachingServo(map.get(ServoImplEx.class, "shippingElementGrab"));
-        magnetSensor = map.digitalChannel.get("magnetSensor");
-        touchSensor = map.get(RevTouchSensor.class, "touchSensor");
+        gate = new CachingServo(map.get(ServoImplEx.class, "depositorGate"));
+        flip = new CachingServo(map.get(ServoImplEx.class, "flip"));
+        extend = new CachingServo(map.get(ServoImplEx.class, "extend"));
+        shippingElementGrab = new CachingServo(map.get(ServoImplEx.class, "SEGrab"));
 
         lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         lift.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, new PIDFCoefficients(15, 0, 0, 0));
+        lift.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        depositNear.setPwmRange(new PwmControl.PwmRange(0,0));
-        depositFar.setPwmRange(new PwmControl.PwmRange(0,0));
-        extend.setPwmRange(new PwmControl.PwmRange(0,0));
-        shippingElementGrab.setPwmRange(new PwmControl.PwmRange(0,0));
+        gate.setPwmRange(new PwmControl.PwmRange(800,1850));
+        flip.setPwmRange(new PwmControl.PwmRange(930,2140));
+        extend.setPwmRange(new PwmControl.PwmRange(1700,2360));
+        shippingElementGrab.setPwmRange(new PwmControl.PwmRange(1530,2520));
     }
 
     @Override
     public void reset() {
-        liftDown();
+//        liftDown();
+        open();
         retractDeposit();
-        retractExtension();
-        retractSEGrab();
+        releaseSE();
     }
 
     @Override
     public void update() {
 
-        if (goal == Goal.STOP || liftCanceller.isConditionMet())
-            stopLift();
-        else if (goal == Goal.UP)
-        {
-            if (depositHeight == Height.LOW) {
-                goal = Goal.STOP;
-            }
-
-            liftUp();
-            currentMagnetState = !magnetSensor.getState();
-            if (currentMagnetState != previousMagnetState) {
-                if (depositHeight == Height.MIDDLE) {
-                    goal = Goal.STOP;
-                } else if (depositHeight == Height.HIGH && passedMiddle)  {
-                    goal = Goal.STOP;
-                } else {
-                    passedMiddle = true;
-                    currentMagnetState = false;
-                    previousMagnetState = false;
-                }
-            }
-        }
-        else if (goal == Goal.DOWN)
-        {
-            liftDown();
-            if (touchSensor.isPressed())
-            {
-                goal = Goal.STOP;
-                passedMiddle = false;
-                currentMagnetState = false;
-                previousMagnetState = false;
-            }
-        }
+//        if (goal == Goal.STOP || liftCanceller.isConditionMet())
+//            stopLift();
+//        else if (goal == Goal.UP)
+//        {
+//            if (depositHeight == Height.LOW) {
+//                goal = Goal.STOP;
+//            }
+//
+//            liftUp();
+////            currentMagnetState = !magnetSensor.getState();
+//            if (currentMagnetState != previousMagnetState) {
+//                if (depositHeight == Height.MIDDLE) {
+//                    goal = Goal.STOP;
+//                } else if (depositHeight == Height.HIGH && passedMiddle)  {
+//                    goal = Goal.STOP;
+//                } else {
+//                    passedMiddle = true;
+//                    currentMagnetState = false;
+//                    previousMagnetState = false;
+//                }
+//            }
+//        }
+//        else if (goal == Goal.DOWN)
+//        {
+//            liftDown();
+////            if (touchSensor.isPressed())
+////            {
+////                goal = Goal.STOP;
+////                passedMiddle = false;
+////                currentMagnetState = false;
+////                previousMagnetState = false;
+////            }
+//        }
     }
 
     @Override
@@ -119,11 +117,12 @@ public class DepositorLift implements Component {
         return null;
     }
 
-    private void liftUp() {
+    public void liftUp() {
+        close();
         lift.setPower(LIFT_UP_POWER);
     }
 
-    private void liftDown() {
+    public void liftDown() {
         lift.setPower(LIFT_DOWN_POWER);
     }
 
@@ -145,48 +144,49 @@ public class DepositorLift implements Component {
         }
     }
 
-    public void setDepositLocation(Location location) {
-        depositLocation = location;
-    }
-
     public void setHeight(Height height) {
         depositHeight = height;
     }
 
-    public void deposit() {
-        if (depositLocation == Location.NEAR) {
-            depositNear();
-        } else {
-            depositFar();
-        }
+    public void close() {
+        gate.setPosition(0);
     }
 
-    private void depositNear() {
-        depositNear.setPosition(1);
-    }
-
-    private void depositFar() {
-        depositFar.setPosition(1);
-    }
-
-    public void retractDeposit() {
-        depositNear.setPosition(0);
-        depositFar.setPosition(0);
+    public void open() {
+        gate.setPosition(1);
     }
 
     public void extend() {
-        extend.setPosition(1);
-    }
-
-    public void retractExtension() {
         extend.setPosition(0);
     }
 
-    public void deploySEGrab() {
-        shippingElementGrab.setPosition(1);
+    public void retractExtension() {
+        extend.setPosition(1);
     }
 
-    public void retractSEGrab() {
+    public void deployDeposit() {
+        flipOut();
+        extend();
+    }
+
+    public void retractDeposit() {
+        retractExtension();
+        flipIn();
+    }
+
+    public void flipOut() {
+        flip.setPosition(1);
+    }
+
+    public void flipIn() {
+        flip.setPosition(0);
+    }
+
+    public void clampSE() {
         shippingElementGrab.setPosition(0);
+    }
+
+    public void releaseSE() {
+        shippingElementGrab.setPosition(1);
     }
 }

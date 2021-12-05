@@ -10,8 +10,7 @@ import org.firstinspires.ftc.teamcode.util.CachingMotor;
 
 public class Turret implements Component{
     private DcMotorEx turret;
-    private DigitalChannel turretLeftLimit;
-    private DigitalChannel turretRightLimit;
+    private DigitalChannel limit;
 
     private static final double TURRET_DEGREE_RANGE = Math.toRadians(140);
     private static final int TURRET_ENCODER_RANGE = 1023;
@@ -22,8 +21,7 @@ public class Turret implements Component{
     public Turret (HardwareMap map) {
         turret = new CachingMotor(map.get(DcMotorEx.class, "turret"));
 
-        turretLeftLimit = map.digitalChannel.get("turretLeftLimit");
-        turretRightLimit = map.digitalChannel.get(("turretRightLimit"));
+        limit = map.digitalChannel.get("limit");
 
         turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -46,7 +44,7 @@ public class Turret implements Component{
     }
 
     public void resetTurret() {
-        while(!turretRightLimit.getState()) {
+        while(!limit.getState()) {
             turret.setPower(0.3);
         }
         turret.setPower(0);
