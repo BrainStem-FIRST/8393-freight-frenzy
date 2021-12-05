@@ -25,7 +25,7 @@ public class CarouselTest extends LinearOpMode {
             sb2.update(gamepad1.dpad_down);
 
             if (sb1.getState()) {
-                if (power < 0.2) {
+                if (power < 0.5) {
                     power += 0.01;
                 }
             }
