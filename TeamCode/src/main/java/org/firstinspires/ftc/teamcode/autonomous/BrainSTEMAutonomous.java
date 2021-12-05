@@ -168,6 +168,8 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         robot.depositorLift.open();
 
         if (startLocation == StartLocation.WAREHOUSE) {
+            robot.drive.turn(coordinates.warehouseTurnAngle());
+            robot.drive.followTrajectory(depositTrajectory);
             for (int i = 0; i < CYCLE_TIMES; i++) {
                 robot.drive.followTrajectorySequence(warehouseSequence);
             }

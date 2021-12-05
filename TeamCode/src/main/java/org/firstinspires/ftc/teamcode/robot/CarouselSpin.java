@@ -25,7 +25,7 @@ public class CarouselSpin implements Component {
         spin.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         spin.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         spin.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        //spin.setDirection(DcMotorSimple.Direction.REVERSE);
+        spin.setDirection(DcMotorSimple.Direction.REVERSE);
         spin.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, new PIDFCoefficients(15, 0, 0, 0));
     }
 
