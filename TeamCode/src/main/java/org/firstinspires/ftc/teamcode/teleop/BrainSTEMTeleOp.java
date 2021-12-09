@@ -2,20 +2,14 @@ package org.firstinspires.ftc.teamcode.teleop;
 
 import android.util.Log;
 
-import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.firstinspires.ftc.teamcode.autonomous.AllianceColor;
 import org.firstinspires.ftc.teamcode.robot.BrainSTEMRobot;
-import org.firstinspires.ftc.teamcode.robot.DepositorLift;
+import org.firstinspires.ftc.teamcode.robot.Collector;
+import org.firstinspires.ftc.teamcode.robot.Direction;
 
-import java.util.List;
-
-@TeleOp
 public class BrainSTEMTeleOp extends LinearOpMode {
     //Initializes joystick storage variables'
     private double leftStickX, leftStickY, rightStickX;
@@ -46,6 +40,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
     protected AllianceColor color = null;
 
     private boolean extended = false;
+    private boolean deployFirstTime = false, retractFirstTime = false;
 
     private class Driver1 {
         private boolean toggleReverseDrive;
@@ -61,7 +56,9 @@ public class BrainSTEMTeleOp extends LinearOpMode {
     private class Driver2 {
         private boolean spinCarousel;
         private double aimTurret;
-        private boolean depositNear, depositFar;
+        private float turretLeft;
+        private float turretRight;
+        private boolean teamShippingElement;
     }
 
     @Override
@@ -69,6 +66,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         robot = new BrainSTEMRobot(this);
 
         robot.reset();
+        robot.depositorLift.clampSE();
         while (!opModeIsActive() && !isStopRequested()) {
             //Status to show if telemetry was initialized
             telemetry.addData("Status", "Initialized");
@@ -104,15 +102,17 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         robot.drive.setMotorPowers(left, right);
 
         if(driver1.collectOn) {
-            robot.collector.startCollection();
-            telemetry.addData("Collector", "On");
+            retractFirstTime = false;
+            if (!deployFirstTime) {
+                robot.collector.setGoal(Collector.Goal.DEPLOY);
+                deployFirstTime = true;
+            }
         } else {
-            robot.collector.stopCollection();
-            telemetry.addData("Collector", "Off");
-        }
-
-        if (gamepad1.dpad_up) {
-            robot.collector.open();
+            deployFirstTime = false;
+            if (!retractFirstTime) {
+                robot.collector.setGoal(Collector.Goal.RETRACT);
+                retractFirstTime = true;
+            }
         }
 
         if (driver1.reverseCollect) {
@@ -122,7 +122,6 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         }
 
         if(depositButton.getState()) {
-            Log.d("DepositorLog", extended + "");
             if (extended) {
                 robot.depositorLift.open();
                 extended = false;
@@ -137,14 +136,6 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             extended = false;
         }
 
-        if (gamepad1.dpad_left) {
-            robot.depositorLift.open();
-        }
-
-        if (gamepad1.dpad_right) {
-            robot.depositorLift.close();
-        }
-
         if (driver1.raiseLift > 0) {
             robot.depositorLift.liftUp();
         } else if (driver1.lowerLift > 0) {
@@ -154,12 +145,27 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         }
 
         if (driver2.spinCarousel) {
-            robot.carouselSpin.runSpinSequence(0.4);
+            robot.carouselSpin.spinCarousel(color);
+        } else {
+            robot.carouselSpin.stopCarousel();
+        }
+
+        if (driver2.turretLeft > 0) {
+            robot.turret.spinTurret(Direction.LEFT);
+        } else if (driver2.turretRight > 0) {
+            robot.turret.spinTurret(Direction.RIGHT);
+        } else {
+            robot.turret.stopTurret();
+        }
+
+        if (driver2.teamShippingElement) {
+            robot.depositorLift.releaseSE();
         }
 
 //        robot.turret.autoSpinTurret(Math.toDegrees(driver2.aimTurret));
 
         telemetry.addData("Running", "Now");
+        telemetry.addData("Turret encoder", robot.turret.encoderPosition());
         telemetry.update();
     }
 
@@ -183,9 +189,9 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         //DRIVER 2//
         ////////////
 
-        driver2.depositNear = gamepad2.dpad_down;
-        driver2.depositFar = gamepad2.dpad_up;
-        driver2.spinCarousel = gamepad2.right_bumper;
+        driver2.turretLeft = gamepad2.left_trigger;
+        driver2.turretRight = gamepad2.right_trigger;
+        driver2.spinCarousel = gamepad2.x;
         if (gamepad2.right_stick_x > 0) {
             driver2.aimTurret = Math.atan(gamepad2.right_stick_y / gamepad2.right_stick_x);
         } else if (gamepad2.right_stick_x < 0) {
@@ -193,5 +199,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         } else {
             driver2.aimTurret = Math.PI / 2;
         }
+        driver2.teamShippingElement = gamepad2.y;
+
     }
 }

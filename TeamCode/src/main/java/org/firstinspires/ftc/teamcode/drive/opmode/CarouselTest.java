@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.drive.opmode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.autonomous.AllianceColor;
 import org.firstinspires.ftc.teamcode.robot.CarouselSpin;
 import org.firstinspires.ftc.teamcode.teleop.StickyButton;
 
@@ -19,7 +20,7 @@ public class CarouselTest extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            spin.runSpinSequence(power);
+            spin.spinCarousel(AllianceColor.BLUE);
 
             sb1.update(gamepad1.dpad_up);
             sb2.update(gamepad1.dpad_down);
