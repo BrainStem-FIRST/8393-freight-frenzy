@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.util.CachingMotor;
 
-public class Turret implements Component{
+public class Turret implements Component {
     private DcMotorEx turret;
     private DigitalChannel limit;
 
@@ -16,7 +16,7 @@ public class Turret implements Component{
     private static final int TURRET_ENCODER_RANGE = 1023;
     private static final double MIN_ANGLE = Math.toRadians(-65);
     private static final double MAX_ANGLE = Math.toRadians(65);
-    private static final double TURRET_POWER = 0.85;
+    private static final double TURRET_POWER = 0.3;
 
     public Turret (HardwareMap map) {
         turret = new CachingMotor(map.get(DcMotorEx.class, "turret"));
@@ -74,5 +74,9 @@ public class Turret implements Component{
 
     public void stopTurret() {
         turret.setPower(0);
+    }
+
+    public int encoderPosition() {
+        return turret.getCurrentPosition();
     }
 }
