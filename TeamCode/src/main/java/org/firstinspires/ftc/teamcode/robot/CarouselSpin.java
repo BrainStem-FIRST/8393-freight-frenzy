@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
+import org.firstinspires.ftc.teamcode.autonomous.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.CachingMotor;
 
 @Config
@@ -40,7 +41,11 @@ public class CarouselSpin implements Component {
         return null;
     }
 
-    public void runSpinSequence(double power) {
-        spin.setPower(SPIN_POWER);
+    public void spinCarousel(AllianceColor color) {
+        spin.setPower(color == AllianceColor.BLUE ? SPIN_POWER : -SPIN_POWER);
+    }
+
+    public void stopCarousel() {
+        spin.setPower(0);
     }
 }
