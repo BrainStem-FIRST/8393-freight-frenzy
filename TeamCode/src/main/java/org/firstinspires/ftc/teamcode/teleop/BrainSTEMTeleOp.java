@@ -1,13 +1,11 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
-import android.util.Log;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.autonomous.AllianceColor;
 import org.firstinspires.ftc.teamcode.robot.BrainSTEMRobot;
 import org.firstinspires.ftc.teamcode.robot.Collector;
+import org.firstinspires.ftc.teamcode.robot.DepositorLift;
 import org.firstinspires.ftc.teamcode.robot.Direction;
 
 public class BrainSTEMTeleOp extends LinearOpMode {
@@ -59,6 +57,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         private float turretLeft;
         private float turretRight;
         private boolean teamShippingElement;
+        private boolean depositHigh, depositLow;
     }
 
     @Override
@@ -126,13 +125,13 @@ public class BrainSTEMTeleOp extends LinearOpMode {
                 robot.depositorLift.open();
                 extended = false;
             } else {
-                robot.depositorLift.deployDeposit();
+                robot.depositorLift.setGoal(DepositorLift.Goal.DEPLOY);
                 extended = true;
             }
         }
 
         if (driver1.retract) {
-            robot.depositorLift.retractDeposit();
+            robot.depositorLift.setGoal(DepositorLift.Goal.RETRACT);
             extended = false;
         }
 
@@ -162,10 +161,17 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             robot.depositorLift.releaseSE();
         }
 
+        if (driver2.depositHigh) {
+            robot.depositorLift.setDepositorFirstLevel(false);
+        } else if (driver2.depositLow) {
+            robot.depositorLift.setDepositorFirstLevel(true);
+        }
+
 //        robot.turret.autoSpinTurret(Math.toDegrees(driver2.aimTurret));
 
         telemetry.addData("Running", "Now");
         telemetry.addData("Turret encoder", robot.turret.encoderPosition());
+        telemetry.addData("Deposit first level?", robot.depositorLift.getDepositFirstLevel());
         telemetry.update();
     }
 
@@ -200,6 +206,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             driver2.aimTurret = Math.PI / 2;
         }
         driver2.teamShippingElement = gamepad2.y;
-
+        driver2.depositHigh = gamepad2.dpad_up;
+        driver2.depositLow = gamepad2.dpad_down;
     }
 }

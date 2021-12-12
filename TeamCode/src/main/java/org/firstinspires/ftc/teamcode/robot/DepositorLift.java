@@ -1,10 +1,8 @@
 package org.firstinspires.ftc.teamcode.robot;
 
-import com.qualcomm.hardware.rev.RevTouchSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.PwmControl;
@@ -17,11 +15,7 @@ import org.firstinspires.ftc.teamcode.util.TimerCanceller;
 
 public class DepositorLift implements Component {
     public enum Goal {
-        UP, DOWN, STOP
-    }
-
-    public enum Location {
-        NEAR, FAR
+        UP, DOWN, STOP, DEPLOY, DEPLOYACTION, RETRACT, RETRACTACTION
     }
 
     public enum Height {
@@ -39,13 +33,11 @@ public class DepositorLift implements Component {
     private static final int LIFT_TIMEOUT = 3000;
 
     private TimerCanceller liftCanceller = new TimerCanceller(LIFT_TIMEOUT);
+    private TimerCanceller flipCanceller = new TimerCanceller(200);
 
-    private Location depositLocation = Location.NEAR;
     private Height depositHeight = Height.HIGH;
-    private boolean currentMagnetState = false;
-    private boolean previousMagnetState = false;
-    private boolean passedMiddle = false;
     private Goal goal = Goal.STOP;
+    private boolean depositFirstLevel = false;
 
     public DepositorLift(HardwareMap map, Telemetry telemetry) {
         lift = new CachingMotor(map.get(DcMotorEx.class, "lift"));
@@ -68,48 +60,41 @@ public class DepositorLift implements Component {
 
     @Override
     public void reset() {
-//        liftDown();
         open();
-        retractDeposit();
+        retract();
+        flipIn();
         releaseSE();
     }
 
     @Override
     public void update() {
-
-//        if (goal == Goal.STOP || liftCanceller.isConditionMet())
-//            stopLift();
-//        else if (goal == Goal.UP)
-//        {
-//            if (depositHeight == Height.LOW) {
-//                goal = Goal.STOP;
-//            }
-//
-//            liftUp();
-////            currentMagnetState = !magnetSensor.getState();
-//            if (currentMagnetState != previousMagnetState) {
-//                if (depositHeight == Height.MIDDLE) {
-//                    goal = Goal.STOP;
-//                } else if (depositHeight == Height.HIGH && passedMiddle)  {
-//                    goal = Goal.STOP;
-//                } else {
-//                    passedMiddle = true;
-//                    currentMagnetState = false;
-//                    previousMagnetState = false;
-//                }
-//            }
-//        }
-//        else if (goal == Goal.DOWN)
-//        {
-//            liftDown();
-////            if (touchSensor.isPressed())
-////            {
-////                goal = Goal.STOP;
-////                passedMiddle = false;
-////                currentMagnetState = false;
-////                previousMagnetState = false;
-////            }
-//        }
+        switch(goal) {
+            case DEPLOY:
+                flipCanceller.reset();
+                setGoal(Goal.DEPLOYACTION);
+                break;
+            case DEPLOYACTION:
+                close();
+                flipOut();
+                if (flipCanceller.isConditionMet()) {
+                    if (depositFirstLevel) {
+                        extendFirstLevel();
+                    } else {
+                        extend();
+                    }
+                }
+                break;
+            case RETRACT:
+                flipCanceller.reset();
+                setGoal(Goal.RETRACTACTION);
+                break;
+            case RETRACTACTION:
+                flipIn();
+                if (flipCanceller.isConditionMet()) {
+                    retract();
+                }
+                break;
+        }
     }
 
     @Override
@@ -160,18 +145,12 @@ public class DepositorLift implements Component {
         extend.setPosition(0);
     }
 
-    public void retractExtension() {
+    public void extendFirstLevel() {
+        extend.setPosition(0.21);
+    }
+
+    public void retract() {
         extend.setPosition(1);
-    }
-
-    public void deployDeposit() {
-        flipOut();
-        extend();
-    }
-
-    public void retractDeposit() {
-        retractExtension();
-        flipIn();
     }
 
     public void flipOut() {
@@ -188,5 +167,13 @@ public class DepositorLift implements Component {
 
     public void releaseSE() {
         shippingElementGrab.setPosition(1);
+    }
+
+    public void setDepositorFirstLevel(boolean dFL) {
+        depositFirstLevel = dFL;
+    }
+
+    public boolean getDepositFirstLevel() {
+        return depositFirstLevel;
     }
 }
