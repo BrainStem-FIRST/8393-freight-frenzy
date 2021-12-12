@@ -23,8 +23,8 @@ public class Collector implements Component {
     private int sign = 1;
     private Goal goal = Goal.DEFAULT;
     private TimerCanceller deployCanceller = new TimerCanceller(200);
-    private TimerCanceller retractCanceller = new TimerCanceller(500);
-    private TimerCanceller offCanceller = new TimerCanceller(400);
+    private TimerCanceller retractCanceller = new TimerCanceller(400);
+    private TimerCanceller offCanceller = new TimerCanceller(700);
 
     public Collector(HardwareMap map) {
         collector = new CachingMotor(map.get(DcMotorEx.class, "collect"));
