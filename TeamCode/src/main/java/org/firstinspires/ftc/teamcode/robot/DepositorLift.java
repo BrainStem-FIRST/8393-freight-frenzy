@@ -37,7 +37,7 @@ public class DepositorLift implements Component {
 
     private Height depositHeight = Height.HIGH;
     private Goal goal = Goal.STOP;
-    private boolean depositFirstLevel = false;
+    private boolean depositLow = false;
 
     public DepositorLift(HardwareMap map, Telemetry telemetry) {
         lift = new CachingMotor(map.get(DcMotorEx.class, "lift"));
@@ -71,21 +71,18 @@ public class DepositorLift implements Component {
         switch(goal) {
             case DEPLOY:
                 flipCanceller.reset();
+                close();
                 setGoal(Goal.DEPLOYACTION);
                 break;
             case DEPLOYACTION:
-                close();
                 flipOut();
                 if (flipCanceller.isConditionMet()) {
-                    if (depositFirstLevel) {
-                        extendFirstLevel();
-                    } else {
-                        extend();
-                    }
+                    extend();
                 }
                 break;
             case RETRACT:
                 flipCanceller.reset();
+                openFull();
                 setGoal(Goal.RETRACTACTION);
                 break;
             case RETRACTACTION:
@@ -138,15 +135,23 @@ public class DepositorLift implements Component {
     }
 
     public void open() {
+        if (depositLow) {
+            gate.setPosition(0.4);
+        } else {
+            openFull();
+        }
+    }
+
+    public void openFull() {
         gate.setPosition(1);
     }
 
     public void extend() {
-        extend.setPosition(0);
-    }
-
-    public void extendFirstLevel() {
-        extend.setPosition(0.21);
+        if (depositLow) {
+            extend.setPosition(0.21);
+        } else {
+            extend.setPosition(0);
+        }
     }
 
     public void retract() {
@@ -169,11 +174,11 @@ public class DepositorLift implements Component {
         shippingElementGrab.setPosition(1);
     }
 
-    public void setDepositorFirstLevel(boolean dFL) {
-        depositFirstLevel = dFL;
+    public void setDepositLow(boolean dL) {
+        depositLow = dL;
     }
 
-    public boolean getDepositFirstLevel() {
-        return depositFirstLevel;
+    public boolean getDepositLow() {
+        return depositLow;
     }
 }
