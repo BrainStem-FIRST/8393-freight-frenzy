@@ -64,8 +64,8 @@ public class SampleTankDrive extends TankDrive {
 
     public static double VX_WEIGHT = 1;
     public static double OMEGA_WEIGHT = 1;
-    public static double LEFT_MULTIPLIER = 1;//
-    public static double RIGHT_MULTIPLIER = 1;//
+    public static double LEFT_MULTIPLIER = 0.97;//1.0016889589;
+    public static double RIGHT_MULTIPLIER = LEFT_MULTIPLIER;//1.0089686099;
     /*
 
      */
@@ -78,7 +78,7 @@ public class SampleTankDrive extends TankDrive {
     private TrajectoryFollower follower;
 
     private List<DcMotorEx> motors, leftMotors, rightMotors;
-    private BNO055IMU imu;
+    public BNO055IMU imu;
 
     private VoltageSensor batteryVoltageSensor;
     private Component component;
@@ -315,12 +315,16 @@ public class SampleTankDrive extends TankDrive {
 
     @Override
     public void setMotorPowers(double v, double v1) {
-        for (DcMotorEx leftMotor : leftMotors) {
-            leftMotor.setPower(v);
-        }
-        for (DcMotorEx rightMotor : rightMotors) {
-            rightMotor.setPower(v1);
-        }
+//        for (DcMotorEx leftMotor : leftMotors) {
+//            leftMotor.setPower(v);
+//        }
+//        for (DcMotorEx rightMotor : rightMotors) {
+//            rightMotor.setPower(v1);
+//        }
+        leftMotors.get(0).setPower(v);
+        rightMotors.get(0).setPower(v1);
+        rightMotors.get(1).setPower(v1);
+        leftMotors.get(1).setPower(v);
     }
 
     @Override
