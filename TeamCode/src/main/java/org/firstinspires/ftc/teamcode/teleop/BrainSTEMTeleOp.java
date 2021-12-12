@@ -135,6 +135,10 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             extended = false;
         }
 
+        if (gamepad1.y) {
+            robot.depositorLift.close();
+        }
+
         if (driver1.raiseLift > 0) {
             robot.depositorLift.liftUp();
         } else if (driver1.lowerLift > 0) {
@@ -162,16 +166,16 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         }
 
         if (driver2.depositHigh) {
-            robot.depositorLift.setDepositorFirstLevel(false);
+            robot.depositorLift.setDepositLow(false);
         } else if (driver2.depositLow) {
-            robot.depositorLift.setDepositorFirstLevel(true);
+            robot.depositorLift.setDepositLow(true);
         }
 
 //        robot.turret.autoSpinTurret(Math.toDegrees(driver2.aimTurret));
 
         telemetry.addData("Running", "Now");
         telemetry.addData("Turret encoder", robot.turret.encoderPosition());
-        telemetry.addData("Deposit first level?", robot.depositorLift.getDepositFirstLevel());
+        telemetry.addData("Deposit first level?", robot.depositorLift.getDepositLow());
         telemetry.update();
     }
 

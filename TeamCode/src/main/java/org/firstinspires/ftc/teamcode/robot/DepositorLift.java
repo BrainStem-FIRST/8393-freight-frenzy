@@ -38,7 +38,7 @@ public class DepositorLift implements Component {
 
     private BarcodePattern depositHeight = BarcodePattern.LEVELTHREE;
     private Goal goal = Goal.STOP;
-    private boolean depositFirstLevel = false;
+    private boolean depositLow = false;
 
     public DepositorLift(HardwareMap map, Telemetry telemetry) {
         lift = new CachingMotor(map.get(DcMotorEx.class, "lift"));
