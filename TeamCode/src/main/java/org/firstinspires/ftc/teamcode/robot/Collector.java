@@ -71,7 +71,8 @@ public class Collector implements Component {
         gate.setPosition(0);
     }
 
-    public void startCollection() {
+    public void
+    startCollection() {
 //        close();
         deploy();
     }
