@@ -106,12 +106,12 @@ public class TestCameraOpMode extends OpMode
         telemetry.addData("HEADING", heading);
 
         pixyCam.engage();
-        sign1 = pixyCam.read(0x51,5);
-        sign2 = pixyCam.read(0x52,5);
+        //sign1 = pixyCam.read(0x51,5);
+        //sign2 = pixyCam.read(0x52,5);
         //notice the 0xff&sign1[x], the 0xff& does an absolute value on the byte
         //the sign1[x] gets byte 1 from the query, see above comments for more info
-        telemetry.addData("X value of sign1", 0xff&sign1[1]);
-        telemetry.addData("X value of sign2", 0xff&sign2[1]);
+        //telemetry.addData("X value of sign1", 0xff&sign1[1]);
+        //telemetry.addData("X value of sign2", 0xff&sign2[1]);
 
     }
 
