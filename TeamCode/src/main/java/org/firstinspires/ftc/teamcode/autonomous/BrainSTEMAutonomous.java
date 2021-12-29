@@ -1,20 +1,24 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
-import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
-import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import org.firstinspires.ftc.teamcode.robot.BrainSTEMRobot;
+import org.firstinspires.ftc.teamcode.robot.DepositorLift;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
-
-import java.util.List;
 
 public class BrainSTEMAutonomous extends LinearOpMode {
     private static final int CYCLE_TIMES = 1;
+    private double shippingElementTheta;
+    private double shippingElementThetaLeft = Math.toRadians(200);
+    private double shippingElementThetaCenter = Math.toRadians(180);
+    private double shippingElementThetaRight = Math.toRadians(160);
+    private double depositTheta;
+    private double depositThetaWarehouse = Math.toRadians(160);
+    private double depositThetaCarousel = Math.toRadians(200);
     protected AllianceColor color = AllianceColor.BLUE;
     protected StartLocation startLocation = StartLocation.WAREHOUSE;
     private BarcodePattern pattern = BarcodePattern.LEVELTHREE;
@@ -23,46 +27,54 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         BrainSTEMRobot robot = new BrainSTEMRobot(this);
         BrainSTEMAutonomousCoordinates coordinates = new BrainSTEMAutonomousCoordinates(color, startLocation);
 
+        depositTheta = startLocation == StartLocation.WAREHOUSE ? depositThetaWarehouse : depositThetaCarousel;
+
+        robot.depositorLift.setDepositLow(true);
 //        VuforiaLocalizer vuforia = initVuforia();
 //        TFObjectDetector tfod = initTfod(vuforia);
 
-        Trajectory startTrajectory = robot.drive.trajectoryBuilder(coordinates.startPos(), true)
+        TrajectorySequence startTrajectory = robot.drive.trajectorySequenceBuilder(coordinates.startPos())
+                .setReversed(true)
                 .lineTo(coordinates.shippingElementCollect().vec())
-                .build();
-
-        Trajectory depositTrajectory = robot.drive.trajectoryBuilder(coordinates.shippingElementCollect(), true)
-                .addDisplacementMarker(0.5, 0, () -> {/*turn turret to proper angle*/})
-                .splineTo(coordinates.deposit().vec(), coordinates.depositTangent())
+                .addDisplacementMarker(() -> {robot.depositorLift.clampSE();})
+                .waitSeconds(1)
+                .UNSTABLE_addTemporalMarkerOffset(1, () -> {robot.turret.autoSpinTurret(depositThetaWarehouse);})
+                .splineToLinearHeading(coordinates.deposit(), coordinates.depositTangent())
                 .build();
 
         TrajectorySequence warehouseSequence = robot.drive.trajectorySequenceBuilder(coordinates.shippingElementCollect())
-                .addDisplacementMarker(0.25, 0, () -> {/*Turn on collector, reset turret, lift down, etc.*/})
-                .splineTo(coordinates.cycleWaypoint().vec(), coordinates.cycleParkTangent())
-                .lineTo(coordinates.cycleCollect().vec())
+                .setReversed(false)
+                .UNSTABLE_addTemporalMarkerOffset(0.25, () -> {
+                    /*Turn on collector, reset turret, lift down, etc.*/
+                })
+                .splineToSplineHeading(coordinates.cycleWaypoint1(), coordinates.cycleWaypoint1Tangent())
+                .splineToSplineHeading(coordinates.cycleWaypoint2(), coordinates.cycleForwardTangent())
+                .splineTo(coordinates.cycleCollect().vec(), coordinates.cycleForwardTangent())
                 .waitSeconds(2)
                 .setReversed(true)
                 .addDisplacementMarker(0.25, 0, () -> {/*Turn off collector, turn turret, lift up, etc.*/})
-                .lineTo(coordinates.cycleWaypoint().vec())
-                .splineTo(coordinates.deposit().vec(), coordinates.depositTangent())
+                .splineTo(coordinates.cycleWaypoint2().vec(), coordinates.cycleReverseTangent())
+                .splineToSplineHeading(coordinates.cycleWaypoint1(), coordinates.depositTangent())
+                .splineToSplineHeading(coordinates.deposit(), coordinates.depositTangent())
+                .addDisplacementMarker(() -> {robot.depositorLift.open();})
                 .waitSeconds(1.5)
                 .build();
 
         TrajectorySequence carouselSequence = robot.drive.trajectorySequenceBuilder(coordinates.shippingElementCollect())
-                .addDisplacementMarker(0.5, 0, () -> {/*turn turret to proper angle*/})
-                .splineTo(coordinates.deposit().vec(), coordinates.depositTangent())
+                .setReversed(false)
                 .addDisplacementMarker(0.4, 0, () -> {/*Turn on carousel wheel, reset turret, lift down, etc.*/})
-                .splineTo(coordinates.carouselWaypoint().vec(), coordinates.carouselWaypointTangent())
-                .setReversed(true)
-                .splineTo(coordinates.carouselDelivery().vec(), coordinates.carouselDeliveryTangent())
-                .addDisplacementMarker(() -> {/*Deliver duck*/})
+                .splineToSplineHeading(coordinates.carouselDelivery(), coordinates.carouselDeliveryTangent())
+                .addDisplacementMarker(() -> {/*Turn on carousel wheels*/})
                 .waitSeconds(5)
                 .addDisplacementMarker(() -> {/*Turn off carousel wheel*/})
+                .setReversed(true)
+                .splineToSplineHeading(coordinates.carouselWait(), coordinates.parkTangent())
                 .build();
 
-        TrajectorySequence parkSequence = robot.drive.trajectorySequenceBuilder(coordinates.parkPathStart())
+        TrajectorySequence parkSequence = robot.drive.trajectorySequenceBuilder(coordinates.parkStart(), coordinates.parkTangent())
                 .addDisplacementMarker(0.5, 0, () -> {/*Reset turret,  etc.*/})
-                .splineTo(coordinates.cycleWaypoint().vec(), coordinates.cycleParkTangent())
-                .splineTo(coordinates.park().vec(), coordinates.cycleParkTangent())
+                .splineToSplineHeading(coordinates.parkWaypoint(), coordinates.parkTangent())
+                .splineToSplineHeading(coordinates.parkEnd(), coordinates.parkTangent())
                 .build();
 
 //        robot.reset();
@@ -70,6 +82,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 //            if (tfod != null) {
 //                List<Recognition> recognitions = tfod.getRecognitions();
 //            }
+            //TODO: set theta for initial turret turn to theta variables
 
             telemetry.addData("Status", "Waiting...");
 //            telemetry.addData("IMU Calibrated during Loop?", robot.drive.getCalibrated());
@@ -84,18 +97,32 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 //        if (tfod != null) {
 //            tfod.shutdown();
 //        }
+        switch(pattern) {
+            case LEVELONE:
+                shippingElementTheta = shippingElementThetaLeft;
+                break;
+            case LEVELTWO:
+                shippingElementTheta = shippingElementThetaCenter;
+                break;
+            case LEVELTHREE:
+                shippingElementTheta = shippingElementThetaRight;
+                break;
+        }
 
         robot.drive.setPoseEstimate(coordinates.startPos());
-
-        robot.drive.followTrajectory(startTrajectory);
+        robot.drive.followTrajectorySequenceAsync(startTrajectory);
+        robot.depositorLift.setGoal(DepositorLift.Goal.DEPLOY);
+        sleep(500);
+        robot.turret.autoSpinTurret(shippingElementTheta);
+        robot.drive.waitForIdle();
+        if (pattern != BarcodePattern.LEVELONE) {
+//            robot.depositorLift.
+        }
         if (startLocation == StartLocation.WAREHOUSE) {
-            robot.drive.turn(coordinates.warehouseTurnAngle());
-            robot.drive.followTrajectory(depositTrajectory);
             for (int i = 0; i < CYCLE_TIMES; i++) {
                 robot.drive.followTrajectorySequence(warehouseSequence);
             }
         } else {
-            robot.drive.followTrajectory(depositTrajectory);
             robot.drive.followTrajectorySequence(carouselSequence);
         }
         robot.drive.followTrajectorySequence(parkSequence);

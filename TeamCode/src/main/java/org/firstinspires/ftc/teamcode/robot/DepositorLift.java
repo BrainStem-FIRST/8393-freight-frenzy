@@ -19,7 +19,7 @@ public class DepositorLift implements Component {
     }
 
     public enum Height {
-        LOW, MIDDLE, HIGH
+        LEVELONE, LEVELTWO, LEVELTHREE
     }
 
     private DcMotorEx lift;
@@ -30,12 +30,13 @@ public class DepositorLift implements Component {
 
     private static final double LIFT_UP_POWER = 0.4; //0.85
     private static final double LIFT_DOWN_POWER = -0.2; //0.4
-    private static final int LIFT_TIMEOUT = 3000;
+    private static final double LIFT_LEVELTWO_TICKS = 0;
+    private static final double LIFT_LEVELTHREE_TICKS = 0;
 
-    private TimerCanceller liftCanceller = new TimerCanceller(LIFT_TIMEOUT);
+    private TimerCanceller liftCanceller = new TimerCanceller(3000);
     private TimerCanceller flipCanceller = new TimerCanceller(200);
 
-    private Height depositHeight = Height.HIGH;
+    private Height depositHeight = Height.LEVELTHREE;
     private Goal goal = Goal.STOP;
     private boolean depositLow = false;
 
