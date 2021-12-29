@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
-import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
@@ -168,8 +167,6 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         robot.depositorLift.open();
 
         if (startLocation == StartLocation.WAREHOUSE) {
-            robot.drive.turn(coordinates.warehouseTurnAngle());
-            robot.drive.followTrajectory(depositTrajectory);
             for (int i = 0; i < CYCLE_TIMES; i++) {
                 robot.drive.followTrajectorySequence(warehouseSequence);
             }

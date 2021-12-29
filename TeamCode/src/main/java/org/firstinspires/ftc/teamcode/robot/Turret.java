@@ -31,8 +31,7 @@ public class Turret implements Component {
     @Override
     public void reset() {
         stopTurret();
-        //turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
+        turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
 
     @Override

@@ -85,7 +85,7 @@ public class BrainSTEMAutonomousCoordinates {
             cycleForwardTangent = 2 * Math.PI - cycleForwardTangent;
             cycleReverseTangent = 2 * Math.PI - cycleReverseTangent;
             carouselDeliveryTangent = 2 * Math.PI - carouselDeliveryTangent;
-            cycleParkTangent = 2 * Math.PI - cycleParkTangent;
+            parkTangent = 2 * Math.PI - parkTangent;
         }
     }
 
