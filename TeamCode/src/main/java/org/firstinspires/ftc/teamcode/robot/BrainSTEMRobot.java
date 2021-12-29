@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.SampleTankDrive;
 import org.firstinspires.ftc.teamcode.util.MinMaxAverage;
 
@@ -18,7 +19,7 @@ public class BrainSTEMRobot implements Component {
     public CarouselSpin carouselSpin;
     public Collector collector;
     public DepositorLift depositorLift;
-    public SampleTankDrive drive;
+    public SampleMecanumDrive drive;
     public Turret turret;
 
     //Instance of linear opmode to use for hwMap
@@ -47,7 +48,7 @@ public class BrainSTEMRobot implements Component {
             m.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
         }
 
-        drive = new SampleTankDrive(opMode.hardwareMap, this);
+        drive = new SampleMecanumDrive(opMode.hardwareMap, this);
 
         components = new ArrayList<>();
 

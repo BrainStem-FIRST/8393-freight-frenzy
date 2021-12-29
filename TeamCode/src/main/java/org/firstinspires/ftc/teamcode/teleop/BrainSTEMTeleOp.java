@@ -82,23 +82,23 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 
     //Loop
     public void runLoop() {
-        double drive = -gamepad1.left_stick_y;
-        double turn  = gamepad1.right_stick_x;
+        //If the x value of the left stick, the y value of the left stick, or the x value of
+        //the right stick is greater than the THRESHOLD value, move the robot
+        if ((Math.abs(leftStickX) > 0) || (Math.abs(leftStickY) > 0)
+                || Math.abs(rightStickX) > 0) {
+            //Set r equal to the magnitude of the input of the y stick in both x and y directions
+            r = Math.pow(Math.sqrt(Math.pow(leftStickX, driveInterpolationFactor) + Math.pow(leftStickY, driveInterpolationFactor)), driveInterpolationFactor);
 
-        // Combine drive and turn for blended motion.
-        double left  = drive + turn;
-        double right = drive - turn;
+            //Calculate the angle between the y value of the left stick and the x value of the left stick
+            theta = Math.atan2(leftStickY, leftStickX);
+            //Calculate how much the robot needs to turn by, by determining if the right stick is above
+            //the dead zone THRESHOLD
+            turning = Math.abs(rightStickX) > 0 ? rightStickX : 0;
 
-        // Normalize the values so neither exceed +/- 1.0
-        double max = Math.max(Math.abs(left), Math.abs(right));
-        if (max > 1.0)
-        {
-            left /= max;
-            right /= max;
-        }
-
-        // Output the safe values to the motor drives.
-        robot.drive.setMotorPowers(left, right);
+            //Set the speeds of the motors using the magnitude of the speed and the angle
+            robot.drive.setPower(r, theta, turning);
+        } else
+            robot.drive.setMotorPowers(0, 0, 0, 0);
 
         if(driver1.collectOn) {
             retractFirstTime = false;
