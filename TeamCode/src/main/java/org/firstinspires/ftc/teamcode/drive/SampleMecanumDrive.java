@@ -27,10 +27,13 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.teamcode.robot.Component;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceBuilder;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceRunner;
+import org.firstinspires.ftc.teamcode.util.AxesSigns;
+import org.firstinspires.ftc.teamcode.util.BNO055IMUUtil;
 import org.firstinspires.ftc.teamcode.util.LynxModuleUtil;
 
 import java.util.ArrayList;
@@ -75,9 +78,15 @@ public class SampleMecanumDrive extends MecanumDrive implements Component {
 
     private BNO055IMU imu;
     private VoltageSensor batteryVoltageSensor;
+    private Component component;
 
     public SampleMecanumDrive(HardwareMap hardwareMap) {
+        this(hardwareMap, null);
+    }
+
+    public SampleMecanumDrive(HardwareMap hardwareMap, Component component) {
         super(kV, kA, kStatic, TRACK_WIDTH, TRACK_WIDTH, LATERAL_MULTIPLIER);
+        this.component = component;
 
         follower = new HolonomicPIDVAFollower(TRANSLATIONAL_PID, TRANSLATIONAL_PID, HEADING_PID,
                 new Pose2d(0.5, 0.5, Math.toRadians(5.0)), 0.5);
@@ -98,7 +107,7 @@ public class SampleMecanumDrive extends MecanumDrive implements Component {
 
         // TODO: if your hub is mounted vertically, remap the IMU axes so that the z-axis points
         // upward (normal to the floor) using a command like the following:
-        // BNO055IMUUtil.remapAxes(imu, AxesOrder.XYZ, AxesSigns.NPN);
+        BNO055IMUUtil.remapAxes(imu, AxesOrder.XZY, AxesSigns.NPN);
 
         leftFront = hardwareMap.get(DcMotorEx.class, "fl");
         leftRear = hardwareMap.get(DcMotorEx.class, "bl");
@@ -142,13 +151,21 @@ public class SampleMecanumDrive extends MecanumDrive implements Component {
         return new TrajectoryBuilder(startPose, reversed, VEL_CONSTRAINT, ACCEL_CONSTRAINT);
     }
 
-    public TrajectoryBuilder trajectoryBuilder(Pose2d startPose, double startHeading) {
-        return new TrajectoryBuilder(startPose, startHeading, VEL_CONSTRAINT, ACCEL_CONSTRAINT);
+    public TrajectoryBuilder trajectoryBuilder(Pose2d startPose, double startTangent) {
+        return new TrajectoryBuilder(startPose, startTangent, VEL_CONSTRAINT, ACCEL_CONSTRAINT);
     }
 
     public TrajectorySequenceBuilder trajectorySequenceBuilder(Pose2d startPose) {
         return new TrajectorySequenceBuilder(
                 startPose,
+                VEL_CONSTRAINT, ACCEL_CONSTRAINT,
+                MAX_ANG_VEL, MAX_ANG_ACCEL
+        );
+    }
+
+    public TrajectorySequenceBuilder trajectorySequenceBuilder(Pose2d startPose, double startTangent) {
+        return new TrajectorySequenceBuilder(
+                startPose, startTangent,
                 VEL_CONSTRAINT, ACCEL_CONSTRAINT,
                 MAX_ANG_VEL, MAX_ANG_ACCEL
         );
@@ -202,6 +219,7 @@ public class SampleMecanumDrive extends MecanumDrive implements Component {
         updatePoseEstimate();
         DriveSignal signal = trajectorySequenceRunner.update(getPoseEstimate(), getPoseVelocity());
         if (signal != null) setDriveSignal(signal);
+        if (component != null) component.update();
     }
 
     @Override
@@ -286,6 +304,20 @@ public class SampleMecanumDrive extends MecanumDrive implements Component {
         leftRear.setPower(v1);
         rightRear.setPower(v2);
         rightFront.setPower(v3);
+    }
+
+    public void setPower(double r, double angle, double turning)
+    {
+        //Calculate speeds for motors
+        double addValue = r * (Math.sin(angle) * Math.abs(Math.sin(angle))
+                + Math.cos(angle) * Math.abs(Math.cos(angle)));
+        double subValue = r * (Math.sin(angle) * Math.abs(Math.sin(angle))
+                - Math.cos(angle) * Math.abs(Math.cos(angle)));
+
+        leftFront.setPower(Math.round((addValue + turning) * 100) / 100.0);
+        rightFront.setPower(Math.round((subValue - turning) * 100) / 100.0);
+        leftRear.setPower(Math.round((subValue + turning) * 100) / 100.0);
+        rightRear.setPower(Math.round((addValue - turning) * 100) / 100.0);
     }
 
     @Override

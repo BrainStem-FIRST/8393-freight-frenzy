@@ -19,7 +19,7 @@ import org.firstinspires.ftc.teamcode.drive.SampleTankDrive;
 public class LocalizationTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
-        SampleTankDrive drive = new SampleTankDrive(hardwareMap);
+        SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
 
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
@@ -42,7 +42,6 @@ public class LocalizationTest extends LinearOpMode {
             telemetry.addData("heading", poseEstimate.getHeading());
             telemetry.addData("leftInches", drive.getWheelPositions().get(0));
             telemetry.addData("rightInches", drive.getWheelPositions().get(1));
-            telemetry.addData("imuOrientation", drive.imu.getAngularOrientation().toString());
             telemetry.update();
         }
     }
