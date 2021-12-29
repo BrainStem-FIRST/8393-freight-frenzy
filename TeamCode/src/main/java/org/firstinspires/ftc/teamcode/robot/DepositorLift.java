@@ -101,11 +101,11 @@ public class DepositorLift implements Component {
 
     public void liftUp() {
         close();
-        lift.setPower(LIFT_UP_POWER);
+        lift.setPower(-LIFT_UP_POWER);
     }
 
     public void liftDown() {
-        lift.setPower(LIFT_DOWN_POWER);
+        lift.setPower(-LIFT_DOWN_POWER);
     }
 
     public void stopLift() {

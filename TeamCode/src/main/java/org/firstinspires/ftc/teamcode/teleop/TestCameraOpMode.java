@@ -12,11 +12,16 @@ import com.arcrobotics.ftclib.geometry.Translation2d;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 import com.spartronics4915.lib.T265Camera;
 
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.SampleTankDrive;
+
+import java.util.Arrays;
+import java.util.List;
 
 @TeleOp(name="Test T265", group="Iterative Opmode")
 public class TestCameraOpMode extends OpMode
@@ -34,16 +39,27 @@ public class TestCameraOpMode extends OpMode
     public double y = 0;
     public double heading = 0;
 
-    SampleMecanumDrive drive;
+    public double block_x;
+    public double block_y;
+
+
+    public double team_element_x;
+    public double team_element_y;
+
 
     I2cDeviceSynch pixyCam;
+
+    SampleMecanumDrive drive;
 
 
     @Override
     public void init() {
         if (slamra == null) {
-            slamra = new T265Camera(new Transform2d(), 0.0, "T265", hardwareMap.appContext);
+            slamra = new T265Camera(new Transform2d(), 0.0, hardwareMap.appContext);
         }
+        drive = new SampleMecanumDrive(hardwareMap);
+
+        drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     @Override
@@ -53,15 +69,27 @@ public class TestCameraOpMode extends OpMode
     @Override
     public void start() {
         slamra.start();
-        drive = new SampleMecanumDrive(hardwareMap);
+
         pixyCam = hardwareMap.i2cDeviceSynch.get("Pixy Cam");
 
-        drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        pixyCam.engage();
+
+
+        telemetry.addData("I2C Connection Info", pixyCam.getConnectionInfo());
+
+        telemetry.update();
+
+
+
+
+
     }
 
     @Override
     public void loop() {
 
+        //tele op movement
         drive.setWeightedDrivePower(
                 new Pose2d(
                         -gamepad1.left_stick_y,
@@ -71,6 +99,10 @@ public class TestCameraOpMode extends OpMode
         );
 
         drive.update();
+
+
+
+
         final int robotRadius = 9; // inches
 
         TelemetryPacket packet = new TelemetryPacket();
@@ -105,13 +137,20 @@ public class TestCameraOpMode extends OpMode
         telemetry.addData("Y VALUE", y);
         telemetry.addData("HEADING", heading);
 
-        pixyCam.engage();
-        //sign1 = pixyCam.read(0x51,5);
-        //sign2 = pixyCam.read(0x52,5);
-        //notice the 0xff&sign1[x], the 0xff& does an absolute value on the byte
-        //the sign1[x] gets byte 1 from the query, see above comments for more info
-        //telemetry.addData("X value of sign1", 0xff&sign1[1]);
-        //telemetry.addData("X value of sign2", 0xff&sign2[1]);
+
+        block_x = 0xff&pixyCam.read(0x50,5)[1];
+        block_y = 0xff&pixyCam.read(0x50,5)[2];
+
+        team_element_x = 0xff&pixyCam.read(0x51,5)[1];
+        team_element_y = 0xff&pixyCam.read(0x51,5)[2];
+
+        telemetry.addData("PIXY ON", pixyCam.getHealthStatus());
+        telemetry.addData("X value of block", block_x);
+        telemetry.addData("X value of team element", team_element_x);
+
+
+        telemetry.update();
+
 
     }
 

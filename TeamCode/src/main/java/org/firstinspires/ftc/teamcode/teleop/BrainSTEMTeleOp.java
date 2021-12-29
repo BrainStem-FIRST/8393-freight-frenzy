@@ -184,6 +184,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         //DRIVER 1//
         ////////////
 
+
         driver1.drive = gamepad1.left_stick_y;
         driver1.turn = gamepad1.right_stick_x;
 
@@ -194,6 +195,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         driver1.lowerLift = gamepad1.left_trigger;
         depositButton.update(gamepad1.x);
         driver1.retract = gamepad1.b;
+
 
         ////////////
         //DRIVER 2//
