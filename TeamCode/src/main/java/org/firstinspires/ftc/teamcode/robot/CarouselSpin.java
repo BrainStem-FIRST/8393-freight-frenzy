@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
+import org.checkerframework.checker.units.qual.A;
 import org.firstinspires.ftc.teamcode.autonomous.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.CachingMotor;
 
@@ -14,7 +15,9 @@ import org.firstinspires.ftc.teamcode.util.CachingMotor;
 public class CarouselSpin implements Component {
     private DcMotorEx spin;
 
-    public static double SPIN_POWER = 0.3; //+ for blue, - for red
+    //+ for blue, - for red
+    public static double SPIN_POWER = 0.3;
+    public static double AUTO_SPIN_POWER = 0.2;
 
     public CarouselSpin(HardwareMap map) {
         spin = map.get(DcMotorEx.class, "spin");
@@ -39,6 +42,10 @@ public class CarouselSpin implements Component {
     @Override
     public String test() {
         return null;
+    }
+
+    public void autonomousSpinCarousel(AllianceColor color) {
+        spin.setPower(color == AllianceColor.BLUE ? AUTO_SPIN_POWER : -AUTO_SPIN_POWER);
     }
 
     public void spinCarousel(AllianceColor color) {

@@ -21,7 +21,7 @@ public class Turret implements Component {
     public Turret (HardwareMap map) {
         turret = new CachingMotor(map.get(DcMotorEx.class, "turret"));
 
-        limit = map.digitalChannel.get("limit");
+        limit = map.digitalChannel.get("turretLimit");
 
         turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
