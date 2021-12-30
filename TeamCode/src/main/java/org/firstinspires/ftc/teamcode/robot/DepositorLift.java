@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.robot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.PwmControl;
@@ -38,7 +39,6 @@ public class DepositorLift implements Component {
 
     private BarcodePattern depositHeight = BarcodePattern.LEVELTHREE;
     private Goal goal = Goal.STOP;
-    private boolean depositLow = false;
 
     public DepositorLift(HardwareMap map, Telemetry telemetry) {
         lift = new CachingMotor(map.get(DcMotorEx.class, "lift"));

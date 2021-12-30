@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.teleop;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.autonomous.AllianceColor;
+import org.firstinspires.ftc.teamcode.autonomous.BarcodePattern;
 import org.firstinspires.ftc.teamcode.robot.BrainSTEMRobot;
 import org.firstinspires.ftc.teamcode.robot.Collector;
 import org.firstinspires.ftc.teamcode.robot.DepositorLift;
@@ -140,9 +141,9 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         }
 
         if (driver1.raiseLift > 0) {
-            robot.depositorLift.liftUp();
+            robot.depositorLift.manualLiftUp();
         } else if (driver1.lowerLift > 0) {
-            robot.depositorLift.liftDown();
+            robot.depositorLift.manualLiftDown();
         } else {
             robot.depositorLift.stopLift();
         }
@@ -166,16 +167,16 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         }
 
         if (driver2.depositHigh) {
-            robot.depositorLift.setDepositLow(false);
+            robot.depositorLift.setHeight(BarcodePattern.LEVELTHREE);
         } else if (driver2.depositLow) {
-            robot.depositorLift.setDepositLow(true);
+            robot.depositorLift.setHeight(BarcodePattern.LEVELONE);
         }
 
 //        robot.turret.autoSpinTurret(Math.toDegrees(driver2.aimTurret));
 
         telemetry.addData("Running", "Now");
         telemetry.addData("Turret encoder", robot.turret.encoderPosition());
-        telemetry.addData("Deposit first level?", robot.depositorLift.getDepositLow());
+        telemetry.addData("Deposit level", robot.depositorLift.getHeight());
         telemetry.update();
     }
 
