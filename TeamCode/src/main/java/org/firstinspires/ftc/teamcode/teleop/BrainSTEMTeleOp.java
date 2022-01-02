@@ -131,6 +131,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         }
 
         if (driver1.retract) {
+            //robot.turret.goToZeroPosition();
             robot.depositorLift.setGoal(DepositorLift.Goal.RETRACT);
             extended = false;
         }

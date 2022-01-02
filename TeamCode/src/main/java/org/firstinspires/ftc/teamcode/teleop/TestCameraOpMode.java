@@ -125,8 +125,8 @@ public class TestCameraOpMode extends OpMode
 
         field.strokeCircle(translation.getX(), translation.getY(), robotRadius);
         double arrowX = rotation.getCos() * robotRadius, arrowY = rotation.getSin() * robotRadius;
-        double x1 = translation.getX() + arrowX  / 2, y1 = translation.getY() + arrowY / 2;
-        double x2 = translation.getX() + arrowX, y2 = translation.getY() + arrowY;
+        double x1 = x + arrowX  / 2, y1 = y + arrowY / 2;
+        double x2 = x + arrowX, y2 = y + arrowY;
         field.strokeLine(x1, y1, x2, y2);
 
         dashboard.sendTelemetryPacket(packet);

@@ -31,11 +31,20 @@ public class Turret implements Component {
     @Override
     public void reset() {
         stopTurret();
+        //turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
     }
 
     @Override
     public void update() {
 
+    }
+
+    public void goToZeroPosition()
+    {
+        turret.setTargetPosition(0);
+        turret.setPower(TURRET_POWER);
+        //turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     @Override
@@ -52,6 +61,7 @@ public class Turret implements Component {
         turret.setTargetPosition(0);
         turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
+
 
     public void autoSpinTurret(double theta) { //theta is in degrees, following the unit circle (0 is facing right on the x-axis)
         theta = Angle.normDelta(theta);
