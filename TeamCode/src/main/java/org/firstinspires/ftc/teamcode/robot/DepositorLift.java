@@ -54,10 +54,17 @@ public class DepositorLift implements Component {
         lift.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, new PIDFCoefficients(15, 0, 0, 0));
         lift.setDirection(DcMotorSimple.Direction.REVERSE);
 
+<<<<<<< HEAD
         gate.setPwmRange(new PwmControl.PwmRange(1200,2380));
         flip.setPwmRange(new PwmControl.PwmRange(660,1920));
         extend.setPwmRange(new PwmControl.PwmRange(720,1460));
         shippingElementGrab.setPwmRange(new PwmControl.PwmRange(870,1920));
+=======
+        gate.setPwmRange(new PwmControl.PwmRange(800,1850));
+        flip.setPwmRange(new PwmControl.PwmRange(930,2140));
+        extend.setPwmRange(new PwmControl.PwmRange(1700,2360));
+        shippingElementGrab.setPwmRange(new PwmControl.PwmRange(1530,2520));
+>>>>>>> 1ddd168f35dcbb771fdc8459245f3faa67e5978e
     }
 
     @Override
@@ -118,7 +125,7 @@ public class DepositorLift implements Component {
 
     public void manualLiftUp() {
         close();
-        lift.setPower(-LIFT_UP_POWER);
+        lift.setPower(LIFT_UP_POWER);
     }
 
     public void manualLiftDown() {
