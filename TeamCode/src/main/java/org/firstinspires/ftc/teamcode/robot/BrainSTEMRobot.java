@@ -56,7 +56,7 @@ public class BrainSTEMRobot implements Component {
         carouselSpin = new CarouselSpin(map);
         collector = new Collector(map);
         depositorLift = new DepositorLift(map, opMode.telemetry);
-        turret = new Turret(map);
+        turret = new Turret(map, depositorLift, opMode.telemetry);
 
         //Add all components to an array list so they can be easily initialized
         components.add(carouselSpin);
@@ -79,9 +79,9 @@ public class BrainSTEMRobot implements Component {
         time.reset();
         mma.update(currentTime);
 
-        opMode.telemetry.addLine("Update time: " + currentTime);
-        opMode.telemetry.addLine(mma.toString());
-        opMode.telemetry.update();
+//        opMode.telemetry.addLine("Update time: " + currentTime);
+//        opMode.telemetry.addLine(mma.toString());
+//        opMode.telemetry.update();
     }
 
     @Override

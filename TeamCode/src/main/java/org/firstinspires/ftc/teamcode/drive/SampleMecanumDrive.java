@@ -21,6 +21,7 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
@@ -132,6 +133,8 @@ public class SampleMecanumDrive extends MecanumDrive implements Component {
         }
 
         // TODO: reverse any motors using DcMotor.setDirection()
+        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftRear.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // TODO: if desired, use setLocalizer() to change the localization method
         // for instance, setLocalizer(new ThreeTrackingWheelLocalizer(...));
@@ -300,20 +303,6 @@ public class SampleMecanumDrive extends MecanumDrive implements Component {
         leftRear.setPower(v1);
         rightRear.setPower(v2);
         rightFront.setPower(v3);
-    }
-
-    public void setPower(double r, double angle, double turning)
-    {
-        //Calculate speeds for motors
-        double addValue = r * (Math.sin(angle) * Math.abs(Math.sin(angle))
-                + Math.cos(angle) * Math.abs(Math.cos(angle)));
-        double subValue = r * (Math.sin(angle) * Math.abs(Math.sin(angle))
-                - Math.cos(angle) * Math.abs(Math.cos(angle)));
-
-        leftFront.setPower(Math.round((addValue + turning) * 100) / 100.0);
-        rightFront.setPower(Math.round((subValue - turning) * 100) / 100.0);
-        leftRear.setPower(Math.round((subValue + turning) * 100) / 100.0);
-        rightRear.setPower(Math.round((addValue - turning) * 100) / 100.0);
     }
 
     @Override

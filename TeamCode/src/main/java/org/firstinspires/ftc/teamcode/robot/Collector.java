@@ -32,8 +32,8 @@ public class Collector implements Component {
         gate = new CachingServo(map.get(ServoImplEx.class, "collectorGate"));
 
         collector.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        tilt.setPwmRange(new PwmControl.PwmRange(970,1570));
-        gate.setPwmRange(new PwmControl.PwmRange(787,1475));
+        tilt.setPwmRange(new PwmControl.PwmRange(640,1145));
+        gate.setPwmRange(new PwmControl.PwmRange(1240,1900));
 
         collector.setDirection(DcMotorSimple.Direction.REVERSE);
     }

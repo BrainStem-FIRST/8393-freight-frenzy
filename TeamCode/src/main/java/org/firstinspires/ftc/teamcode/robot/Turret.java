@@ -5,20 +5,28 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.util.CachingMotor;
+
+import static java.lang.Thread.sleep;
 
 public class Turret implements Component {
     private DcMotorEx turret;
     private DigitalChannel limit;
 
-    private static final double TURRET_DEGREE_RANGE = Math.toRadians(140);
-    private static final int TURRET_ENCODER_RANGE = 1023;
-    private static final double MIN_ANGLE = Math.toRadians(-65);
-    private static final double MAX_ANGLE = Math.toRadians(65);
-    private static final double TURRET_POWER = 0.3;
+    private static final double TURRET_DEGREE_CONVERSION = Math.toRadians(145);
+    private static final int TURRET_ENCODER_CONVERSION = 1073;
+    private static final double MIN_ANGLE = Math.toRadians(70);
+    private static final double MAX_ANGLE = Math.toRadians(290);
+    private static final double TURRET_POWER = 0.5;
+    private DepositorLift dL;
+    private Telemetry telemetry;
 
-    public Turret (HardwareMap map) {
+    public Turret (HardwareMap map, DepositorLift dL, Telemetry telemetry) {
+        this.dL = dL;
+        this.telemetry = telemetry;
         turret = new CachingMotor(map.get(DcMotorEx.class, "turret"));
 
         limit = map.digitalChannel.get("turretLimit");
@@ -26,6 +34,7 @@ public class Turret implements Component {
         turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        turret.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, new PIDFCoefficients(15,0,0,0));
     }
 
     @Override
@@ -43,28 +52,38 @@ public class Turret implements Component {
         return null;
     }
 
-    public void resetTurret() {
+    public void resetTurret() throws InterruptedException {
+        dL.flipMid();
+        sleep(400);
         while(!limit.getState()) {
-            turret.setPower(0.3);
+            turret.setPower(0.5);
         }
         turret.setPower(0);
         turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        turret.setTargetPosition(0);
-        turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        autoSpinTurret(Math.toRadians(180));
+        while(turret.isBusy()) {
+            telemetry.addData("Current", turret.getCurrentPosition());
+            telemetry.addData("Target", turret.getTargetPosition());
+            telemetry.update();
+        }
+        telemetry.clearAll();
+        telemetry.addLine("Out of loop");
+        telemetry.update();
+        dL.flipIn();
     }
 
     public void autoSpinTurret(double theta) { //theta is in degrees, following the unit circle (0 is facing right on the x-axis)
-        theta = Angle.normDelta(theta);
         if (theta < MIN_ANGLE || theta > MAX_ANGLE) {
             turret.setPower(0);
             return;
         }
 
         //TODO: negate theta if needed
-        double targetPosition = theta * TURRET_ENCODER_RANGE / TURRET_DEGREE_RANGE;
-
+        double targetPosition = -(theta - Math.toRadians(35)) * ((double) TURRET_ENCODER_CONVERSION) / TURRET_DEGREE_CONVERSION;
 
         turret.setTargetPosition((int) Math.round(targetPosition));
+        turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         turret.setPower(TURRET_POWER);
     }
 
@@ -78,5 +97,9 @@ public class Turret implements Component {
 
     public int encoderPosition() {
         return turret.getCurrentPosition();
+    }
+
+    public boolean limitState() {
+        return limit.getState();
     }
 }
