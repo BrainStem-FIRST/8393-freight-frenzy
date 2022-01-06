@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.robot;
 
+import android.util.Log;
+
 import com.acmerobotics.roadrunner.util.Angle;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -32,9 +34,9 @@ public class Turret implements Component {
         limit = map.digitalChannel.get("turretLimit");
 
         turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        turret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        turret.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, new PIDFCoefficients(15,0,0,0));
+//        turret.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, new PIDFCoefficients(15,0,0,0));
     }
 
     @Override
@@ -53,6 +55,7 @@ public class Turret implements Component {
     }
 
     public void resetTurret() throws InterruptedException {
+        Log.d("Turret", "Resetting");
         dL.flipMid();
         sleep(400);
         while(!limit.getState()) {
@@ -61,16 +64,26 @@ public class Turret implements Component {
         turret.setPower(0);
         turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        autoSpinTurret(Math.toRadians(180));
+//        autoSpinTurret(Math.toRadians(180));
         while(turret.isBusy()) {
-            telemetry.addData("Current", turret.getCurrentPosition());
-            telemetry.addData("Target", turret.getTargetPosition());
+//            telemetry.addData("Current", turret.getCurrentPosition());
+//            telemetry.addData("Target", turret.getTargetPosition());
             telemetry.update();
         }
         telemetry.clearAll();
         telemetry.addLine("Out of loop");
         telemetry.update();
         dL.flipIn();
+    }
+
+    public void setTurretHold() {
+        turret.setTargetPosition(0);
+        turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        turret.setTargetPositionTolerance(3);
+    }
+
+    public void setTurretHoldPower() {
+        turret.setPower(0.1);
     }
 
     public void autoSpinTurret(double theta) { //theta is in degrees, following the unit circle (0 is facing right on the x-axis)
@@ -82,8 +95,7 @@ public class Turret implements Component {
         //TODO: negate theta if needed
         double targetPosition = -(theta - Math.toRadians(35)) * ((double) TURRET_ENCODER_CONVERSION) / TURRET_DEGREE_CONVERSION;
 
-        turret.setTargetPosition((int) Math.round(targetPosition));
-        turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         turret.setPower(TURRET_POWER);
     }
 
@@ -96,7 +108,8 @@ public class Turret implements Component {
     }
 
     public int encoderPosition() {
-        return turret.getCurrentPosition();
+        return 0;
+        //return turret.getCurrentPosition();
     }
 
     public boolean limitState() {

@@ -1,21 +1,28 @@
 package org.firstinspires.ftc.teamcode.robot;
 
+import com.qualcomm.hardware.rev.RevTouchSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.autonomous.BarcodePattern;
 import org.firstinspires.ftc.teamcode.util.CachingMotor;
 import org.firstinspires.ftc.teamcode.util.CachingServo;
 import org.firstinspires.ftc.teamcode.util.TimerCanceller;
 
 public class DepositorLift implements Component {
-    public enum Goal {
+    public enum DepositorGoal {
         DEFAULT, DEPLOY, DEPLOYACTION, RETRACT, RETRACTACTION
+    }
+
+    public enum LiftGoal {
+        STOP, LIFTUP, LIFTUPACTION, LIFTDOWN, LIFTDOWNACTION
+    }
+
+    public enum DepositorHeight {
+        LOW, MIDDLE, HIGH, CAP
     }
 
     private DcMotorEx lift;
@@ -23,20 +30,25 @@ public class DepositorLift implements Component {
     private ServoImplEx flip;
     private ServoImplEx extend;
     private ServoImplEx shippingElementGrab;
-    private DigitalChannel limit;
+    private RevTouchSensor touch;
 
-    private static final double LIFT_UP_POWER = 0.85; //0.85
-    private static final double LIFT_DOWN_POWER = -0.7; //0.4
+    private static final double LIFT_UP_POWER = 1;
+    private static final double LIFT_HOLD_POWER = 0.2;
+    private static final double LIFT_STOP_POWER = 0;
+    private static final double LIFT_DOWN_POWER = -0.4;
     private static final int LIFT_LEVELONE_TICKS = 0;
     private static final int LIFT_LEVELTWO_TICKS = 170;
     private static final int LIFT_LEVELTHREE_TICKS = 350;
+    private static final int LIFT_CAP_TICKS = 400;
     private int liftTicks = LIFT_LEVELTHREE_TICKS;
 
     private TimerCanceller liftCanceller = new TimerCanceller(2000);
     private TimerCanceller flipCanceller = new TimerCanceller(200);
 
-    private BarcodePattern depositHeight = BarcodePattern.LEVELTHREE;
-    private Goal goal = Goal.DEFAULT;
+    private DepositorHeight depositHeight = DepositorHeight.HIGH;
+    private DepositorGoal depositorGoal = DepositorGoal.DEFAULT;
+    private LiftGoal liftGoal = LiftGoal.STOP;
+    private boolean hold = false;
 
     public DepositorLift(HardwareMap map, Telemetry telemetry) {
         lift = new CachingMotor(map.get(DcMotorEx.class, "lift"));
@@ -44,11 +56,12 @@ public class DepositorLift implements Component {
         flip = new CachingServo(map.get(ServoImplEx.class, "flip"));
         extend = new CachingServo(map.get(ServoImplEx.class, "extend"));
         shippingElementGrab = new CachingServo(map.get(ServoImplEx.class, "SEGrab"));
-        limit = map.digitalChannel.get("liftLimit");
+        touch = map.get(RevTouchSensor.class, "liftTouch");
 
         lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lift.setTargetPositionTolerance(3);
 //        lift.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, new PIDFCoefficients(15, 0, 0, 0));
 
         gate.setPwmRange(new PwmControl.PwmRange(1200,2300));
@@ -59,7 +72,7 @@ public class DepositorLift implements Component {
 
     @Override
     public void reset() {
-        autoLiftDown();
+        setGoal(LiftGoal.LIFTDOWN);
         open();
         retract();
         flipMid();
@@ -68,13 +81,11 @@ public class DepositorLift implements Component {
 
     @Override
     public void update() {
-        switch(goal) {
-            case DEFAULT:
-                break;
+        switch(depositorGoal) {
             case DEPLOY:
                 flipCanceller.reset();
                 close();
-                setGoal(Goal.DEPLOYACTION);
+                setGoal(DepositorGoal.DEPLOYACTION);
                 break;
             case DEPLOYACTION:
                 flipOut();
@@ -85,7 +96,7 @@ public class DepositorLift implements Component {
             case RETRACT:
                 flipCanceller.reset();
                 openFull();
-                setGoal(Goal.RETRACTACTION);
+                setGoal(DepositorGoal.RETRACTACTION);
                 break;
             case RETRACTACTION:
                 flipIn();
@@ -94,6 +105,37 @@ public class DepositorLift implements Component {
                 }
                 break;
         }
+        switch(liftGoal) {
+            case LIFTUP:
+                close();
+                if (depositHeight == DepositorHeight.LOW) {
+                    break;
+                }
+                lift.setTargetPosition(liftTicks);
+                lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                liftCanceller.reset();
+                setGoal(LiftGoal.LIFTUPACTION);
+                break;
+            case LIFTUPACTION:
+                lift.setPower(LIFT_UP_POWER);
+//                    if (liftCanceller.isConditionMet()) {
+//                        setGoal(LiftGoal.STOP);
+//                    }
+                break;
+            case LIFTDOWN:
+                lift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                liftCanceller.reset();
+                setGoal(LiftGoal.LIFTDOWNACTION);
+                break;
+            case LIFTDOWNACTION:
+                lift.setPower(LIFT_DOWN_POWER);
+                if(touch.isPressed() || liftCanceller.isConditionMet()) {
+                    lift.setPower(0);
+                    openFull();
+                    setGoal(LiftGoal.STOP);
+                    break;
+                }
+        }
     }
 
     @Override
@@ -101,30 +143,17 @@ public class DepositorLift implements Component {
         return null;
     }
 
-    public void autoLiftUp() {
-        if (depositHeight != BarcodePattern.LEVELONE) {
-            close();
-            lift.setTargetPosition(liftTicks);
-            lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            lift.setPower(LIFT_UP_POWER);
-            while (lift.isBusy());
-//            holdLift();
-//            lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
-    }
-
-    public void autoLiftDown() {
-        lift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        liftCanceller.reset();
-        while(!limit.getState() && !liftCanceller.isConditionMet()) {
-            lift.setPower(LIFT_DOWN_POWER);
-        }
-        stopLift();
-    }
-
     public void manualLiftUp() {
         close();
         lift.setPower(LIFT_UP_POWER);
+    }
+
+    public void manualLiftHold() {
+        if (hold) {
+            lift.setPower(LIFT_HOLD_POWER);
+        } else {
+            lift.setPower(LIFT_STOP_POWER);
+        }
     }
 
     public void manualLiftDown() {
@@ -135,34 +164,47 @@ public class DepositorLift implements Component {
         lift.setPower(0);
     }
 
-    public Goal getGoal() {
-        return goal;
+    public LiftGoal getLiftGoal() {
+        return liftGoal;
     }
 
-    public void setGoal(Goal goal) {
-        if (this.goal != goal)
+    public void setGoal(LiftGoal liftGoal) {
+        if (this.liftGoal != liftGoal)
         {
-            liftCanceller.reset();
-            this.goal = goal;
+            this.liftGoal = liftGoal;
         }
     }
 
-    public void setHeight(BarcodePattern height) {
+    public DepositorGoal getDepositorGoal() {
+        return depositorGoal;
+    }
+
+    public void setGoal(DepositorGoal depositorGoal) {
+        if (this.depositorGoal != depositorGoal)
+        {
+            this.depositorGoal = depositorGoal;
+        }
+    }
+
+    public void setHeight(DepositorHeight height) {
         depositHeight = height;
         switch(height) {
-            case LEVELONE:
+            case LOW:
                 liftTicks = LIFT_LEVELONE_TICKS;
                 break;
-            case LEVELTWO:
+            case MIDDLE:
                 liftTicks = LIFT_LEVELTWO_TICKS;
                 break;
-            case LEVELTHREE:
+            case HIGH:
                 liftTicks = LIFT_LEVELTHREE_TICKS;
+                break;
+            case CAP:
+                liftTicks = LIFT_CAP_TICKS;
                 break;
         }
     }
 
-    public BarcodePattern getHeight() {
+    public DepositorHeight getHeight() {
         return depositHeight;
     }
 
@@ -171,7 +213,7 @@ public class DepositorLift implements Component {
     }
 
     public void open() {
-        if (depositHeight == BarcodePattern.LEVELONE) {
+        if (depositHeight == DepositorHeight.LOW || depositHeight == DepositorHeight.MIDDLE) {
             gate.setPosition(0.4);
         } else {
             openFull();
@@ -183,7 +225,7 @@ public class DepositorLift implements Component {
     }
 
     public void extend() {
-        if (depositHeight == BarcodePattern.LEVELONE) {
+        if (depositHeight == DepositorHeight.LOW) {
             extend.setPosition(0.21);
         } else {
             extend.setPosition(0);
@@ -196,6 +238,10 @@ public class DepositorLift implements Component {
 
     public void flipOut() {
         flip.setPosition(1);
+    }
+
+    public void flipCap() {
+        flip.setPosition(0.75);
     }
 
     public void flipMid() {
@@ -218,7 +264,15 @@ public class DepositorLift implements Component {
         return lift.getCurrentPosition();
     }
 
-    public boolean limitState() {
-        return limit.getState();
+    public boolean isTouchPressed() {
+        return touch.isPressed();
+    }
+
+    public void setHold(boolean isHolding) {
+        hold = isHolding;
+    }
+
+    public double getLiftPower() {
+        return lift.getPower();
     }
 }
