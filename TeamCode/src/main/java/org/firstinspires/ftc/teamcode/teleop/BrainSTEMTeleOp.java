@@ -4,11 +4,9 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.autonomous.AllianceColor;
-import org.firstinspires.ftc.teamcode.autonomous.BarcodePattern;
 import org.firstinspires.ftc.teamcode.robot.BrainSTEMRobot;
 import org.firstinspires.ftc.teamcode.robot.Collector;
 import org.firstinspires.ftc.teamcode.robot.DepositorLift;
-import org.firstinspires.ftc.teamcode.robot.Direction;
 
 public class BrainSTEMTeleOp extends LinearOpMode {
     //Initializes joystick storage variables'
@@ -51,21 +49,21 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         public boolean upCollector = false;
         private boolean retract;
         private double drive, turn, strafe;
+        private boolean teamShippingElement;
     }
 
     private class Driver2 {
-        private boolean spinCarousel;
+        private float spinCarousel;
         private double aimTurret;
         private float turretLeft;
         private float turretRight;
-        private boolean teamShippingElement;
-        private boolean depositHigh, depositLow;
+        private boolean depositHigh, depositMid, depositLow;
     }
 
     @Override
     public void runOpMode() throws InterruptedException {
         robot = new BrainSTEMRobot(this);
-
+//        robot.turret.setTurretHold();
         robot.reset();
         robot.depositorLift.clampSE();
         while (!opModeIsActive() && !isStopRequested()) {
@@ -94,6 +92,8 @@ public class BrainSTEMTeleOp extends LinearOpMode {
                 )
         );
 
+//        robot.turret.setTurretHoldPower();
+
         if(driver1.collectOn) {
             retractFirstTime = false;
             if (!deployFirstTime) {
@@ -119,26 +119,37 @@ public class BrainSTEMTeleOp extends LinearOpMode {
                 robot.depositorLift.open();
                 extended = false;
             } else {
-                robot.depositorLift.setGoal(DepositorLift.Goal.DEPLOY);
+                robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
                 extended = true;
             }
         }
 
         if (driver1.retract) {
-            robot.depositorLift.setGoal(DepositorLift.Goal.RETRACT);
+            robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
             extended = false;
-            robot.turret.autoSpinTurret(Math.PI);
+//            robot.turret.autoSpinTurret(Math.PI);
         } else {
-            robot.turret.autoSpinTurret(driver2.aimTurret);
+//            robot.turret.autoSpinTurret(driver2.aimTurret);
         }
 
         if (driver1.raiseLift > 0) {
-            robot.depositorLift.autoLiftUp();
+            robot.depositorLift.setHold(true);
+            robot.depositorLift.manualLiftUp();
+            telemetry.addLine("Lifting up");
         } else if (driver1.lowerLift > 0) {
-            robot.depositorLift.autoLiftDown();
+            robot.depositorLift.setHold(false);
+            robot.depositorLift.setGoal(DepositorLift.LiftGoal.LIFTDOWN);
+            telemetry.addLine("Lifting down");
+        } else if (robot.depositorLift.getLiftGoal() == DepositorLift.LiftGoal.STOP) {
+            robot.depositorLift.manualLiftHold();
+            telemetry.addLine("Holding");
         }
+//        } else if (!robot.depositorLift.limitState()) {
+//            robot.depositorLift.manualLiftHold();
+//            telemetry.addLine("Holding");
+//        }
 
-        if (driver2.spinCarousel) {
+        if (driver2.spinCarousel > 0) {
             robot.carouselSpin.spinCarousel(color);
         } else {
             robot.carouselSpin.stopCarousel();
@@ -152,22 +163,25 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 //            robot.turret.stopTurret();
 //        }
 
-        if (driver2.teamShippingElement) {
+        if (driver1.teamShippingElement) {
             robot.depositorLift.releaseSE();
         }
 
         if (driver2.depositHigh) {
-            robot.depositorLift.setHeight(BarcodePattern.LEVELTHREE);
+            robot.depositorLift.setHeight(DepositorLift.DepositorHeight.HIGH);
+        } else if (driver2.depositMid) {
+            robot.depositorLift.setHeight(DepositorLift.DepositorHeight.MIDDLE);
         } else if (driver2.depositLow) {
-            robot.depositorLift.setHeight(BarcodePattern.LEVELONE);
+            robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LOW);
         }
 
         telemetry.addData("Running", "Now");
-        telemetry.addData("Turret encoder", robot.turret.encoderPosition());
+//        telemetry.addData("Turret encoder", robot.turret.encoderPosition());
         telemetry.addData("Deposit level", robot.depositorLift.getHeight());
         telemetry.addData("Lift encoder", robot.depositorLift.getLiftTicks());
-        telemetry.addData("Lift limit", robot.depositorLift.limitState());
+        telemetry.addData("Lift limit", robot.depositorLift.isTouchPressed());
         telemetry.addData("Turret limit", robot.turret.limitState());
+        telemetry.addData("Lift power", robot.depositorLift.getLiftPower());
         telemetry.update();
     }
 
@@ -183,14 +197,15 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         driver1.lowerLift = gamepad1.left_trigger;
         depositButton.update(gamepad1.x);
         driver1.retract = gamepad1.b;
+        driver1.teamShippingElement = gamepad1.y;
 
         ////////////
         //DRIVER 2//
         ////////////
 
-        driver2.turretLeft = gamepad2.left_trigger;
-        driver2.turretRight = gamepad2.right_trigger;
-        driver2.spinCarousel = gamepad2.x;
+//        driver2.turretLeft = gamepad2.left_trigger;
+//        driver2.turretRight = gamepad2.right_trigger;
+        driver2.spinCarousel = gamepad2.right_trigger;
         if (gamepad2.right_stick_x > 0 && gamepad2.right_stick_y > 0) {
             driver2.aimTurret = Math.atan(gamepad2.right_stick_y / gamepad2.right_stick_x) + Math.PI / 2;
         } else if (gamepad2.right_stick_x < 0 && gamepad2.right_stick_y > 0) {
@@ -202,8 +217,8 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         } else {
             driver2.aimTurret = Math.PI;
         }
-        driver2.teamShippingElement = gamepad2.y;
         driver2.depositHigh = gamepad2.dpad_up;
+        driver2.depositMid = gamepad2.dpad_left;
         driver2.depositLow = gamepad2.dpad_down;
     }
 }

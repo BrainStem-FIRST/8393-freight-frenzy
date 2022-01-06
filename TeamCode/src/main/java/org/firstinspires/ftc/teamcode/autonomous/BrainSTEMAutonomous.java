@@ -32,7 +32,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 
         depositTheta = startLocation == StartLocation.WAREHOUSE ? depositThetaWarehouse : depositThetaCarousel;
 
-        robot.depositorLift.setHeight(BarcodePattern.LEVELONE);
+        robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LOW);
 //        VuforiaLocalizer vuforia = initVuforia();
 //        TFObjectDetector tfod = initTfod(vuforia);
 
@@ -48,7 +48,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         TrajectorySequence warehouseSequence = robot.drive.trajectorySequenceBuilder(coordinates.shippingElementCollect())
                 .setReversed(false)
                 .UNSTABLE_addTemporalMarkerOffset(0.1, () -> {
-                    robot.depositorLift.setGoal(DepositorLift.Goal.RETRACT);
+                    robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
                 })
                 .splineToSplineHeading(coordinates.cycleWaypoint1(), coordinates.cycleWaypoint1Tangent())
                 .UNSTABLE_addTemporalMarkerOffset(0.1, () -> {
@@ -56,8 +56,8 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                 })
                 .splineToSplineHeading(coordinates.cycleWaypoint2(), coordinates.cycleForwardTangent())
                 .UNSTABLE_addTemporalMarkerOffset(0.1, () -> {
-                    robot.depositorLift.autoLiftDown();
-                    robot.depositorLift.setHeight(BarcodePattern.LEVELTHREE);
+                    robot.depositorLift.setGoal(DepositorLift.LiftGoal.LIFTDOWN);
+                    robot.depositorLift.setHeight(DepositorLift.DepositorHeight.HIGH);
                     robot.collector.setGoal(Collector.Goal.DEPLOY);
                 })
                 .splineTo(coordinates.cycleCollect().vec(), coordinates.cycleForwardTangent())
@@ -68,11 +68,11 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                 })
                 .splineTo(coordinates.cycleWaypoint2().vec(), coordinates.cycleReverseTangent())
                 .UNSTABLE_addTemporalMarkerOffset(0.1, () -> {
-                    robot.depositorLift.setGoal(DepositorLift.Goal.DEPLOY);
+                    robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
                 })
                 .splineToSplineHeading(coordinates.cycleWaypoint1(), coordinates.depositTangent())
                 .UNSTABLE_addTemporalMarkerOffset(0.1, () -> {
-                    robot.depositorLift.autoLiftUp();
+                    robot.depositorLift.setGoal(DepositorLift.LiftGoal.LIFTUP);
                     robot.turret.autoSpinTurret(depositTheta);
                 })
                 .splineToSplineHeading(coordinates.deposit(), coordinates.depositTangent())
@@ -103,7 +103,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 
         TrajectorySequence parkSequence = robot.drive.trajectorySequenceBuilder(coordinates.parkStart(), coordinates.parkTangent())
                 .UNSTABLE_addTemporalMarkerOffset(0.1, () -> {
-                    robot.depositorLift.setGoal(DepositorLift.Goal.RETRACT);
+                    robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
                 })
                 .splineToSplineHeading(coordinates.cycleWaypoint1(), coordinates.cycleWaypoint1Tangent())
                 .UNSTABLE_addTemporalMarkerOffset(0.1, () -> {
@@ -111,7 +111,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                 })
                 .splineToSplineHeading(coordinates.cycleWaypoint2(), coordinates.cycleForwardTangent())
                 .UNSTABLE_addTemporalMarkerOffset(0.1, () -> {
-                    robot.depositorLift.autoLiftDown();
+                    robot.depositorLift.setGoal(DepositorLift.LiftGoal.LIFTDOWN);
                 })
                 .splineTo(coordinates.cycleCollect().vec(), coordinates.cycleForwardTangent())
                 .build();
@@ -161,9 +161,19 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 
         robot.drive.followTrajectoryAsync(preloadTrajectory);
         //needs to be here bc shipping element has to be at L1
-        robot.depositorLift.setHeight(pattern);
+        switch(pattern) {
+            case LEVELONE:
+                robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LOW);
+                break;
+            case LEVELTWO:
+                robot.depositorLift.setHeight(DepositorLift.DepositorHeight.MIDDLE);
+                break;
+            case LEVELTHREE:
+                robot.depositorLift.setHeight(DepositorLift.DepositorHeight.HIGH);
+                break;
+        }
         if (pattern != BarcodePattern.LEVELONE) {
-            robot.depositorLift.autoLiftUp();
+            robot.depositorLift.setGoal(DepositorLift.LiftGoal.LIFTUP);
         }
         robot.turret.autoSpinTurret(depositThetaWarehouse);
         robot.drive.waitForIdle();
