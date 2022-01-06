@@ -76,7 +76,9 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                     robot.turret.autoSpinTurret(depositTheta);
                 })
                 .splineToSplineHeading(coordinates.deposit(), coordinates.depositTangent())
-                .addDisplacementMarker(() -> {robot.depositorLift.open();})
+                .addDisplacementMarker(() -> {
+                    robot.depositorLift.open();
+                })
                 .waitSeconds(1.5)
                 .build();
 
@@ -135,7 +137,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 //        if (tfod != null) {
 //            tfod.shutdown();
 //        }
-        switch(pattern) {
+        switch (pattern) {
             case LEVELONE:
                 shippingElementTheta = shippingElementThetaLeft;
                 break;
@@ -154,14 +156,14 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         sleep(500);
 //        robot.turret.autoSpinTurret(shippingElementTheta);
         robot.drive.waitForIdle();
-        while(opModeIsActive())
+        while (opModeIsActive())
 
-        robot.depositorLift.clampSE();
+            robot.depositorLift.clampSE();
         sleep(1000);
 
         robot.drive.followTrajectoryAsync(preloadTrajectory);
         //needs to be here bc shipping element has to be at L1
-        switch(pattern) {
+        switch (pattern) {
             case LEVELONE:
                 robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LOW);
                 break;
@@ -180,9 +182,9 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         robot.depositorLift.open();
 
 //        if (startLocation == StartLocation.WAREHOUSE) {
-            for (int i = 0; i < CYCLE_TIMES; i++) {
-                robot.drive.followTrajectorySequence(warehouseSequence);
-            }
+        for (int i = 0; i < CYCLE_TIMES; i++) {
+            robot.drive.followTrajectorySequence(warehouseSequence);
+        }
 //        } else {
 //            robot.drive.followTrajectorySequence(carouselSequence);
 //        }
@@ -216,7 +218,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 
         if (tfod != null) {
             tfod.activate();
-            tfod.setZoom(2, 16.0/9.0);
+            tfod.setZoom(2, 16.0 / 9.0);
         }
 
         return tfod;

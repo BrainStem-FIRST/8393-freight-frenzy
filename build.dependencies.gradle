@@ -3,8 +3,11 @@ repositories {
     google() // Needed for androidx
     jcenter()  // Needed for tensorflow-lite
     maven { url = 'https://maven.brott.dev/' }
+<<<<<<< HEAD
     maven { url = "https://maven.0x778.tk" }
 
+=======
+>>>>>>> 6840fee774c97d32d2446726f6628fe0b511cc3d
     flatDir {
         dirs rootProject.file('libs')
     }
@@ -22,7 +25,14 @@ dependencies {
     implementation 'org.tensorflow:tensorflow-lite-task-vision:0.2.0'
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'org.firstinspires.ftc:gameAssets-FreightFrenzy:1.0.0'
+<<<<<<< HEAD
     implementation 'com.spartronics4915.lib:ftc265:2.1.9'
 
     implementation 'com.acmerobotics.dashboard:dashboard:0.4.3'
 }
+=======
+
+    implementation 'com.acmerobotics.dashboard:dashboard:0.4.3'
+}
+
+>>>>>>> 6840fee774c97d32d2446726f6628fe0b511cc3d

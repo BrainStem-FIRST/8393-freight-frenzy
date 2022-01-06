@@ -37,8 +37,7 @@ public class BrainSTEMRobot implements Component {
      *
      * @param opMode the op mode
      */
-    public BrainSTEMRobot(LinearOpMode opMode)
-    {
+    public BrainSTEMRobot(LinearOpMode opMode) {
         this.opMode = opMode;
 
         //Get instance of hardware map and telemetry
@@ -68,7 +67,7 @@ public class BrainSTEMRobot implements Component {
 
     @Override
     public void update() {
-        for (LynxModule m: allHubs) {
+        for (LynxModule m : allHubs) {
             m.getBulkData();
         }
 
@@ -91,8 +90,7 @@ public class BrainSTEMRobot implements Component {
             component.reset();
     }
 
-    public String test()
-    {
+    public String test() {
         String failures = "";
         for (Component component : components)
             failures += component.test();
