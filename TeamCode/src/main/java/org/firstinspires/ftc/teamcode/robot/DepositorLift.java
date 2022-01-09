@@ -64,18 +64,11 @@ public class DepositorLift implements Component {
         lift.setTargetPositionTolerance(3);
 //        lift.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, new PIDFCoefficients(15, 0, 0, 0));
 
-<<<<<<< HEAD
         gate.setPwmRange(new PwmControl.PwmRange(1200,2380));
         flip.setPwmRange(new PwmControl.PwmRange(660,1920));
         extend.setPwmRange(new PwmControl.PwmRange(720,1460));
         shippingElementGrab.setPwmRange(new PwmControl.PwmRange(870,1920));
 
-=======
-        gate.setPwmRange(new PwmControl.PwmRange(1200,2300));
-        flip.setPwmRange(new PwmControl.PwmRange(660,1920));
-        extend.setPwmRange(new PwmControl.PwmRange(720,1460));
-        shippingElementGrab.setPwmRange(new PwmControl.PwmRange(870,1920));
->>>>>>> 6840fee774c97d32d2446726f6628fe0b511cc3d
     }
 
     @Override
@@ -169,11 +162,7 @@ public class DepositorLift implements Component {
     }
 
     public void stopLift() {
-<<<<<<< HEAD
         lift.setPower(0.0);
-=======
-        lift.setPower(0);
->>>>>>> 6840fee774c97d32d2446726f6628fe0b511cc3d
     }
 
     public LiftGoal getLiftGoal() {
@@ -287,8 +276,4 @@ public class DepositorLift implements Component {
     public double getLiftPower() {
         return lift.getPower();
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 6840fee774c97d32d2446726f6628fe0b511cc3d

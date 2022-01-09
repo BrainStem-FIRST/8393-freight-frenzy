@@ -42,10 +42,8 @@ public class Turret implements Component {
     @Override
     public void reset() {
         stopTurret();
-<<<<<<< HEAD
         turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-=======
->>>>>>> 6840fee774c97d32d2446726f6628fe0b511cc3d
+
     }
 
     @Override
@@ -53,16 +51,6 @@ public class Turret implements Component {
 
     }
 
-<<<<<<< HEAD
-    public void goToZeroPosition()
-    {
-        turret.setTargetPosition(0);
-        turret.setPower(TURRET_POWER);
-        //turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-    }
-
-=======
->>>>>>> 6840fee774c97d32d2446726f6628fe0b511cc3d
     @Override
     public String test() {
         return null;
@@ -100,10 +88,6 @@ public class Turret implements Component {
         turret.setPower(0.1);
     }
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 6840fee774c97d32d2446726f6628fe0b511cc3d
     public void autoSpinTurret(double theta) { //theta is in degrees, following the unit circle (0 is facing right on the x-axis)
         if (theta < MIN_ANGLE || theta > MAX_ANGLE) {
             turret.setPower(0);
