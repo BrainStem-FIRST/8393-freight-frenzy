@@ -7,10 +7,7 @@ import com.arcrobotics.ftclib.geometry.Translation2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-<<<<<<< HEAD
 import com.spartronics4915.lib.T265Camera;
-=======
->>>>>>> 6840fee774c97d32d2446726f6628fe0b511cc3d
 
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.SampleTankDrive;
@@ -31,7 +28,6 @@ public class LocalizationTest extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-<<<<<<< HEAD
         if (slamra == null) {
             slamra = new T265Camera(new Transform2d(), 0.0, hardwareMap.appContext);
         }
@@ -43,11 +39,7 @@ public class LocalizationTest extends LinearOpMode {
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         slamra.start();
-=======
-        SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
 
-        drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
->>>>>>> 6840fee774c97d32d2446726f6628fe0b511cc3d
 
         waitForStart();
 
@@ -76,7 +68,6 @@ public class LocalizationTest extends LinearOpMode {
             heading = up.pose.getHeading();
 
             Pose2d poseEstimate = drive.getPoseEstimate();
-<<<<<<< HEAD
             telemetry.addData("x_rr", poseEstimate.getX());
             telemetry.addData("y_rr", poseEstimate.getY());
             telemetry.addData("heading_rr", Math.toDegrees(poseEstimate.getHeading()));
@@ -90,13 +81,7 @@ public class LocalizationTest extends LinearOpMode {
             telemetry.addData("Y VALUE_cam", y);
             telemetry.addData("HEADING_cam", Math.toDegrees(heading));
 
-=======
-            telemetry.addData("x", poseEstimate.getX());
-            telemetry.addData("y", poseEstimate.getY());
-            telemetry.addData("heading", poseEstimate.getHeading());
-            telemetry.addData("leftInches", drive.getWheelPositions().get(0));
-            telemetry.addData("rightInches", drive.getWheelPositions().get(1));
->>>>>>> 6840fee774c97d32d2446726f6628fe0b511cc3d
+
             telemetry.update();
         }
     }
