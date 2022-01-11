@@ -89,7 +89,7 @@ public class BrainSTEMAutonomousCoordinates {
 
             flipHeading(shippingElementTangent);
             flipHeading(depositTangent);
-            flipHeading(cycleWaypoint1Tangent = 2 * Math.PI - cycleWaypoint1Tangent);
+            flipHeading(cycleWaypoint1Tangent);
             flipHeading(cycleForwardTangent);
             flipHeading(cycleReverseTangent);
             flipHeading(carouselDeliveryTangent);
