@@ -73,7 +73,7 @@ public class BrainSTEMAutonomousCoordinates {
         shippingElementWaypoint = startPos.minus(shippingElementWaypointOffset);
         shippingElementCollect = startPos.minus(shippingElementCollectOffset);
 
-        if(color == AllianceColor.RED) {
+        if (color == AllianceColor.RED) {
             startPos = new Pose2d(startPos.getX(), -startPos.getY(), flipHeading(startPos.getHeading()));
             shippingElementWaypoint = new Pose2d(shippingElementWaypoint.getX(), -shippingElementWaypoint.getY(), flipHeading(shippingElementWaypoint.getHeading()));
             shippingElementCollect = new Pose2d(shippingElementCollect.getX(), -shippingElementCollect.getY(), flipHeading(shippingElementCollect.getHeading()));
@@ -89,7 +89,7 @@ public class BrainSTEMAutonomousCoordinates {
 
             flipHeading(shippingElementTangent);
             flipHeading(depositTangent);
-            flipHeading(cycleWaypoint1Tangent = 2 * Math.PI  - cycleWaypoint1Tangent);
+            flipHeading(cycleWaypoint1Tangent = 2 * Math.PI - cycleWaypoint1Tangent);
             flipHeading(cycleForwardTangent);
             flipHeading(cycleReverseTangent);
             flipHeading(carouselDeliveryTangent);
@@ -97,35 +97,81 @@ public class BrainSTEMAutonomousCoordinates {
         }
     }
 
-    public Pose2d startPos() { return startPos; }
-    public Pose2d shippingElementWaypoint() { return shippingElementWaypoint; }
-    public Pose2d shippingElementCollect() { return shippingElementCollect; }
-    public Pose2d deposit() { return deposit; }
+    public Pose2d startPos() {
+        return startPos;
+    }
 
-    public Pose2d cycleWaypoint1() { return cycleWaypoint1; }
-    public Pose2d cycleWaypoint2() { return cycleWaypoint2; }
-    public Pose2d cycleCollect() { return cycleCollect; }
+    public Pose2d shippingElementWaypoint() {
+        return shippingElementWaypoint;
+    }
+
+    public Pose2d shippingElementCollect() {
+        return shippingElementCollect;
+    }
+
+    public Pose2d deposit() {
+        return deposit;
+    }
+
+    public Pose2d cycleWaypoint1() {
+        return cycleWaypoint1;
+    }
+
+    public Pose2d cycleWaypoint2() {
+        return cycleWaypoint2;
+    }
+
+    public Pose2d cycleCollect() {
+        return cycleCollect;
+    }
 
     public Pose2d carouselWait() {
         return carouselWait;
     }
-    public Pose2d carouselDelivery() { return carouselDelivery; }
 
-    public Pose2d parkStart() { return parkStart; }
-    public Pose2d parkWaypoint() { return parkWaypoint; }
-    public Pose2d parkEnd() { return parkEnd; }
+    public Pose2d carouselDelivery() {
+        return carouselDelivery;
+    }
+
+    public Pose2d parkStart() {
+        return parkStart;
+    }
+
+    public Pose2d parkWaypoint() {
+        return parkWaypoint;
+    }
+
+    public Pose2d parkEnd() {
+        return parkEnd;
+    }
 
     public double shippingElementTangent() {
         return shippingElementTangent;
     }
-    public double depositTangent() { return depositTangent; }
-    public double cycleWaypoint1Tangent() { return cycleWaypoint1Tangent; }
-    public double cycleForwardTangent() { return cycleForwardTangent; }
-    public double cycleReverseTangent() { return cycleReverseTangent; }
+
+    public double depositTangent() {
+        return depositTangent;
+    }
+
+    public double cycleWaypoint1Tangent() {
+        return cycleWaypoint1Tangent;
+    }
+
+    public double cycleForwardTangent() {
+        return cycleForwardTangent;
+    }
+
+    public double cycleReverseTangent() {
+        return cycleReverseTangent;
+    }
+
     public double carouselDeliveryTangent() {
         return carouselDeliveryTangent;
     }
-    public double parkTangent() { return parkTangent; }
+
+    public double parkTangent() {
+        return parkTangent;
+    }
 
     private double flipHeading(double heading) { // radians
         return Angle.norm(2.0 * Math.PI - heading);

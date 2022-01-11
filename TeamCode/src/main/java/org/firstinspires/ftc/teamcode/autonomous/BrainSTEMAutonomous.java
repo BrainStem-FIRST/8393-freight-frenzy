@@ -76,7 +76,9 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                     robot.turret.autoSpinTurret(depositTheta);
                 })
                 .splineToSplineHeading(coordinates.deposit(), coordinates.depositTangent())
-                .addDisplacementMarker(() -> {robot.depositorLift.open();})
+                .addDisplacementMarker(() -> {
+                    robot.depositorLift.open();
+                })
                 .waitSeconds(1.5)
                 .build();
 
@@ -120,8 +122,6 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         while (!opModeIsActive() && !isStopRequested()) {
             robot.pixie.update();
             telemetry.addData("Status", "Waiting...");
-            telemetry.addData("Marker x", robot.pixie.team_element_x);
-            telemetry.addData("Marker y", robot.pixie.team_element_y);
             telemetry.addData("Barcode Pattern", pattern);
             telemetry.update();
         }
@@ -177,9 +177,9 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         robot.depositorLift.open();
 
 //        if (startLocation == StartLocation.WAREHOUSE) {
-            for (int i = 0; i < CYCLE_TIMES; i++) {
-                robot.drive.followTrajectorySequence(warehouseSequence);
-            }
+        for (int i = 0; i < CYCLE_TIMES; i++) {
+            robot.drive.followTrajectorySequence(warehouseSequence);
+        }
 //        } else {
 //            robot.drive.followTrajectorySequence(carouselSequence);
 //        }
