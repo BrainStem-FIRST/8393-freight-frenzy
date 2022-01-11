@@ -83,6 +83,12 @@ public class Turret implements Component {
         turret.setTargetPositionTolerance(3);
     }
 
+    public void backToZeroPosition() {
+        turret.setTargetPosition(1);
+        turret.setPower(TURRET_POWER);
+        turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    }
+
     public void setTurretHoldPower() {
         turret.setPower(0.1);
     }
