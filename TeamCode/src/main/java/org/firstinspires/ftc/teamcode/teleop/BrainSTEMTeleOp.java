@@ -155,6 +155,11 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             robot.carouselSpin.stopCarousel();
         }
 
+        if(gamepad2.a)
+        {
+            robot.turret.backToZeroPosition();
+        }
+
 //        if (driver2.turretLeft > 0) {
 //            robot.turret.spinTurret(Direction.LEFT);
 //        } else if (driver2.turretRight > 0) {
@@ -182,6 +187,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         telemetry.addData("Lift limit", robot.depositorLift.isTouchPressed());
         telemetry.addData("Turret limit", robot.turret.limitState());
         telemetry.addData("Lift power", robot.depositorLift.getLiftPower());
+        telemetry.addData("Turret Encoder Value", robot.turret.encoderPosition());
         telemetry.update();
     }
 
@@ -198,6 +204,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         depositButton.update(gamepad1.x);
         driver1.retract = gamepad1.b;
         driver1.teamShippingElement = gamepad1.y;
+
 
         ////////////
         //DRIVER 2//
