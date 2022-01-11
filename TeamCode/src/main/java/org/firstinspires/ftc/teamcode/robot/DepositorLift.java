@@ -35,6 +35,7 @@ public class DepositorLift implements Component {
     private static final double LIFT_UP_POWER = 1;
     private static final double LIFT_HOLD_POWER = 0.2;
     private static final double LIFT_STOP_POWER = 0;
+    private static final double LIFT_DOWN_POWER_SLOW = -0.05;
     private static final double LIFT_DOWN_POWER = -0.4;
     private static final int LIFT_LEVELONE_TICKS = 0;
     private static final int LIFT_LEVELTWO_TICKS = 170;
@@ -49,6 +50,7 @@ public class DepositorLift implements Component {
     private DepositorGoal depositorGoal = DepositorGoal.DEFAULT;
     private LiftGoal liftGoal = LiftGoal.STOP;
     private boolean hold = false;
+    private boolean cap = false;
 
     public DepositorLift(HardwareMap map, Telemetry telemetry) {
         lift = new CachingMotor(map.get(DcMotorEx.class, "lift"));
@@ -67,7 +69,7 @@ public class DepositorLift implements Component {
         gate.setPwmRange(new PwmControl.PwmRange(1200,2300));
         flip.setPwmRange(new PwmControl.PwmRange(660,1920));
         extend.setPwmRange(new PwmControl.PwmRange(720,1460));
-        shippingElementGrab.setPwmRange(new PwmControl.PwmRange(870,1920));
+        shippingElementGrab.setPwmRange(new PwmControl.PwmRange(870,2050));
     }
 
     @Override
@@ -88,7 +90,11 @@ public class DepositorLift implements Component {
                 setGoal(DepositorGoal.DEPLOYACTION);
                 break;
             case DEPLOYACTION:
-                flipOut();
+                if (cap) {
+                    flipCap();
+                } else {
+                    flipOut();
+                }
                 if (flipCanceller.isConditionMet()) {
                     extend();
                 }
@@ -154,6 +160,10 @@ public class DepositorLift implements Component {
         } else {
             lift.setPower(LIFT_STOP_POWER);
         }
+    }
+
+    public void slowLiftDown() {
+        lift.setPower(LIFT_DOWN_POWER_SLOW);
     }
 
     public void manualLiftDown() {
@@ -241,7 +251,7 @@ public class DepositorLift implements Component {
     }
 
     public void flipCap() {
-        flip.setPosition(0.75);
+        flip.setPosition(0.7976190476);
     }
 
     public void flipMid() {
@@ -270,6 +280,10 @@ public class DepositorLift implements Component {
 
     public void setHold(boolean isHolding) {
         hold = isHolding;
+    }
+
+    public void setCap(boolean isCapping) {
+        cap = isCapping;
     }
 
     public double getLiftPower() {

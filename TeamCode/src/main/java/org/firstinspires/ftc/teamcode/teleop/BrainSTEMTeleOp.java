@@ -27,6 +27,8 @@ public class BrainSTEMTeleOp extends LinearOpMode {
     private double driveInterpolationFactor = 3;
 
     private ToggleButton collectOnButton = new ToggleButton();
+    private ToggleButton capButton1 = new ToggleButton();
+    private ToggleButton capButton2 = new ToggleButton();
 
     private StickyButton depositButton = new StickyButton();
 
@@ -43,8 +45,10 @@ public class BrainSTEMTeleOp extends LinearOpMode {
     private class Driver1 {
         private boolean toggleReverseDrive;
         private boolean collectOn;
+        private boolean gateOverride;
         private boolean reverseCollect;
         private float raiseLift;
+        private boolean lowerLiftSlow;
         private float lowerLift;
         public boolean upCollector = false;
         private boolean retract;
@@ -108,6 +112,13 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             }
         }
 
+        if (driver1.gateOverride) {
+            telemetry.addLine("overriding");
+            robot.collector.setGateOverride(true);
+        } else {
+            robot.collector.setGateOverride(false);
+        }
+
         if (driver1.reverseCollect) {
             robot.collector.setSign(-1);
         } else {
@@ -136,6 +147,10 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             robot.depositorLift.setHold(true);
             robot.depositorLift.manualLiftUp();
             telemetry.addLine("Lifting up");
+        } else if (driver1.lowerLiftSlow) {
+            robot.depositorLift.setHold(false);
+            robot.depositorLift.slowLiftDown();
+            telemetry.addLine("Lifting down slow");
         } else if (driver1.lowerLift > 0) {
             robot.depositorLift.setHold(false);
             robot.depositorLift.setGoal(DepositorLift.LiftGoal.LIFTDOWN);
@@ -175,6 +190,12 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LOW);
         }
 
+        if (capButton1.getState()) {
+            robot.depositorLift.setCap(true);
+        } else {
+            robot.depositorLift.setCap(false);
+        }
+
         telemetry.addData("Running", "Now");
 //        telemetry.addData("Turret encoder", robot.turret.encoderPosition());
         telemetry.addData("Deposit level", robot.depositorLift.getHeight());
@@ -195,9 +216,12 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         driver1.reverseCollect = gamepad1.left_bumper;
         driver1.raiseLift = gamepad1.right_trigger;
         driver1.lowerLift = gamepad1.left_trigger;
+        driver1.lowerLiftSlow = gamepad1.dpad_down;
         depositButton.update(gamepad1.x);
         driver1.retract = gamepad1.b;
         driver1.teamShippingElement = gamepad1.y;
+        capButton1.update(gamepad1.a);
+        driver1.gateOverride = gamepad1.dpad_up;
 
         ////////////
         //DRIVER 2//
@@ -220,5 +244,6 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         driver2.depositHigh = gamepad2.dpad_up;
         driver2.depositMid = gamepad2.dpad_left;
         driver2.depositLow = gamepad2.dpad_down;
+        capButton2.update(gamepad2.a);
     }
 }
