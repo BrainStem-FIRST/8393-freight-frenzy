@@ -37,15 +37,14 @@ public class CameraT265 implements Component{
         if (slamra == null) {
             slamra = new T265Camera(new Transform2d(), 0.0, map.appContext);
         }
-
-        slamra.stop();
-
-        slamra.start();
     }
 
 
     @Override
     public void reset() {
+    }
+
+    public void start() {
         slamra.stop();
         slamra.start();
     }

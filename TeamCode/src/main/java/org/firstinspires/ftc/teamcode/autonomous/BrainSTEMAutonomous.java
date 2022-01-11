@@ -121,6 +121,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 //        robot.reset();
         while (!opModeIsActive() && !isStopRequested()) {
             robot.pixie.update();
+            pattern = robot.pixie.tsePos();
             telemetry.addData("Status", "Waiting...");
             telemetry.addData("Barcode Pattern", pattern);
             telemetry.update();
