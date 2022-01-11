@@ -11,6 +11,8 @@ import org.firstinspires.ftc.teamcode.util.CachingMotor;
 import org.firstinspires.ftc.teamcode.util.CachingServo;
 import org.firstinspires.ftc.teamcode.util.TimerCanceller;
 
+import java.util.Timer;
+
 public class Collector implements Component {
     public enum Goal {
         DEFAULT, DEPLOY, DEPLOYACTION, RETRACT, RETRACTACTION, OFF
@@ -22,7 +24,8 @@ public class Collector implements Component {
     private static final double COLLECT_POWER = 1;
     private int sign = 1;
     private Goal goal = Goal.DEFAULT;
-    private TimerCanceller deployCanceller = new TimerCanceller(200);
+    private boolean gateOverride = false;
+    private TimerCanceller deployCanceller = new TimerCanceller(75);
     private TimerCanceller retractCanceller = new TimerCanceller(400);
     private TimerCanceller offCanceller = new TimerCanceller(700);
 
@@ -32,7 +35,7 @@ public class Collector implements Component {
         gate = new CachingServo(map.get(ServoImplEx.class, "collectorGate"));
 
         collector.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        tilt.setPwmRange(new PwmControl.PwmRange(640,1145));
+        tilt.setPwmRange(new PwmControl.PwmRange(1900,2400));
         gate.setPwmRange(new PwmControl.PwmRange(1240,1900));
 
         collector.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -57,7 +60,11 @@ public class Collector implements Component {
             case DEPLOYACTION:
                 deploy();
                 if (deployCanceller.isConditionMet()) {
-                    close();
+                    if (gateOverride) {
+                        open();
+                    } else {
+                        close();
+                    }
                     on();
                 }
                 break;
@@ -95,11 +102,11 @@ public class Collector implements Component {
     }
 
     public void deploy() {
-        tilt.setPosition(0);
+        tilt.setPosition(1);
     }
 
     public void retract() {
-        tilt.setPosition(1);
+        tilt.setPosition(0);
     }
 
     public void close() {
@@ -116,5 +123,17 @@ public class Collector implements Component {
 
     public void setGoal(Goal goal) {
         this.goal = goal;
+    }
+
+    public Goal getGoal() {
+        return goal;
+    }
+
+    public double getGatePosition() {
+        return gate.getPosition();
+    }
+
+    public void setGateOverride(boolean override) {
+        gateOverride = override;
     }
 }

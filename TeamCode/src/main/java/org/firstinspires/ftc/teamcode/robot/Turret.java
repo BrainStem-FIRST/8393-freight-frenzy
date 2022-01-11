@@ -34,6 +34,7 @@ public class Turret implements Component {
         limit = map.digitalChannel.get("turretLimit");
 
         turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 //        turret.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, new PIDFCoefficients(15,0,0,0));
@@ -57,15 +58,18 @@ public class Turret implements Component {
 
     public void resetTurret() throws InterruptedException {
         Log.d("Turret", "Resetting");
+        dL.setHold(true);
         dL.flipMid();
+        dL.manualLiftUp();
         sleep(400);
+        dL.manualLiftHold();
         while(!limit.getState()) {
             turret.setPower(0.5);
         }
         turret.setPower(0);
         turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-//        autoSpinTurret(Math.toRadians(180));
+        autoSpinTurret(Math.toRadians(180));
         while(turret.isBusy()) {
 //            telemetry.addData("Current", turret.getCurrentPosition());
 //            telemetry.addData("Target", turret.getTargetPosition());
@@ -75,6 +79,10 @@ public class Turret implements Component {
         telemetry.addLine("Out of loop");
         telemetry.update();
         dL.flipIn();
+        dL.setGoal(DepositorLift.LiftGoal.LIFTDOWN);
+        while(dL.getLiftGoal() != DepositorLift.LiftGoal.STOP) {
+            dL.update();
+        }
     }
 
     public void setTurretHold() {
@@ -102,7 +110,8 @@ public class Turret implements Component {
         //TODO: negate theta if needed
         double targetPosition = -(theta - Math.toRadians(35)) * ((double) TURRET_ENCODER_CONVERSION) / TURRET_DEGREE_CONVERSION;
 
-//        turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        turret.setTargetPosition((int)Math.round(targetPosition));
+        turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         turret.setPower(TURRET_POWER);
     }
 

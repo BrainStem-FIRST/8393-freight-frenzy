@@ -17,10 +17,10 @@ public class BrainSTEMAutonomousCoordinates {
     private Pose2d shippingElementWaypointOffset = new Pose2d(0, 5, Math.toRadians(0));
 
     private Pose2d shippingElementCollect;
-    private Pose2d shippingElementCollectOffset = new Pose2d(0, 17, Math.toRadians(180));
+    private Pose2d shippingElementCollectOffset = new Pose2d(0, 13, Math.toRadians(180));
 
     private Pose2d deposit;
-    private Pose2d depositWarehouse = new Pose2d(1, 40, Math.toRadians(70));
+    private Pose2d depositWarehouse = new Pose2d(-5.25, 46, Math.toRadians(70));
     private Pose2d depositCarousel = new Pose2d(-28, 34, Math.toRadians(140));
 
     private Pose2d cycleWaypoint1 = new Pose2d(4, 50, Math.toRadians(70));
@@ -89,7 +89,7 @@ public class BrainSTEMAutonomousCoordinates {
 
             flipHeading(shippingElementTangent);
             flipHeading(depositTangent);
-            flipHeading(cycleWaypoint1Tangent = 2 * Math.PI - cycleWaypoint1Tangent);
+            flipHeading(cycleWaypoint1Tangent);
             flipHeading(cycleForwardTangent);
             flipHeading(cycleReverseTangent);
             flipHeading(carouselDeliveryTangent);

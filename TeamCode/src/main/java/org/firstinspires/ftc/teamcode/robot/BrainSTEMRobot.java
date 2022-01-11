@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.robot;
 
-
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -23,7 +22,6 @@ public class BrainSTEMRobot implements Component {
     public SampleMecanumDrive drive;
     public Turret turret;
     public PixieCam pixie;
-    public CameraT265 t265;
 
     //Instance of linear opmode to use for hwMap
     private LinearOpMode opMode;
@@ -60,15 +58,12 @@ public class BrainSTEMRobot implements Component {
         depositorLift = new DepositorLift(map, opMode.telemetry);
         turret = new Turret(map, depositorLift, opMode.telemetry);
         pixie = new PixieCam(map);
-        t265 = new CameraT265(map);
 
         //Add all components to an array list so they can be easily initialized
         components.add(carouselSpin);
         components.add(collector);
         components.add(depositorLift);
         components.add(turret);
-        components.add(pixie);
-        components.add(t265);
     }
 
     @Override

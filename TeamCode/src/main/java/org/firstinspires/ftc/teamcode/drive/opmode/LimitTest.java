@@ -13,9 +13,7 @@ public class LimitTest extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         Turret turret = new Turret(hardwareMap, new DepositorLift(hardwareMap, telemetry), telemetry);
         waitForStart();
-        while(opModeIsActive()) {
-            turret.resetTurret();
-        }
+        turret.resetTurret();
     }
 
 }

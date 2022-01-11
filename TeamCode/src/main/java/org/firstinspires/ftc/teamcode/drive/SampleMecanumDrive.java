@@ -57,11 +57,10 @@ import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kV;
  */
 @Config
 public class SampleMecanumDrive extends MecanumDrive implements Component {
+    public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(6, 0, 0);
+    public static PIDCoefficients HEADING_PID = new PIDCoefficients(2, 0, 0);
 
-    public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(8.8, 0, 0);
-    public static PIDCoefficients HEADING_PID = new PIDCoefficients(8.8, 0, 0);
-
-    public static double LATERAL_MULTIPLIER = 1.12;
+    public static double LATERAL_MULTIPLIER = 1.1336169125;
 
     public static double VX_WEIGHT = 1;
     public static double VY_WEIGHT = 1;
@@ -101,7 +100,7 @@ public class SampleMecanumDrive extends MecanumDrive implements Component {
         }
 
         // TODO: adjust the names of the following hardware devices to match your configuration
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu = hardwareMap.get(BNO055IMU.class, "imu 1");
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
         imu.initialize(parameters);
@@ -139,6 +138,7 @@ public class SampleMecanumDrive extends MecanumDrive implements Component {
 
         // TODO: if desired, use setLocalizer() to change the localization method
         // for instance, setLocalizer(new ThreeTrackingWheelLocalizer(...));
+        setLocalizer(new MecanumLocalizer(this, true));
 
         trajectorySequenceRunner = new TrajectorySequenceRunner(follower, HEADING_PID);
     }
