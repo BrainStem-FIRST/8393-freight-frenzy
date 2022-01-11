@@ -17,8 +17,10 @@ import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 import com.spartronics4915.lib.T265Camera;
 
+import org.firstinspires.ftc.teamcode.autonomous.BarcodePattern;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.SampleTankDrive;
+import org.firstinspires.ftc.teamcode.robot.PixieCam;
 
 import java.util.Arrays;
 import java.util.List;
@@ -50,6 +52,10 @@ public class TestCameraOpMode extends OpMode
     I2cDeviceSynch pixyCam;
 
     SampleMecanumDrive drive;
+
+    public final double LEFT_X = 135;
+    public final double MIDDLE_X = 197;
+    public final double RIGHT_X = 240;
 
 
     @Override
@@ -138,17 +144,24 @@ public class TestCameraOpMode extends OpMode
         telemetry.addData("HEADING", heading);
 
 
-        block_x = 0xff&pixyCam.read(0x50,5)[1];
-        block_y = 0xff&pixyCam.read(0x50,5)[2];
-
         team_element_x = 0xff&pixyCam.read(0x51,5)[1];
         team_element_y = 0xff&pixyCam.read(0x51,5)[2];
 
         telemetry.addData("PIXY ON", pixyCam.getHealthStatus());
-        telemetry.addData("X value of block", block_x);
-        telemetry.addData("X value of team element", team_element_x);
+        telemetry.addData("X value of team element 1", team_element_x);
 
-
+        if(team_element_x <= (LEFT_X+MIDDLE_X)/2.0 && team_element_x >= 100)
+        {
+            telemetry.addData("BARDCODE POS", "left");
+        }
+        else if(team_element_x <= (MIDDLE_X+RIGHT_X)/2.0)
+        {
+            telemetry.addData("BARDCODE POS", "middle");
+        }
+        else
+        {
+            telemetry.addData("BARDCODE POS", "right");
+        }
         telemetry.update();
 
 
