@@ -23,6 +23,7 @@ public class Turret implements Component {
     private static final double MIN_ANGLE = Math.toRadians(70);
     private static final double MAX_ANGLE = Math.toRadians(290);
     private static final double TURRET_POWER = 0.5;
+    private static final double TURRET_POWER_SLOW = 0.15;
     private DepositorLift dL;
     private Telemetry telemetry;
 
@@ -115,8 +116,8 @@ public class Turret implements Component {
         turret.setPower(TURRET_POWER);
     }
 
-    public void spinTurret(Direction direction) {
-        turret.setPower(direction == Direction.LEFT ? -TURRET_POWER : TURRET_POWER);
+    public void spinTurretSlow(Direction direction) {
+        turret.setPower(direction == Direction.LEFT ? -TURRET_POWER_SLOW : TURRET_POWER_SLOW);
     }
 
     public void stopTurret() {
@@ -124,8 +125,7 @@ public class Turret implements Component {
     }
 
     public int encoderPosition() {
-        return 0;
-        //return turret.getCurrentPosition();
+        return turret.getCurrentPosition();
     }
 
     public boolean limitState() {

@@ -7,6 +7,7 @@ import org.firstinspires.ftc.teamcode.autonomous.AllianceColor;
 import org.firstinspires.ftc.teamcode.robot.BrainSTEMRobot;
 import org.firstinspires.ftc.teamcode.robot.Collector;
 import org.firstinspires.ftc.teamcode.robot.DepositorLift;
+import org.firstinspires.ftc.teamcode.robot.Direction;
 
 public class BrainSTEMTeleOp extends LinearOpMode {
     //Initializes joystick storage variables'
@@ -175,13 +176,13 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             robot.turret.backToZeroPosition();
         }
 
-//        if (driver2.turretLeft > 0) {
-//            robot.turret.spinTurret(Direction.LEFT);
-//        } else if (driver2.turretRight > 0) {
-//            robot.turret.spinTurret(Direction.RIGHT);
-//        } else {
-//            robot.turret.stopTurret();
-//        }
+        if (driver2.turretLeft > 0) {
+            robot.turret.spinTurretSlow(Direction.LEFT);
+        } else if (driver2.turretRight > 0) {
+            robot.turret.spinTurretSlow(Direction.RIGHT);
+        } else {
+            robot.turret.stopTurret();
+        }
 
         if (driver1.teamShippingElement) {
             robot.depositorLift.releaseSE();
@@ -234,8 +235,8 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         //DRIVER 2//
         ////////////
 
-//        driver2.turretLeft = gamepad2.left_trigger;
-//        driver2.turretRight = gamepad2.right_trigger;
+        driver2.turretLeft = gamepad2.left_trigger;
+        driver2.turretRight = gamepad2.right_trigger;
         driver2.spinCarousel = gamepad2.right_trigger;
         if (gamepad2.right_stick_x > 0 && gamepad2.right_stick_y > 0) {
             driver2.aimTurret = Math.atan(gamepad2.right_stick_y / gamepad2.right_stick_x) + Math.PI / 2;
