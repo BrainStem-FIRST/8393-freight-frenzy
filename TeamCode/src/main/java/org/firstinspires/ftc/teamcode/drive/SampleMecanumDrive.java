@@ -71,6 +71,9 @@ public class SampleMecanumDrive extends MecanumDrive implements Component {
     private static final TrajectoryVelocityConstraint VEL_CONSTRAINT = getVelocityConstraint(MAX_VEL, MAX_ANG_VEL, TRACK_WIDTH);
     private static final TrajectoryAccelerationConstraint ACCEL_CONSTRAINT = getAccelerationConstraint(MAX_ACCEL);
 
+    private static final TrajectoryVelocityConstraint SLOW_VEL_CONSTRAINT = getVelocityConstraint(15, Math.toRadians(20), TRACK_WIDTH);
+    private static final TrajectoryAccelerationConstraint SLOW_ACCEL_CONSTRAINT = getAccelerationConstraint(15);
+
     private TrajectoryFollower follower;
 
     private DcMotorEx leftFront, leftRear, rightRear, rightFront;
@@ -343,5 +346,13 @@ public class SampleMecanumDrive extends MecanumDrive implements Component {
 
     public static TrajectoryAccelerationConstraint getAccelerationConstraint(double maxAccel) {
         return new ProfileAccelerationConstraint(maxAccel);
+    }
+
+    public TrajectoryVelocityConstraint slowVelocityConstraint() {
+        return SLOW_VEL_CONSTRAINT;
+    }
+
+    public TrajectoryAccelerationConstraint slowAccelerationConstraint() {
+        return SLOW_ACCEL_CONSTRAINT;
     }
 }

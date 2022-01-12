@@ -15,7 +15,7 @@ import java.util.Timer;
 
 public class Collector implements Component {
     public enum Goal {
-        DEFAULT, DEPLOY, DEPLOYACTION, RETRACT, RETRACTACTION, OFF
+        DEFAULT, DEPLOY, DEPLOYACTION, RETRACT, RETRACTACTION, RETRACTAUTO, RETRACTAUTOACTION, OFF
     }
     private DcMotorEx collector;
     private ServoImplEx tilt;
@@ -43,7 +43,7 @@ public class Collector implements Component {
 
     @Override
     public void reset() {
-        setGoal(Goal.RETRACT);
+//        setGoal(Goal.RETRACT);
     }
 
     @Override
@@ -82,6 +82,8 @@ public class Collector implements Component {
                 if (offCanceller.isConditionMet()) {
                     off();
                 }
+                break;
+            case RETRACTAUTO:
                 break;
         }
     }

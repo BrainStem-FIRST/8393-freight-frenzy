@@ -1,6 +1,10 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
+import com.acmerobotics.roadrunner.trajectory.constraints.AngularVelocityConstraint;
+import com.acmerobotics.roadrunner.trajectory.constraints.MecanumVelocityConstraint;
+import com.acmerobotics.roadrunner.trajectory.constraints.MinVelocityConstraint;
+import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryVelocityConstraint;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.robot.BrainSTEMRobot;
@@ -8,11 +12,10 @@ import org.firstinspires.ftc.teamcode.robot.Collector;
 import org.firstinspires.ftc.teamcode.robot.DepositorLift;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 
+import java.util.Arrays;
+
 public class BrainSTEMAutonomous extends LinearOpMode {
-    private static final int CYCLE_TIMES = 2;
-    private double resetTheta = Math.toRadians(180);
-    private double redSETheta = Math.toRadians(90);
-    private double blueSETheta = Math.toRadians(270);
+    private static final int CYCLE_TIMES = 1;
     protected AllianceColor color = AllianceColor.BLUE;
     protected StartLocation startLocation = StartLocation.WAREHOUSE;
     private BarcodePattern pattern = BarcodePattern.LEVELONE;
@@ -45,46 +48,26 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         robot.drive.setPoseEstimate(coordinates.startPos());
 
         TrajectorySequence seTrajectory = robot.drive.trajectorySequenceBuilder(coordinates.startPos())
-                .addDisplacementMarker(() -> {
-                    if ((color == AllianceColor.BLUE && pattern == BarcodePattern.LEVELONE)
-                            || (color == AllianceColor.RED && pattern == BarcodePattern.LEVELTHREE)) {
-                        try {
-                            robot.turret.resetTurret();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                })
                 .forward(7)
-                .addDisplacementMarker(() -> {
-                    if (pattern == BarcodePattern.LEVELTHREE && color == AllianceColor.RED) {
-                        robot.turret.autoSpinTurret(redSETheta);
-                    } else if (pattern == BarcodePattern.LEVELONE && color == AllianceColor.BLUE) {
-                        robot.turret.autoSpinTurret(blueSETheta);
-                    }
-                })
-                .turn(Math.toRadians(180))
-                .addDisplacementMarker(() -> {
+                .UNSTABLE_addTemporalMarkerOffset(0.2, () -> {
+                    robot.collector.setGoal(Collector.Goal.DEPLOY);
+                    robot.collector.setGoal(Collector.Goal.RETRACT);
                     robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
                 })
+                .turn(coordinates.startTurn())
+                .addDisplacementMarker(() -> robot.depositorLift.releaseSE())
                 .lineTo(coordinates.shippingElementCollect().vec())
                 .build();
 
         robot.drive.followTrajectorySequence(seTrajectory);
-        while(opModeIsActive());
-
-        if ((color == AllianceColor.BLUE && pattern == BarcodePattern.LEVELONE)
-                || (color == AllianceColor.RED && pattern == BarcodePattern.LEVELTHREE)) {
-            robot.drive.followTrajectory(robot.drive.trajectoryBuilder(robot.drive.getPoseEstimate()).strafeLeft(4).build());
-        } else {
-            robot.drive.followTrajectory(robot.drive.trajectoryBuilder(robot.drive.getPoseEstimate()).back(2).build());
-        }
+        robot.depositorLift.extendSE();
+        sleep(300);
         robot.depositorLift.clampSE();
+        sleep(300);
 
         TrajectorySequence preloadTrajectory = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
                 .setReversed(true)
-                .addDisplacementMarker(() -> {
-                    robot.depositorLift.setAutoSE(false);
+                .addTemporalMarker(() -> {
                     switch(pattern) {
                         case LEVELONE:
                             robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LOW);
@@ -96,59 +79,63 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                             robot.depositorLift.setHeight(DepositorLift.DepositorHeight.HIGH);
                             break;
                     }
-                    robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
-                })
-                .UNSTABLE_addTemporalMarkerOffset(1.5, () -> {
                     if (pattern != BarcodePattern.LEVELONE) {
                         robot.depositorLift.setGoal(DepositorLift.LiftGoal.LIFTUP);
                     }
                 })
-                .lineToLinearHeading(coordinates.deposit())
-                .addDisplacementMarker(() -> robot.depositorLift.open())
-                .waitSeconds(0.2)
+                .UNSTABLE_addDisplacementMarkerOffset(3, () -> {
+                    robot.depositorLift.setAutoSE(false);
+                    robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
+                })
+                .lineToLinearHeading(coordinates.preloadDeposit())
                 .build();
 
         robot.drive.followTrajectorySequence(preloadTrajectory);
 
-        TrajectorySequence warehouseSequence = robot.drive.trajectorySequenceBuilder(coordinates.deposit())
+        robot.depositorLift.openPartial();
+//        sleep(200);
+
+        TrajectorySequence warehouseSequence = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
                 .setReversed(false)
-                .UNSTABLE_addDisplacementMarkerOffset(3, () -> robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT))
-                .UNSTABLE_addDisplacementMarkerOffset(5, () -> {
+                .UNSTABLE_addDisplacementMarkerOffset(4, () -> {
+                    robot.collector.setGoal(Collector.Goal.DEPLOY);
+                    robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
+                })
+                .UNSTABLE_addDisplacementMarkerOffset(7, () -> {
                     robot.depositorLift.setGoal(DepositorLift.LiftGoal.LIFTDOWN);
                     robot.depositorLift.setHeight(DepositorLift.DepositorHeight.HIGH);
                 })
-                .splineToSplineHeading(coordinates.cycleForwardWaypoint(), coordinates.cycleForwardTangent())
-                .addDisplacementMarker(() -> {
-                    robot.collector.setGoal(Collector.Goal.DEPLOY);
-                })
+                .splineToSplineHeading(coordinates.cycleWaypoint1(), coordinates.cycleWaypoint1ForwardTangent())
+                .splineToSplineHeading(coordinates.cycleWaypoint2(), coordinates.cycleForwardTangent())
                 .splineToSplineHeading(coordinates.cycleCollect(), coordinates.cycleForwardTangent())
-                .waitSeconds(1)
-
                 .setReversed(true)
 
-                .addDisplacementMarker(() -> robot.collector.setGoal(Collector.Goal.RETRACT))
-                .splineToSplineHeading(coordinates.cycleReverseWaypoint1(), coordinates.cycleReverseTangent())
+                .UNSTABLE_addDisplacementMarkerOffset(1, () -> robot.collector.setGoal(Collector.Goal.RETRACT))
+                .splineToSplineHeading(coordinates.cycleWaypoint2(), coordinates.cycleReverseTangent())
+
+                .UNSTABLE_addDisplacementMarkerOffset(7, () -> robot.depositorLift.setGoal(DepositorLift.LiftGoal.LIFTUP))
+                .splineToSplineHeading(coordinates.cycleWaypoint1(), coordinates.cycleWaypoint1ReverseTangent())
 
                 .addDisplacementMarker(() -> robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY))
-                .splineToSplineHeading(coordinates.cycleReverseWaypoint2(), coordinates.cycleReverseTangent())
-
-                .addDisplacementMarker(() -> robot.depositorLift.setGoal(DepositorLift.LiftGoal.LIFTUP))
                 .splineToSplineHeading(coordinates.deposit(), coordinates.depositTangent())
-                .addDisplacementMarker(() -> robot.depositorLift.open())
-                .waitSeconds(0.2)
                 .build();
 
         for (int i = 0; i < CYCLE_TIMES; i++) {
             robot.drive.followTrajectorySequence(warehouseSequence);
+            robot.depositorLift.openPartial();
+//            sleep(200);
         }
 
         TrajectorySequence parkSequence = robot.drive.trajectorySequenceBuilder(coordinates.deposit())
-                .UNSTABLE_addDisplacementMarkerOffset(3, () -> robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT))
-                .UNSTABLE_addDisplacementMarkerOffset(5, () -> robot.depositorLift.setGoal(DepositorLift.LiftGoal.LIFTDOWN))
-                .splineToSplineHeading(coordinates.cycleForwardWaypoint(), coordinates.cycleForwardTangent())
+                .UNSTABLE_addDisplacementMarkerOffset(4, () -> robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT))
+                .UNSTABLE_addDisplacementMarkerOffset(7, () -> {
+                    robot.depositorLift.setGoal(DepositorLift.LiftGoal.LIFTDOWN);
+                    robot.depositorLift.setHeight(DepositorLift.DepositorHeight.HIGH);
+                })
+                .splineToSplineHeading(coordinates.cycleWaypoint1(), coordinates.cycleForwardTangent())
                 .splineTo(coordinates.cycleCollect().vec(), coordinates.cycleForwardTangent())
                 .build();
 
-        robot.drive.followTrajectorySequence(parkSequence);
+//        robot.drive.followTrajectorySequence(parkSequence);
     }
 }

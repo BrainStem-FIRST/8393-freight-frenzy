@@ -39,7 +39,7 @@ public class DepositorLift implements Component {
     private static final double LIFT_DOWN_POWER = -0.4;
     private static final int LIFT_LEVELONE_TICKS = 0;
     private static final int LIFT_LEVELTWO_TICKS = 170;
-    private static final int LIFT_LEVELTHREE_TICKS = 350;
+    private static final int LIFT_LEVELTHREE_TICKS = 400;
     private static final int LIFT_CAP_TICKS = 400;
     private int liftTicks = LIFT_LEVELTHREE_TICKS;
 
@@ -70,7 +70,7 @@ public class DepositorLift implements Component {
         gate.setPwmRange(new PwmControl.PwmRange(1200,2300));
         flip.setPwmRange(new PwmControl.PwmRange(660,1920));
         extend.setPwmRange(new PwmControl.PwmRange(720,1460));
-        shippingElementGrab.setPwmRange(new PwmControl.PwmRange(870,2050));
+        shippingElementGrab.setPwmRange(new PwmControl.PwmRange(1040,1840));
     }
 
     @Override
@@ -228,7 +228,7 @@ public class DepositorLift implements Component {
         if (depositHeight == DepositorHeight.HIGH) {
             openFull();
         } else {
-            gate.setPosition(0.4);
+            openPartial();
         }
     }
 
@@ -236,11 +236,21 @@ public class DepositorLift implements Component {
         gate.setPosition(1);
     }
 
+    public void openPartial() {
+        gate.setPosition(0.4);
+    }
+
     public void extend() {
         if (depositHeight == DepositorHeight.LOW) {
-            extend.setPosition(0.21);
+            extend.setPosition(0.48);
         } else {
             extend.setPosition(0);
+        }
+    }
+
+    public void extendSE() {
+        for (int i = 0; i < 5; i++) {
+            extend.setPosition(extend.getPosition() - 0.05);
         }
     }
 
@@ -253,7 +263,7 @@ public class DepositorLift implements Component {
     }
 
     public void flipAutoSE() {
-        flip.setPosition(0.8920634921);
+        flip.setPosition(0.9);
     }
 
     public void flipCap() {
@@ -274,6 +284,10 @@ public class DepositorLift implements Component {
 
     public void releaseSE() {
         shippingElementGrab.setPosition(1);
+    }
+
+    public double getSEPosition() {
+        return shippingElementGrab.getPosition();
     }
 
     public int getLiftTicks() {

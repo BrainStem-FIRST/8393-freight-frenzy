@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.autonomous.AllianceColor;
 import org.firstinspires.ftc.teamcode.autonomous.BarcodePattern;
+import org.firstinspires.ftc.teamcode.robot.BrainSTEMRobot;
 import org.firstinspires.ftc.teamcode.robot.CarouselSpin;
 import org.firstinspires.ftc.teamcode.robot.DepositorLift;
 import org.firstinspires.ftc.teamcode.robot.Turret;
@@ -16,10 +17,14 @@ public class SubsystemTest extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        Turret turret = new Turret(hardwareMap, new DepositorLift(hardwareMap, telemetry), telemetry);
+        BrainSTEMRobot robot = new BrainSTEMRobot(this);
+        robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LOW);
+        telemetry.addData("Status", "Ready");
+        telemetry.update();
         waitForStart();
         while(opModeIsActive()) {
-            turret.resetTurret();
+            telemetry.addData("Lift ticks", robot.depositorLift.getLiftTicks());
+            telemetry.update();
         }
     }
 
