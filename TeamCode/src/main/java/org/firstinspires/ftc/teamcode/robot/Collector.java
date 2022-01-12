@@ -43,9 +43,7 @@ public class Collector implements Component {
 
     @Override
     public void reset() {
-        close();
-        off();
-        retract();
+        setGoal(Goal.RETRACT);
     }
 
     @Override
@@ -135,5 +133,9 @@ public class Collector implements Component {
 
     public void setGateOverride(boolean override) {
         gateOverride = override;
+    }
+
+    public double getTiltPosition() {
+        return tilt.getPosition();
     }
 }

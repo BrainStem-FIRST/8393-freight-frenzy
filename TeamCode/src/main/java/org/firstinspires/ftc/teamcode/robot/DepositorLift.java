@@ -51,6 +51,7 @@ public class DepositorLift implements Component {
     private LiftGoal liftGoal = LiftGoal.STOP;
     private boolean hold = false;
     private boolean cap = false;
+    private boolean autoSE = false;
 
     public DepositorLift(HardwareMap map, Telemetry telemetry) {
         lift = new CachingMotor(map.get(DcMotorEx.class, "lift"));
@@ -74,10 +75,9 @@ public class DepositorLift implements Component {
 
     @Override
     public void reset() {
-        setGoal(LiftGoal.LIFTDOWN);
+        flipIn();
         open();
         retract();
-        flipMid();
         releaseSE();
     }
 
@@ -92,6 +92,8 @@ public class DepositorLift implements Component {
             case DEPLOYACTION:
                 if (cap) {
                     flipCap();
+                } else if (autoSE) {
+                    flipAutoSE();
                 } else {
                     flipOut();
                 }
@@ -223,10 +225,10 @@ public class DepositorLift implements Component {
     }
 
     public void open() {
-        if (depositHeight == DepositorHeight.LOW || depositHeight == DepositorHeight.MIDDLE) {
-            gate.setPosition(0.4);
-        } else {
+        if (depositHeight == DepositorHeight.HIGH) {
             openFull();
+        } else {
+            gate.setPosition(0.4);
         }
     }
 
@@ -248,6 +250,10 @@ public class DepositorLift implements Component {
 
     public void flipOut() {
         flip.setPosition(1);
+    }
+
+    public void flipAutoSE() {
+        flip.setPosition(0.8920634921);
     }
 
     public void flipCap() {
@@ -284,6 +290,10 @@ public class DepositorLift implements Component {
 
     public void setCap(boolean isCapping) {
         cap = isCapping;
+    }
+
+    public void setAutoSE(boolean isAutoSE) {
+        autoSE = isAutoSE;
     }
 
     public double getLiftPower() {

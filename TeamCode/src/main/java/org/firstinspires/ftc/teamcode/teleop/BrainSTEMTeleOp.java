@@ -68,13 +68,14 @@ public class BrainSTEMTeleOp extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         robot = new BrainSTEMRobot(this);
-//        robot.turret.setTurretHold();
-        robot.reset();
+//        robot.reset();
         robot.depositorLift.clampSE();
+        robot.depositorLift.setCap(false);
         while (!opModeIsActive() && !isStopRequested()) {
             //Status to show if telemetry was initialized
+            robot.collector.retract();
+            robot.collector.close();
             telemetry.addData("Status", "Initialized");
-//            telemetry.addData("IMU Calibrated during Loop?", robot.drive.getCalibrated());
             telemetry.update();
         }
         robot.depositorLift.flipIn();

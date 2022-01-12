@@ -43,8 +43,6 @@ public class Turret implements Component {
 
     @Override
     public void reset() {
-        stopTurret();
-
     }
 
     @Override

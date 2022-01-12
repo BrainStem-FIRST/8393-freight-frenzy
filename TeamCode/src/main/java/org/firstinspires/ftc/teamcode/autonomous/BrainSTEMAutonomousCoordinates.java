@@ -10,22 +10,23 @@ public class BrainSTEMAutonomousCoordinates {
      */
 
     private Pose2d startPos;
-    private Pose2d startPosWarehouse = new Pose2d(6.25, 63, Math.toRadians(270));
-    private Pose2d startPosCarousel = new Pose2d(-30.25, 63, Math.toRadians(270));
-
-    private Pose2d shippingElementWaypoint;
-    private Pose2d shippingElementWaypointOffset = new Pose2d(0, 5, Math.toRadians(0));
+    private Pose2d startPosWarehouse = new Pose2d(6.5, 63, Math.toRadians(270));
+    private Pose2d startPosCarousel = new Pose2d(-30.5, 63, Math.toRadians(270));
 
     private Pose2d shippingElementCollect;
-    private Pose2d shippingElementCollectOffset = new Pose2d(0, 13, Math.toRadians(180));
+    private Pose2d shippingElementCollectFar = new Pose2d(8, 37, Math.toRadians(90));
+    private Pose2d shippingElementCollectMiddle = new Pose2d(12, 47.5, Math.toRadians(90));
+    private Pose2d shippingElementCollectNear = new Pose2d(3, 47.5, Math.toRadians(90));
 
     private Pose2d deposit;
     private Pose2d depositWarehouse = new Pose2d(-5.25, 46, Math.toRadians(70));
     private Pose2d depositCarousel = new Pose2d(-28, 34, Math.toRadians(140));
 
-    private Pose2d cycleWaypoint1 = new Pose2d(4, 50, Math.toRadians(70));
-    private Pose2d cycleWaypoint2 = new Pose2d(24, 64.5, Math.toRadians(0));
-    private Pose2d cycleCollect = new Pose2d(50, 64.5, Math.toRadians(0));
+//    private Pose2d cycleWaypoint1 = new Pose2d(4, 50, Math.toRadians(70));
+    private Pose2d cycleForwardWaypoint = new Pose2d(24, 65, Math.toRadians(0));
+    private Pose2d cycleReverseWaypoint1 = new Pose2d(34, 66, Math.toRadians(0));
+    private Pose2d cycleReverseWaypoint2 = new Pose2d(14, 66, Math.toRadians(0));
+    private Pose2d cycleCollect = new Pose2d(50, 65, Math.toRadians(0));
 
     private Pose2d carouselDelivery = new Pose2d(-53, 55, Math.toRadians(0));
     private Pose2d carouselWait = new Pose2d(-36, 52, Math.toRadians(0));
@@ -53,7 +54,7 @@ public class BrainSTEMAutonomousCoordinates {
 
     private double parkTangent = Math.toRadians(0);
 
-    public BrainSTEMAutonomousCoordinates(AllianceColor color, StartLocation startLocation) {
+    public BrainSTEMAutonomousCoordinates(AllianceColor color, StartLocation startLocation, BarcodePattern pattern) {
         if (startLocation == StartLocation.WAREHOUSE) {
             startPos = startPosWarehouse;
             deposit = depositWarehouse;
@@ -70,16 +71,22 @@ public class BrainSTEMAutonomousCoordinates {
             depositTangent = depositTangentCarousel;
         }
 
-        shippingElementWaypoint = startPos.minus(shippingElementWaypointOffset);
-        shippingElementCollect = startPos.minus(shippingElementCollectOffset);
+        if (pattern == BarcodePattern.LEVELTWO) {
+            shippingElementCollect = shippingElementCollectMiddle;
+        } else if ((color == AllianceColor.BLUE && pattern == BarcodePattern.LEVELONE)
+                || (color == AllianceColor.RED && pattern == BarcodePattern.LEVELTHREE)) {
+            shippingElementCollect = shippingElementCollectFar;
+        } else {
+            shippingElementCollect = shippingElementCollectNear;
+        }
 
         if (color == AllianceColor.RED) {
             startPos = new Pose2d(startPos.getX(), -startPos.getY(), flipHeading(startPos.getHeading()));
-            shippingElementWaypoint = new Pose2d(shippingElementWaypoint.getX(), -shippingElementWaypoint.getY(), flipHeading(shippingElementWaypoint.getHeading()));
             shippingElementCollect = new Pose2d(shippingElementCollect.getX(), -shippingElementCollect.getY(), flipHeading(shippingElementCollect.getHeading()));
             deposit = new Pose2d(deposit.getX(), -deposit.getY(), flipHeading(deposit.getHeading()));
-            cycleWaypoint1 = new Pose2d(cycleWaypoint1.getX(), -cycleWaypoint1.getY(), flipHeading(cycleWaypoint1.getHeading()));
-            cycleWaypoint2 = new Pose2d(cycleWaypoint2.getX(), -cycleWaypoint2.getY(), flipHeading(cycleWaypoint2.getHeading()));
+            cycleForwardWaypoint = new Pose2d(cycleForwardWaypoint.getX(), -cycleForwardWaypoint.getY(), flipHeading(cycleForwardWaypoint.getHeading()));
+            cycleReverseWaypoint1 = new Pose2d(cycleReverseWaypoint1.getX(), -cycleReverseWaypoint1.getY(), flipHeading(cycleReverseWaypoint1.getHeading()));
+            cycleReverseWaypoint2 = new Pose2d(cycleReverseWaypoint2.getX(), -cycleReverseWaypoint2.getY(), flipHeading(cycleReverseWaypoint2.getHeading()));
             cycleCollect = new Pose2d(cycleCollect.getX(), -cycleCollect.getY(), flipHeading(cycleCollect.getHeading()));
             carouselDelivery = new Pose2d(carouselDelivery.getX(), -carouselDelivery.getY(), flipHeading(carouselDelivery.getHeading()));
             carouselWait = new Pose2d(carouselWait.getX(), -carouselWait.getY(), flipHeading(carouselWait.getHeading()));
@@ -87,22 +94,18 @@ public class BrainSTEMAutonomousCoordinates {
             parkWaypoint = new Pose2d(parkWaypoint.getX(), -parkWaypoint.getY(), flipHeading(parkWaypoint.getHeading()));
             parkEnd = new Pose2d(parkEnd.getX(), -parkEnd.getY(), flipHeading(parkEnd.getHeading()));
 
-            flipHeading(shippingElementTangent);
-            flipHeading(depositTangent);
-            flipHeading(cycleWaypoint1Tangent);
-            flipHeading(cycleForwardTangent);
-            flipHeading(cycleReverseTangent);
-            flipHeading(carouselDeliveryTangent);
-            flipHeading(parkTangent);
+            shippingElementTangent = flipHeading(shippingElementTangent);
+            depositTangent = flipHeading(depositTangent);
+            cycleWaypoint1Tangent = flipHeading(cycleWaypoint1Tangent);
+            cycleForwardTangent = flipHeading(cycleForwardTangent);
+            cycleReverseTangent = flipHeading(cycleReverseTangent);
+            carouselDeliveryTangent = flipHeading(carouselDeliveryTangent);
+            parkTangent = flipHeading(parkTangent);
         }
     }
 
     public Pose2d startPos() {
         return startPos;
-    }
-
-    public Pose2d shippingElementWaypoint() {
-        return shippingElementWaypoint;
     }
 
     public Pose2d shippingElementCollect() {
@@ -113,16 +116,20 @@ public class BrainSTEMAutonomousCoordinates {
         return deposit;
     }
 
-    public Pose2d cycleWaypoint1() {
-        return cycleWaypoint1;
-    }
-
-    public Pose2d cycleWaypoint2() {
-        return cycleWaypoint2;
+    public Pose2d cycleForwardWaypoint() {
+        return cycleForwardWaypoint;
     }
 
     public Pose2d cycleCollect() {
         return cycleCollect;
+    }
+
+    public Pose2d cycleReverseWaypoint1() {
+        return cycleReverseWaypoint1;
+    }
+
+    public Pose2d cycleReverseWaypoint2() {
+        return cycleReverseWaypoint2;
     }
 
     public Pose2d carouselWait() {
