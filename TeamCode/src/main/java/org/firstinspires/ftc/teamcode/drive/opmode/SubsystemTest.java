@@ -19,10 +19,13 @@ public class SubsystemTest extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         BrainSTEMRobot robot = new BrainSTEMRobot(this);
         robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LOW);
-        telemetry.addData("Status", "Ready");
+        robot.depositorLift.setAutoSE(false);
+        robot.depositorLift.setCap(false);
+        telemetry.addData("Status:", "ready");
         telemetry.update();
         waitForStart();
         while(opModeIsActive()) {
+            robot.depositorLift.flipAutoSE();
             telemetry.addData("Lift ticks", robot.depositorLift.getLiftTicks());
             telemetry.update();
         }

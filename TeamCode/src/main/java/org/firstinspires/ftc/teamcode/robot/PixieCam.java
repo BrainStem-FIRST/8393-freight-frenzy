@@ -45,9 +45,9 @@ public class PixieCam implements Component {
     }
 
     public BarcodePattern tsePos() {
-        if (tse_x <= (LEFT_X + MIDDLE_X) / 2.0) {
+        if (tse_x <= (LEFT_X + MIDDLE_X) / 2.0 && tse_x > 100) {
             pos = BarcodePattern.LEVELONE;
-        } else if (tse_x <= (MIDDLE_X + RIGHT_X) / 2.0) {
+        } else if (tse_x <= (MIDDLE_X + RIGHT_X) / 2.0  && tse_x > 100) {
             pos = BarcodePattern.LEVELTWO;
         } else {
             pos = BarcodePattern.LEVELTHREE;

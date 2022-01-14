@@ -68,7 +68,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         robot = new BrainSTEMRobot(this);
-//        robot.reset();
+        robot.reset();
         robot.depositorLift.clampSE();
         robot.depositorLift.setCap(false);
         while (!opModeIsActive() && !isStopRequested()) {

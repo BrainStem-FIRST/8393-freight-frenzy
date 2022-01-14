@@ -12,6 +12,8 @@ import org.firstinspires.ftc.teamcode.util.CachingMotor;
 import org.firstinspires.ftc.teamcode.util.CachingServo;
 import org.firstinspires.ftc.teamcode.util.TimerCanceller;
 
+import static java.lang.Thread.sleep;
+
 public class DepositorLift implements Component {
     public enum DepositorGoal {
         DEFAULT, DEPLOY, DEPLOYACTION, RETRACT, RETRACTACTION
@@ -68,7 +70,7 @@ public class DepositorLift implements Component {
 //        lift.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, new PIDFCoefficients(15, 0, 0, 0));
 
         gate.setPwmRange(new PwmControl.PwmRange(1200,2300));
-        flip.setPwmRange(new PwmControl.PwmRange(660,1920));
+        flip.setPwmRange(new PwmControl.PwmRange(760,1920));
         extend.setPwmRange(new PwmControl.PwmRange(720,1460));
         shippingElementGrab.setPwmRange(new PwmControl.PwmRange(1040,1840));
     }
@@ -248,9 +250,10 @@ public class DepositorLift implements Component {
         }
     }
 
-    public void extendSE() {
+    public void extendSE() throws InterruptedException {
         for (int i = 0; i < 5; i++) {
             extend.setPosition(extend.getPosition() - 0.05);
+            sleep(100);
         }
     }
 
@@ -263,7 +266,7 @@ public class DepositorLift implements Component {
     }
 
     public void flipAutoSE() {
-        flip.setPosition(0.9);
+        flip.setPosition(0.98);
     }
 
     public void flipCap() {
