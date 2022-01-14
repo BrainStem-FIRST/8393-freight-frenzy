@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import java.util.Arrays;
 
 public class BrainSTEMAutonomous extends LinearOpMode {
-    private static final int CYCLE_TIMES = 1;
+    private static final int CYCLE_TIMES = 2;
     protected AllianceColor color = AllianceColor.BLUE;
     protected StartLocation startLocation = StartLocation.WAREHOUSE;
     private BarcodePattern pattern = BarcodePattern.LEVELONE;
@@ -26,11 +26,12 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 
         robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LOW);
         robot.depositorLift.setAutoSE(true);
+        robot.collector.setAuto(true);
 
         robot.reset();
         while (!opModeIsActive() && !isStopRequested()) {
-//            robot.pixie.update();
-//            pattern = robot.pixie.tsePos();
+            robot.pixie.update();
+            pattern = robot.pixie.tsePos();
             robot.update();
             telemetry.addData("Status", "Waiting...");
             telemetry.addData("Barcode Pattern", pattern);
@@ -61,9 +62,9 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 
         robot.drive.followTrajectorySequence(seTrajectory);
         robot.depositorLift.extendSE();
-        sleep(300);
+        sleep(600);
         robot.depositorLift.clampSE();
-        sleep(300);
+        sleep(500);
 
         TrajectorySequence preloadTrajectory = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
                 .setReversed(true)
@@ -93,15 +94,12 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         robot.drive.followTrajectorySequence(preloadTrajectory);
 
         robot.depositorLift.openPartial();
-//        sleep(200);
+        sleep(200);
 
         TrajectorySequence warehouseSequence = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
                 .setReversed(false)
-                .UNSTABLE_addDisplacementMarkerOffset(4, () -> {
+                .UNSTABLE_addDisplacementMarkerOffset(3, () -> {
                     robot.collector.setGoal(Collector.Goal.DEPLOY);
-                    robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
-                })
-                .UNSTABLE_addDisplacementMarkerOffset(7, () -> {
                     robot.depositorLift.setGoal(DepositorLift.LiftGoal.LIFTDOWN);
                     robot.depositorLift.setHeight(DepositorLift.DepositorHeight.HIGH);
                 })
@@ -121,21 +119,21 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                 .build();
 
         for (int i = 0; i < CYCLE_TIMES; i++) {
+            robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
+            sleep(400);
             robot.drive.followTrajectorySequence(warehouseSequence);
             robot.depositorLift.openPartial();
-//            sleep(200);
+            sleep(200);
         }
 
         TrajectorySequence parkSequence = robot.drive.trajectorySequenceBuilder(coordinates.deposit())
                 .UNSTABLE_addDisplacementMarkerOffset(4, () -> robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT))
-                .UNSTABLE_addDisplacementMarkerOffset(7, () -> {
-                    robot.depositorLift.setGoal(DepositorLift.LiftGoal.LIFTDOWN);
-                    robot.depositorLift.setHeight(DepositorLift.DepositorHeight.HIGH);
-                })
-                .splineToSplineHeading(coordinates.cycleWaypoint1(), coordinates.cycleForwardTangent())
-                .splineTo(coordinates.cycleCollect().vec(), coordinates.cycleForwardTangent())
+                .UNSTABLE_addDisplacementMarkerOffset(7, () -> robot.depositorLift.setGoal(DepositorLift.LiftGoal.LIFTDOWN))
+                .splineToSplineHeading(coordinates.cycleWaypoint1(), coordinates.cycleWaypoint1ForwardTangent())
+                .splineToSplineHeading(coordinates.cycleWaypoint2(), coordinates.cycleForwardTangent())
+                .splineToSplineHeading(coordinates.cycleCollect(), coordinates.cycleForwardTangent())
                 .build();
 
-//        robot.drive.followTrajectorySequence(parkSequence);
+        robot.drive.followTrajectorySequence(parkSequence);
     }
 }

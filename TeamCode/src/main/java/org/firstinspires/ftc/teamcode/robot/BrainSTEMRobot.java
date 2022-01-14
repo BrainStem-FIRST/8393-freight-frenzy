@@ -80,9 +80,9 @@ public class BrainSTEMRobot implements Component {
         time.reset();
         mma.update(currentTime);
 
-//        opMode.telemetry.addLine("Update time: " + currentTime);
-//        opMode.telemetry.addLine(mma.toString());
-//        opMode.telemetry.update();
+        opMode.telemetry.addLine("Update time: " + currentTime);
+        opMode.telemetry.addLine(mma.toString());
+        opMode.telemetry.update();
     }
 
     @Override

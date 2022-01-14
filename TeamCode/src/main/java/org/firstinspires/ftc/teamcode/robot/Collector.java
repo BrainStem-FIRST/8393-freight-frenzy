@@ -15,7 +15,7 @@ import java.util.Timer;
 
 public class Collector implements Component {
     public enum Goal {
-        DEFAULT, DEPLOY, DEPLOYACTION, RETRACT, RETRACTACTION, RETRACTAUTO, RETRACTAUTOACTION, OFF
+        DEFAULT, DEPLOY, DEPLOYACTION, RETRACT, RETRACTACTION, OFF, OPEN, OFFAUTO
     }
     private DcMotorEx collector;
     private ServoImplEx tilt;
@@ -28,6 +28,9 @@ public class Collector implements Component {
     private TimerCanceller deployCanceller = new TimerCanceller(75);
     private TimerCanceller retractCanceller = new TimerCanceller(400);
     private TimerCanceller offCanceller = new TimerCanceller(700);
+    private TimerCanceller gateCanceller = new TimerCanceller(200);
+    private TimerCanceller onCanceller = new TimerCanceller(700);
+    private boolean isAuto = false;
 
     public Collector(HardwareMap map) {
         collector = new CachingMotor(map.get(DcMotorEx.class, "collect"));
@@ -73,9 +76,15 @@ public class Collector implements Component {
             case RETRACTACTION:
                 retract();
                 if (retractCanceller.isConditionMet()) {
-                    open();
-                    offCanceller.reset();
-                    setGoal(Goal.OFF);
+                    if (isAuto) {
+                        off();
+                        gateCanceller.reset();
+                        setGoal(Goal.OPEN);
+                    } else {
+                        open();
+                        offCanceller.reset();
+                        setGoal(Goal.OFF);
+                    }
                 }
                 break;
             case OFF:
@@ -83,10 +92,24 @@ public class Collector implements Component {
                     off();
                 }
                 break;
-            case RETRACTAUTO:
+            case OPEN:
+                if (gateCanceller.isConditionMet()) {
+                    on();
+                    open();
+                    onCanceller.reset();
+                    setGoal(Goal.OFFAUTO);
+                }
+                break;
+            case OFFAUTO:
+                if (onCanceller.isConditionMet()) {
+                    off();
+                }
                 break;
         }
     }
+    /*
+
+     */
 
     @Override
     public String test() {
@@ -139,5 +162,9 @@ public class Collector implements Component {
 
     public double getTiltPosition() {
         return tilt.getPosition();
+    }
+
+    public void setAuto(boolean auto) {
+        isAuto = auto;
     }
 }

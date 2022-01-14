@@ -14,13 +14,14 @@ public class BrainSTEMAutonomousCoordinates {
     private Pose2d startPosCarousel = new Pose2d(-30.5, 63, Math.toRadians(270));
 
     private Pose2d shippingElementCollect;
-    private Pose2d shippingElementCollectFar = new Pose2d(6, 35, Math.toRadians(180));
+    private Pose2d shippingElementCollectFar = new Pose2d(5.25, 34.5, Math.toRadians(180));
     private Pose2d shippingElementCollectMiddle = new Pose2d(12, 49, Math.toRadians(90));
-    private Pose2d shippingElementCollectNear = new Pose2d(3, 49, Math.toRadians(90));
+    private Pose2d shippingElementCollectNear = new Pose2d(1.5, 49, Math.toRadians(90));
 
     private Pose2d preloadDeposit;
     private Pose2d preloadDepositL1 = new Pose2d(1.5, 46, Math.toRadians(60)); //bottom
     private Pose2d preloadDepositL2 = new Pose2d(1.5, 47.5, Math.toRadians(60)); //middle
+    private Pose2d preloadDepositL3 = new Pose2d(1.5, 44, Math.toRadians(60)); //top
 
     private Pose2d deposit;
     private Pose2d depositWarehouse = new Pose2d(-0.5, 47, Math.toRadians(60));
@@ -28,7 +29,7 @@ public class BrainSTEMAutonomousCoordinates {
 
     private Pose2d cycleWaypoint1 = new Pose2d(5, 60, Math.toRadians(0)); //x=34
     private Pose2d cycleWaypoint2 = new Pose2d(15, 65, Math.toRadians(0));
-    private Pose2d cycleCollect = new Pose2d(42, 65, Math.toRadians(0));
+    private Pose2d cycleCollect = new Pose2d(45, 65, Math.toRadians(0));
 
     private Pose2d carouselDelivery = new Pose2d(-53, 55, Math.toRadians(0));
     private Pose2d carouselWait = new Pose2d(-36, 52, Math.toRadians(0));
@@ -93,7 +94,7 @@ public class BrainSTEMAutonomousCoordinates {
                 startTurn = Math.toRadians(180);
                 break;
             case LEVELTHREE:
-                preloadDeposit = deposit;
+                preloadDeposit = preloadDepositL3;
                 if(color == AllianceColor.RED) {
                     shippingElementCollect = shippingElementCollectFar;
                     startTurn = Math.toRadians(-90);
