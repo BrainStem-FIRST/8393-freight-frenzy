@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
+import android.util.Log;
+
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.acmerobotics.roadrunner.trajectory.constraints.AngularVelocityConstraint;
 import com.acmerobotics.roadrunner.trajectory.constraints.MecanumVelocityConstraint;
@@ -15,7 +17,6 @@ import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import java.util.Arrays;
 
 public class BrainSTEMAutonomous extends LinearOpMode {
-    private static final int CYCLE_TIMES = 2;
     protected AllianceColor color = AllianceColor.BLUE;
     protected StartLocation startLocation = StartLocation.WAREHOUSE;
     private BarcodePattern pattern = BarcodePattern.LEVELONE;
@@ -30,7 +31,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 
         robot.reset();
         while (!opModeIsActive() && !isStopRequested()) {
-            robot.pixie.update();
+            robot.pixie.teamShippingElementUpdate();
             pattern = robot.pixie.tsePos();
             robot.update();
             telemetry.addData("Status", "Waiting...");
@@ -43,26 +44,24 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         }
 
         robot.pixie.stop();
+        Log.d("BSAutonomous", "Is pixy engaged? " + robot.pixie.isPixyEngaged());
 
         BrainSTEMAutonomousCoordinates coordinates = new BrainSTEMAutonomousCoordinates(color, startLocation, pattern);
 
         robot.drive.setPoseEstimate(coordinates.startPos());
 
         TrajectorySequence seTrajectory = robot.drive.trajectorySequenceBuilder(coordinates.startPos())
-                .forward(7)
-                .UNSTABLE_addTemporalMarkerOffset(0.2, () -> {
-                    robot.collector.setGoal(Collector.Goal.DEPLOY);
-                    robot.collector.setGoal(Collector.Goal.RETRACT);
-                    robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
-                })
-                .turn(coordinates.startTurn())
-                .addDisplacementMarker(() -> robot.depositorLift.releaseSE())
+                .addTemporalMarker(() -> robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY))
+                .lineToLinearHeading(coordinates.shippingElementWaypoint())
                 .lineTo(coordinates.shippingElementCollect().vec())
                 .build();
 
-        robot.drive.followTrajectorySequence(seTrajectory);
+        robot.drive.followTrajectorySequenceAsync(seTrajectory);
+        robot.depositorLift.releaseSE();
+        robot.drive.waitForIdle();
+
         robot.depositorLift.extendSE();
-        sleep(600);
+        sleep(200);
         robot.depositorLift.clampSE();
         sleep(500);
 
@@ -88,15 +87,18 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                     robot.depositorLift.setAutoSE(false);
                     robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
                 })
+                .waitSeconds(pattern == BarcodePattern.LEVELTHREE ? 0.4 : 0)
                 .lineToLinearHeading(coordinates.preloadDeposit())
                 .build();
 
         robot.drive.followTrajectorySequence(preloadTrajectory);
 
         robot.depositorLift.openPartial();
-        sleep(200);
+        robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
+        sleep(400);
 
-        TrajectorySequence warehouseSequence = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
+        Log.d("BSAutonomous Cycle 1", coordinates.cycleCollect().toString());
+        TrajectorySequence warehouseSequence1 = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
                 .setReversed(false)
                 .UNSTABLE_addDisplacementMarkerOffset(3, () -> {
                     robot.collector.setGoal(Collector.Goal.DEPLOY);
@@ -105,29 +107,97 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                 })
                 .splineToSplineHeading(coordinates.cycleWaypoint1(), coordinates.cycleWaypoint1ForwardTangent())
                 .splineToSplineHeading(coordinates.cycleWaypoint2(), coordinates.cycleForwardTangent())
+                .splineToSplineHeading(coordinates.cycleWaypoint3(), coordinates.cycleForwardTangent())
                 .splineToSplineHeading(coordinates.cycleCollect(), coordinates.cycleForwardTangent())
+
                 .setReversed(true)
 
-                .UNSTABLE_addDisplacementMarkerOffset(1, () -> robot.collector.setGoal(Collector.Goal.RETRACT))
+                .UNSTABLE_addDisplacementMarkerOffset(3, () -> robot.collector.setGoal(Collector.Goal.RETRACT))
+                .splineToSplineHeading(coordinates.cycleWaypoint3(), coordinates.cycleReverseTangent())
                 .splineToSplineHeading(coordinates.cycleWaypoint2(), coordinates.cycleReverseTangent())
 
                 .UNSTABLE_addDisplacementMarkerOffset(7, () -> robot.depositorLift.setGoal(DepositorLift.LiftGoal.LIFTUP))
-                .splineToSplineHeading(coordinates.cycleWaypoint1(), coordinates.cycleWaypoint1ReverseTangent())
+                .splineToSplineHeading(coordinates.cycleWaypoint1Reverse(), coordinates.cycleWaypoint1ReverseTangent())
 
                 .addDisplacementMarker(() -> robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY))
                 .splineToSplineHeading(coordinates.deposit(), coordinates.depositTangent())
                 .build();
 
-        for (int i = 0; i < CYCLE_TIMES; i++) {
-            robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
-            sleep(400);
-            robot.drive.followTrajectorySequence(warehouseSequence);
-            robot.depositorLift.openPartial();
-            sleep(200);
-        }
+        robot.drive.followTrajectorySequence(warehouseSequence1);
+        robot.depositorLift.openPartial();
+        robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
+        coordinates.increaseCycleCollectPosition();
+        coordinates.increaseDeposit();
+        coordinates.increaseWallPosition();
+        sleep(400);
+
+        Log.d("BSAutonomous Cycle 2", coordinates.cycleCollect().toString());
+        TrajectorySequence warehouseSequence2 = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
+                .setReversed(false)
+                .UNSTABLE_addDisplacementMarkerOffset(3, () -> {
+                    robot.collector.setGoal(Collector.Goal.DEPLOY);
+                    robot.depositorLift.setGoal(DepositorLift.LiftGoal.LIFTDOWN);
+                    robot.depositorLift.setHeight(DepositorLift.DepositorHeight.HIGH);
+                })
+                .splineToSplineHeading(coordinates.cycleWaypoint1(), coordinates.cycleWaypoint1ForwardTangent())
+                .splineToSplineHeading(coordinates.cycleWaypoint2(), coordinates.cycleForwardTangent())
+                .splineToSplineHeading(coordinates.cycleWaypoint3(), coordinates.cycleForwardTangent())
+                .splineToSplineHeading(coordinates.cycleCollect(), coordinates.cycleForwardTangent())
+
+                .setReversed(true)
+
+                .UNSTABLE_addDisplacementMarkerOffset(3, () -> robot.collector.setGoal(Collector.Goal.RETRACT))
+                .splineToSplineHeading(coordinates.cycleWaypoint3(), coordinates.cycleReverseTangent())
+                .splineToSplineHeading(coordinates.cycleWaypoint2(), coordinates.cycleReverseTangent())
+
+                .UNSTABLE_addDisplacementMarkerOffset(7, () -> robot.depositorLift.setGoal(DepositorLift.LiftGoal.LIFTUP))
+                .splineToSplineHeading(coordinates.cycleWaypoint1Reverse(), coordinates.cycleWaypoint1ReverseTangent())
+
+                .addDisplacementMarker(() -> robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY))
+                .splineToSplineHeading(coordinates.deposit(), coordinates.depositTangent())
+                .build();
+
+        robot.drive.followTrajectorySequence(warehouseSequence2);
+        robot.depositorLift.openPartial();
+        robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
+//        coordinates.increaseCycleCollectPosition();
+        coordinates.increaseCycleCollectHeading();
+        coordinates.increaseDeposit();
+        coordinates.increaseWallPosition();
+        sleep(400);
+
+        Log.d("BSAutonomous Cycle 3", coordinates.cycleCollect().toString());
+        TrajectorySequence warehouseSequence3 = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
+                .setReversed(false)
+                .UNSTABLE_addDisplacementMarkerOffset(3, () -> {
+                    robot.collector.setGoal(Collector.Goal.DEPLOY);
+                    robot.depositorLift.setGoal(DepositorLift.LiftGoal.LIFTDOWN);
+                    robot.depositorLift.setHeight(DepositorLift.DepositorHeight.HIGH);
+                })
+                .splineToSplineHeading(coordinates.cycleWaypoint1(), coordinates.cycleWaypoint1ForwardTangent())
+                .splineToSplineHeading(coordinates.cycleWaypoint2(), coordinates.cycleForwardTangent())
+                .splineToSplineHeading(coordinates.cycleWaypoint3(), coordinates.cycleForwardTangent())
+                .splineToSplineHeading(coordinates.cycleCollect(), coordinates.cycleForwardTangent())
+
+                .setReversed(true)
+
+                .UNSTABLE_addDisplacementMarkerOffset(3, () -> robot.collector.setGoal(Collector.Goal.RETRACT))
+                .splineToSplineHeading(coordinates.cycleWaypoint3(), coordinates.cycleReverseTangent())
+                .splineToSplineHeading(coordinates.cycleWaypoint2(), coordinates.cycleReverseTangent())
+
+                .UNSTABLE_addDisplacementMarkerOffset(7, () -> robot.depositorLift.setGoal(DepositorLift.LiftGoal.LIFTUP))
+                .splineToSplineHeading(coordinates.cycleWaypoint1Reverse(), coordinates.cycleWaypoint1ReverseTangent())
+
+                .addDisplacementMarker(() -> robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY))
+                .splineToSplineHeading(coordinates.deposit(), coordinates.depositTangent())
+                .build();
+
+        robot.drive.followTrajectorySequence(warehouseSequence3);
+        robot.depositorLift.openPartial();
+        robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
+        sleep(400);
 
         TrajectorySequence parkSequence = robot.drive.trajectorySequenceBuilder(coordinates.deposit())
-                .UNSTABLE_addDisplacementMarkerOffset(4, () -> robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT))
                 .UNSTABLE_addDisplacementMarkerOffset(7, () -> robot.depositorLift.setGoal(DepositorLift.LiftGoal.LIFTDOWN))
                 .splineToSplineHeading(coordinates.cycleWaypoint1(), coordinates.cycleWaypoint1ForwardTangent())
                 .splineToSplineHeading(coordinates.cycleWaypoint2(), coordinates.cycleForwardTangent())

@@ -72,7 +72,7 @@ public class DepositorLift implements Component {
         gate.setPwmRange(new PwmControl.PwmRange(1200,2300));
         flip.setPwmRange(new PwmControl.PwmRange(760,1920));
         extend.setPwmRange(new PwmControl.PwmRange(720,1460));
-        shippingElementGrab.setPwmRange(new PwmControl.PwmRange(1040,1840));
+        shippingElementGrab.setPwmRange(new PwmControl.PwmRange(1000,2040));
     }
 
     @Override

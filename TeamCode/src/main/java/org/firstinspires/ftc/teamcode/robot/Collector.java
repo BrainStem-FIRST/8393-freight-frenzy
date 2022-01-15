@@ -37,7 +37,7 @@ public class Collector implements Component {
         tilt = new CachingServo(map.get(ServoImplEx.class, "collectorTilt"));
         gate = new CachingServo(map.get(ServoImplEx.class, "collectorGate"));
 
-        collector.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        collector.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         tilt.setPwmRange(new PwmControl.PwmRange(1900,2400));
         gate.setPwmRange(new PwmControl.PwmRange(1240,1900));
 
