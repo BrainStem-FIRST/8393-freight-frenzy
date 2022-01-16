@@ -55,6 +55,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         private boolean retract;
         private double drive, turn, strafe;
         private boolean teamShippingElement;
+        private boolean spinCarousel;
     }
 
     private class Driver2 {
@@ -178,7 +179,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 //            telemetry.addLine("Holding");
 //        }
 
-        if (driver2.spinCarousel > 0) {
+        if (driver1.spinCarousel || driver2.spinCarousel > 0) {
             robot.carouselSpin.spinCarousel(color);
         } else {
             robot.carouselSpin.stopCarousel();
@@ -237,6 +238,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         capModeButton1.update(gamepad1.a);
         driver1.gateOverride = gamepad1.dpad_up;
         tseReleaseButton.update(gamepad1.y);
+        driver1.spinCarousel = gamepad1.dpad_right;
 
         ////////////
         //DRIVER 2//

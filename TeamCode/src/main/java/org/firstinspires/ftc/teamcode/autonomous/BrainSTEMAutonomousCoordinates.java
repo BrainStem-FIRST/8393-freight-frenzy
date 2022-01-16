@@ -19,9 +19,9 @@ public class BrainSTEMAutonomousCoordinates {
 
     private Pose2d shippingElementWaypoint;
     private Pose2d shippingElementCollect;
-    private Pose2d shippingElementCollectFar = new Pose2d(5.9, 34.25, Math.toRadians(180));
-    private Pose2d shippingElementCollectMiddle = new Pose2d(11.5, 49.5, Math.toRadians(90));
-    private Pose2d shippingElementCollectNear = new Pose2d(1.5, 50.5, Math.toRadians(90));
+    private Pose2d shippingElementCollectFar = new Pose2d(5.7, 34, Math.toRadians(180));
+    private Pose2d shippingElementCollectMiddle = new Pose2d(12, 49.5, Math.toRadians(90));
+    private Pose2d shippingElementCollectNear = new Pose2d(1.5, 50, Math.toRadians(90));
 
     private Pose2d preloadDeposit;
     private Pose2d preloadDepositL1 = new Pose2d(1.5, 46, Math.toRadians(60)); //bottom
@@ -29,7 +29,7 @@ public class BrainSTEMAutonomousCoordinates {
     private Pose2d preloadDepositL3 = new Pose2d(1.5, 44, Math.toRadians(60)); //top
 
     private Pose2d deposit;
-    private Pose2d depositWarehouse = new Pose2d(0, 48.5, Math.toRadians(60));
+    private Pose2d depositWarehouse = new Pose2d(0, 48, Math.toRadians(60));
     private Pose2d depositCarousel = new Pose2d(-28, 34, Math.toRadians(140));
 
     private Pose2d cycleWaypoint1 = new Pose2d(4, 60, Math.toRadians(0)); //x=34
@@ -176,7 +176,8 @@ public class BrainSTEMAutonomousCoordinates {
     }
 
     public void increaseDeposit() {
-        deposit = deposit.plus(new Pose2d(1, 0, 0));
+        deposit = deposit.plus(new Pose2d(1, 0,
+                color == AllianceColor.RED ? Math.toRadians(-5) : Math.toRadians(5)));
     }
 
     public void increaseWallPosition() {

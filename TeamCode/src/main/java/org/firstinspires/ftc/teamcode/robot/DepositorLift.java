@@ -41,7 +41,7 @@ public class DepositorLift implements Component {
     private static final double LIFT_DOWN_POWER = -0.4;
     private static final int LIFT_LEVELONE_TICKS = 0;
     private static final int LIFT_LEVELTWO_TICKS = 170;
-    private static final int LIFT_LEVELTHREE_TICKS = 400;
+    private static final int LIFT_LEVELTHREE_TICKS = 430;
     private static final int LIFT_CAP_TICKS = 400;
     private int liftTicks = LIFT_LEVELTHREE_TICKS;
 
@@ -105,7 +105,9 @@ public class DepositorLift implements Component {
                 break;
             case RETRACT:
                 flipCanceller.reset();
-                openFull();
+                if (depositHeight == DepositorHeight.HIGH) {
+                    openFull();
+                }
                 setGoal(DepositorGoal.RETRACTACTION);
                 break;
             case RETRACTACTION:
@@ -251,8 +253,8 @@ public class DepositorLift implements Component {
     }
 
     public void extendSE() throws InterruptedException {
-        for (int i = 0; i < 5; i++) {
-            extend.setPosition(extend.getPosition() - 0.05);
+        for (int i = 0; i < 4; i++) {
+            extend.setPosition(extend.getPosition() - 0.07);
             sleep(100);
         }
     }
