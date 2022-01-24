@@ -60,7 +60,7 @@ public class BrainSTEMRobot implements Component {
         //Initialize robot components
         carouselSpin = new CarouselSpin(map);
         collector = new Collector(map);
-        depositorLift = new DepositorLift(map, opMode.telemetry);
+        depositorLift = new DepositorLift(map);
         turret = new Turret(map, depositorLift, opMode.telemetry);
         pixie = new PixieCam(map);
 

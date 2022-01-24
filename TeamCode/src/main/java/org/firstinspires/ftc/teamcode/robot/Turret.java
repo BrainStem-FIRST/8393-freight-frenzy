@@ -36,9 +36,7 @@ public class Turret implements Component {
 
         turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
         turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-//        turret.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, new PIDFCoefficients(15,0,0,0));
     }
 
     @Override
@@ -59,7 +57,7 @@ public class Turret implements Component {
     public void resetTurret() throws InterruptedException {
         Log.d("Turret", "Resetting");
         dL.setHold(true);
-        dL.flipMid();
+        dL.rotateClear();
         dL.manualLiftUp();
         sleep(400);
         dL.manualLiftHold();
@@ -78,11 +76,11 @@ public class Turret implements Component {
         telemetry.clearAll();
         telemetry.addLine("Out of loop");
         telemetry.update();
-        dL.flipIn();
         dL.setGoal(DepositorLift.LiftGoal.LIFTDOWN);
         while(dL.getLiftGoal() != DepositorLift.LiftGoal.STOP) {
             dL.update();
         }
+        dL.rotateCollect();
     }
 
     public void setTurretHold() {
@@ -113,6 +111,10 @@ public class Turret implements Component {
         turret.setTargetPosition((int)Math.round(targetPosition));
         turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         turret.setPower(TURRET_POWER);
+    }
+
+    public void spinTurret(Direction direction) {
+        turret.setPower(direction == Direction.LEFT ? -TURRET_POWER : TURRET_POWER);
     }
 
     public void spinTurretSlow(Direction direction) {

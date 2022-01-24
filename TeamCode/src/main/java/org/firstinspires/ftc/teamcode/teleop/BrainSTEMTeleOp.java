@@ -7,6 +7,7 @@ import org.firstinspires.ftc.teamcode.autonomous.AllianceColor;
 import org.firstinspires.ftc.teamcode.robot.BrainSTEMRobot;
 import org.firstinspires.ftc.teamcode.robot.Collector;
 import org.firstinspires.ftc.teamcode.robot.DepositorLift;
+import org.firstinspires.ftc.teamcode.robot.Direction;
 
 public class BrainSTEMTeleOp extends LinearOpMode {
     //Initializes joystick storage variables'
@@ -70,7 +71,6 @@ public class BrainSTEMTeleOp extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         robot = new BrainSTEMRobot(this);
         robot.reset();
-        robot.depositorLift.clampSE();
         robot.depositorLift.setCap(false);
         while (!opModeIsActive() && !isStopRequested()) {
             //Status to show if telemetry was initialized
@@ -79,7 +79,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             telemetry.addData("Status", "Initialized");
             telemetry.update();
         }
-        robot.depositorLift.flipIn();
+        robot.depositorLift.rotateCollect();
 //        robot.turret.resetTurret();
 
         while(opModeIsActive()) {
@@ -141,21 +141,18 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         }
 
         if(depositButton.getState()) {
-            if (extended) {
-                robot.depositorLift.open();
-                extended = false;
-            } else {
-                robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
-                extended = true;
-            }
+//            if (extended) {
+//                robot.depositorLift.open();
+//                extended = false;
+//            } else {
+//                robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
+//                extended = true;
+//            }
         }
 
         if (driver1.retract) {
-            robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
+//            robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
             extended = false;
-//            robot.turret.autoSpinTurret(Math.PI);
-        } else {
-//            robot.turret.autoSpinTurret(driver2.aimTurret);
         }
 
         if (driver1.raiseLift > 0) {
@@ -189,18 +186,18 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 //            robot.turret.backToZeroPosition();
 //        }
 //
-//        if (driver2.turretLeft > 0) {
-//            robot.turret.spinTurretSlow(Direction.LEFT);
-//        } else if (driver2.turretRight > 0) {
-//            robot.turret.spinTurretSlow(Direction.RIGHT);
-//        } else {
-//            robot.turret.stopTurret();
-//        }
+        if (driver2.turretLeft > 0) {
+            robot.turret.spinTurret(Direction.LEFT);
+        } else if (driver2.turretRight > 0) {
+            robot.turret.spinTurret(Direction.RIGHT);
+        } else {
+            robot.turret.stopTurret();
+        }
 
         if (tseReleaseButton.getState()) {
-            robot.depositorLift.releaseSE();
+//            robot.depositorLift.releaseSE();
         } else {
-            robot.depositorLift.clampSE();
+//            robot.depositorLift.clampSE();
         }
 
         if (driver2.depositHigh) {
@@ -214,7 +211,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         telemetry.addData("Running", "Now");
 //        telemetry.addData("Turret encoder", robot.turret.encoderPosition());
         telemetry.addData("Deposit level", robot.depositorLift.getHeight());
-        telemetry.addData("Lift encoder", robot.depositorLift.getLiftTicks());
+        telemetry.addData("Lift encoder", robot.depositorLift.getLiftPosition());
         telemetry.addData("Lift limit", robot.depositorLift.isTouchPressed());
         telemetry.addData("Turret limit", robot.turret.limitState());
         telemetry.addData("Lift power", robot.depositorLift.getLiftPower());
