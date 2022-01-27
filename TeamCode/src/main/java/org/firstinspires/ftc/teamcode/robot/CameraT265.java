@@ -34,9 +34,9 @@ public class CameraT265 implements Component{
 
     public CameraT265(HardwareMap map)
     {
-        if (slamra == null) {
-            slamra = new T265Camera(new Transform2d(), 0.0, map.appContext);
-        }
+//        if (slamra == null) {
+//            slamra = new T265Camera(new Transform2d(), 0.0, map.appContext);
+//        }
     }
 
 
@@ -45,26 +45,26 @@ public class CameraT265 implements Component{
     }
 
     public void start() {
-        slamra.stop();
-        slamra.start();
+//        slamra.stop();
+//        slamra.start();
     }
 
     @Override
     public void update() {
-        T265Camera.CameraUpdate up = slamra.getLastReceivedCameraUpdate();
-
-
-        if (up == null) return;
-
-
-
-        // We divide by 0.0254 to convert meters to inches
-        Translation2d translation = new Translation2d(up.pose.getTranslation().getX() / 0.0254, up.pose.getTranslation().getY() / 0.0254);
-        Rotation2d rotation = up.pose.getRotation();
-
-        x = translation.getX() * xCorrection;
-        y = translation.getY() * yCorrection;
-        heading = up.pose.getHeading() * headingCorrection;
+//        T265Camera.CameraUpdate up = slamra.getLastReceivedCameraUpdate();
+//
+//
+//        if (up == null) return;
+//
+//
+//
+//        // We divide by 0.0254 to convert meters to inches
+//        Translation2d translation = new Translation2d(up.pose.getTranslation().getX() / 0.0254, up.pose.getTranslation().getY() / 0.0254);
+//        Rotation2d rotation = up.pose.getRotation();
+//
+//        x = translation.getX() * xCorrection;
+//        y = translation.getY() * yCorrection;
+//        heading = up.pose.getHeading() * headingCorrection;
     }
 
     @Override

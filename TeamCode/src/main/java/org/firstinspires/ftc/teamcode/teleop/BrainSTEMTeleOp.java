@@ -28,8 +28,9 @@ public class BrainSTEMTeleOp extends LinearOpMode {
     private double driveInterpolationFactor = 3;
 
     private ToggleButton collectOnButton = new ToggleButton();
-    private ToggleButton capButton1 = new ToggleButton();
-    private ToggleButton capButton2 = new ToggleButton();
+    private ToggleButton capModeButton1 = new ToggleButton();
+    private ToggleButton capModeButton2 = new ToggleButton();
+    private ToggleButton tseReleaseButton = new ToggleButton();
 
     private StickyButton depositButton = new StickyButton();
 
@@ -55,6 +56,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         private boolean retract;
         private double drive, turn, strafe;
         private boolean teamShippingElement;
+        private boolean spinCarousel;
     }
 
     private class Driver2 {
@@ -69,7 +71,6 @@ public class BrainSTEMTeleOp extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         robot = new BrainSTEMRobot(this);
         robot.reset();
-        robot.depositorLift.clampSE();
         robot.depositorLift.setCap(false);
         while (!opModeIsActive() && !isStopRequested()) {
             //Status to show if telemetry was initialized
@@ -78,7 +79,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             telemetry.addData("Status", "Initialized");
             telemetry.update();
         }
-        robot.depositorLift.flipIn();
+        robot.depositorLift.rotateCollect();
 //        robot.turret.resetTurret();
 
         while(opModeIsActive()) {
@@ -90,13 +91,25 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 
     //Loop
     public void runLoop() {
-        robot.drive.setWeightedDrivePower(
-                new Pose2d(
-                        -gamepad1.left_stick_y,
-                        -gamepad1.left_stick_x,
-                        -gamepad1.right_stick_x
-                )
-        );
+        if (capModeButton2.getState()) {
+//            robot.depositorLift.setCap(true);
+            robot.drive.setWeightedDrivePower(
+                    new Pose2d(
+                            -gamepad1.left_stick_y * 0.5,
+                            -gamepad1.left_stick_x * 0.5,
+                            -gamepad1.right_stick_x * 0.5
+                    )
+            );
+        } else {
+//            robot.depositorLift.setCap(false);
+            robot.drive.setWeightedDrivePower(
+                    new Pose2d(
+                            -gamepad1.left_stick_y,
+                            -gamepad1.left_stick_x,
+                            -gamepad1.right_stick_x * 0.9
+                    )
+            );
+        }
 
 //        robot.turret.setTurretHoldPower();
 
@@ -128,21 +141,18 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         }
 
         if(depositButton.getState()) {
-            if (extended) {
-                robot.depositorLift.open();
-                extended = false;
-            } else {
-                robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
-                extended = true;
-            }
+//            if (extended) {
+//                robot.depositorLift.open();
+//                extended = false;
+//            } else {
+//                robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
+//                extended = true;
+//            }
         }
 
         if (driver1.retract) {
-            robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
+//            robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
             extended = false;
-//            robot.turret.autoSpinTurret(Math.PI);
-        } else {
-//            robot.turret.autoSpinTurret(driver2.aimTurret);
         }
 
         if (driver1.raiseLift > 0) {
@@ -166,27 +176,28 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 //            telemetry.addLine("Holding");
 //        }
 
-        if (driver2.spinCarousel > 0) {
+        if (driver1.spinCarousel || driver2.spinCarousel > 0) {
             robot.carouselSpin.spinCarousel(color);
         } else {
             robot.carouselSpin.stopCarousel();
         }
 
-        if(gamepad2.a)
-        {
-            robot.turret.backToZeroPosition();
-        }
-
+//        if(gamepad2.a) {
+//            robot.turret.backToZeroPosition();
+//        }
+//
         if (driver2.turretLeft > 0) {
-            robot.turret.spinTurretSlow(Direction.LEFT);
+            robot.turret.spinTurret(Direction.LEFT);
         } else if (driver2.turretRight > 0) {
-            robot.turret.spinTurretSlow(Direction.RIGHT);
+            robot.turret.spinTurret(Direction.RIGHT);
         } else {
             robot.turret.stopTurret();
         }
 
-        if (driver1.teamShippingElement) {
-            robot.depositorLift.releaseSE();
+        if (tseReleaseButton.getState()) {
+//            robot.depositorLift.releaseSE();
+        } else {
+//            robot.depositorLift.clampSE();
         }
 
         if (driver2.depositHigh) {
@@ -197,16 +208,10 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LOW);
         }
 
-        if (capButton1.getState()) {
-            robot.depositorLift.setCap(true);
-        } else {
-            robot.depositorLift.setCap(false);
-        }
-
         telemetry.addData("Running", "Now");
 //        telemetry.addData("Turret encoder", robot.turret.encoderPosition());
         telemetry.addData("Deposit level", robot.depositorLift.getHeight());
-        telemetry.addData("Lift encoder", robot.depositorLift.getLiftTicks());
+        telemetry.addData("Lift encoder", robot.depositorLift.getLiftPosition());
         telemetry.addData("Lift limit", robot.depositorLift.isTouchPressed());
         telemetry.addData("Turret limit", robot.turret.limitState());
         telemetry.addData("Lift power", robot.depositorLift.getLiftPower());
@@ -227,10 +232,10 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         driver1.lowerLiftSlow = gamepad1.dpad_down;
         depositButton.update(gamepad1.x);
         driver1.retract = gamepad1.b;
-        driver1.teamShippingElement = gamepad1.y;
-        capButton1.update(gamepad1.a);
+        capModeButton1.update(gamepad1.a);
         driver1.gateOverride = gamepad1.dpad_up;
-
+        tseReleaseButton.update(gamepad1.y);
+        driver1.spinCarousel = gamepad1.dpad_right;
 
         ////////////
         //DRIVER 2//
@@ -253,6 +258,6 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         driver2.depositHigh = gamepad2.dpad_up;
         driver2.depositMid = gamepad2.dpad_left;
         driver2.depositLow = gamepad2.dpad_down;
-        capButton2.update(gamepad2.a);
+        capModeButton2.update(gamepad2.a);
     }
 }

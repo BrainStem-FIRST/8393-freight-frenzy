@@ -44,7 +44,12 @@ public class BrainSTEMRobot implements Component {
         HardwareMap map = opMode.hardwareMap;
 
         allHubs = opMode.hardwareMap.getAll(LynxModule.class);
+
         for (LynxModule m : allHubs) {
+            if(!m.isParent()) {
+                allHubs.remove(m);
+                continue;
+            }
             m.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
         }
 
@@ -55,7 +60,7 @@ public class BrainSTEMRobot implements Component {
         //Initialize robot components
         carouselSpin = new CarouselSpin(map);
         collector = new Collector(map);
-        depositorLift = new DepositorLift(map, opMode.telemetry);
+        depositorLift = new DepositorLift(map);
         turret = new Turret(map, depositorLift, opMode.telemetry);
         pixie = new PixieCam(map);
 
@@ -69,6 +74,7 @@ public class BrainSTEMRobot implements Component {
     @Override
     public void update() {
         for (LynxModule m : allHubs) {
+            m.clearBulkCache();
             m.getBulkData();
         }
 

@@ -35,8 +35,7 @@ public class PixieCam implements Component {
 
     @Override
     public void update() {
-        tse_x = 0xff&pixyCam.read(0x51,5)[1];
-        tse_y = 0xff&pixyCam.read(0x51,5)[2];
+
     }
 
     @Override
@@ -54,5 +53,13 @@ public class PixieCam implements Component {
         }
         return pos;
     }
-}
 
+    public void teamShippingElementUpdate() {
+        tse_x = 0xff&pixyCam.read(0x51,5)[1];
+        tse_y = 0xff&pixyCam.read(0x51,5)[2];
+    }
+
+    public boolean isPixyEngaged() {
+        return pixyCam.isEngaged();
+    }
+}

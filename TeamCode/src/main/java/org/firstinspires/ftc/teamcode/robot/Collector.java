@@ -11,11 +11,9 @@ import org.firstinspires.ftc.teamcode.util.CachingMotor;
 import org.firstinspires.ftc.teamcode.util.CachingServo;
 import org.firstinspires.ftc.teamcode.util.TimerCanceller;
 
-import java.util.Timer;
-
 public class Collector implements Component {
     public enum Goal {
-        DEFAULT, DEPLOY, DEPLOYACTION, RETRACT, RETRACTACTION, OFF, OPEN, OFFAUTO
+        DEFAULT, DEPLOY, DEPLOYACTION, RETRACT, RETRACTACTION, ONAUTO, OFF, OPEN, OFFAUTO
     }
     private DcMotorEx collector;
     private ServoImplEx tilt;
@@ -26,10 +24,11 @@ public class Collector implements Component {
     private Goal goal = Goal.DEFAULT;
     private boolean gateOverride = false;
     private TimerCanceller deployCanceller = new TimerCanceller(75);
-    private TimerCanceller retractCanceller = new TimerCanceller(400);
+    private TimerCanceller retractAutoCanceller = new TimerCanceller(400);
+    private TimerCanceller retractTeleCanceller = new TimerCanceller(200);
     private TimerCanceller offCanceller = new TimerCanceller(700);
-    private TimerCanceller gateCanceller = new TimerCanceller(200);
-    private TimerCanceller onCanceller = new TimerCanceller(700);
+    private TimerCanceller gateCanceller = new TimerCanceller(300); //200
+    private TimerCanceller onCanceller = new TimerCanceller(300); //800
     private boolean isAuto = false;
 
     public Collector(HardwareMap map) {
@@ -37,7 +36,7 @@ public class Collector implements Component {
         tilt = new CachingServo(map.get(ServoImplEx.class, "collectorTilt"));
         gate = new CachingServo(map.get(ServoImplEx.class, "collectorGate"));
 
-        collector.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        collector.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         tilt.setPwmRange(new PwmControl.PwmRange(1900,2400));
         gate.setPwmRange(new PwmControl.PwmRange(1240,1900));
 
@@ -70,17 +69,24 @@ public class Collector implements Component {
                 }
                 break;
             case RETRACT:
-                retractCanceller.reset();
+                if (isAuto) {
+                    retractAutoCanceller.reset();
+                } else {
+                    retractTeleCanceller.reset();
+                }
                 setGoal(Goal.RETRACTACTION);
                 break;
             case RETRACTACTION:
                 retract();
-                if (retractCanceller.isConditionMet()) {
-                    if (isAuto) {
+                if (isAuto) {
+                    if (retractAutoCanceller.isConditionMet()) {
                         off();
-                        gateCanceller.reset();
-                        setGoal(Goal.OPEN);
-                    } else {
+                        onCanceller.reset();
+                        setGoal(Goal.ONAUTO);
+
+                    }
+                } else {
+                    if(retractTeleCanceller.isConditionMet()) {
                         open();
                         offCanceller.reset();
                         setGoal(Goal.OFF);
@@ -92,17 +98,18 @@ public class Collector implements Component {
                     off();
                 }
                 break;
-            case OPEN:
-                if (gateCanceller.isConditionMet()) {
+            case ONAUTO:
+                if (onCanceller.isConditionMet()) {
                     on();
-                    open();
-                    onCanceller.reset();
-                    setGoal(Goal.OFFAUTO);
+                    gateCanceller.reset();
+                    setGoal(Goal.OPEN);
                 }
                 break;
-            case OFFAUTO:
-                if (onCanceller.isConditionMet()) {
-                    off();
+            case OPEN:
+                if(gateCanceller.isConditionMet()) {
+                    open();
+                    offCanceller.reset();
+                    setGoal(Goal.OFF);
                 }
                 break;
         }
