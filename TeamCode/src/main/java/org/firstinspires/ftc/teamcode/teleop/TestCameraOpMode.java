@@ -25,7 +25,7 @@ import org.firstinspires.ftc.teamcode.robot.PixieCam;
 import java.util.Arrays;
 import java.util.List;
 
-@TeleOp(name="Test T265", group="Iterative Opmode")
+@TeleOp
 public class TestCameraOpMode extends OpMode
 {
     // We treat this like a singleton because there should only ever be one object per camera
@@ -33,8 +33,8 @@ public class TestCameraOpMode extends OpMode
 
     private final FtcDashboard dashboard = FtcDashboard.getInstance();
 
-    public double xCorrection = 1;
-    public double yCorrection = 1;
+    public double xCorrection = -(24.0/22.2);
+    public double yCorrection = -(24.0/22.2);
     public double headingCorrection = 1;
 
     public double x = 0;

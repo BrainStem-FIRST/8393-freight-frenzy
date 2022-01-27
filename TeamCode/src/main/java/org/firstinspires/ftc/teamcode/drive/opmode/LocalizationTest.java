@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.drive.opmode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.arcrobotics.ftclib.geometry.Rotation2d;
 import com.arcrobotics.ftclib.geometry.Transform2d;
@@ -21,13 +22,28 @@ import org.firstinspires.ftc.teamcode.drive.SampleTankDrive;
  */
 @TeleOp(group = "drive")
 public class LocalizationTest extends LinearOpMode {
+    private static T265Camera slamra = null;
+
+
+    public double xCorrection = -(24.0/22.2);
+    public double yCorrection = -(24.0/22.2);
+    public double headingCorrection = 1;
+
+    public double x = 0;
+    public double y = 0;
+    public double heading = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
 
+        if (slamra == null) {
+            slamra = new T265Camera(new Transform2d(), 0.0, hardwareMap.appContext);
+        }
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
 
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        slamra.start();
 
         waitForStart();
 
@@ -42,16 +58,36 @@ public class LocalizationTest extends LinearOpMode {
 
             drive.update();
 
+            T265Camera.CameraUpdate up = slamra.getLastReceivedCameraUpdate();
+
+
+            if (up == null) return;
+
+
+
+            // We divide by 0.0254 to convert meters to inches
+            Translation2d translation = new Translation2d(up.pose.getTranslation().getX() / 0.0254, up.pose.getTranslation().getY() / 0.0254);
+            Rotation2d rotation = up.pose.getRotation();
+
+            x = translation.getX() * xCorrection;
+            y = translation.getY() * yCorrection;
+            heading = up.pose.getHeading() * headingCorrection;
+
 
             Pose2d poseEstimate = drive.getPoseEstimate();
-            telemetry.addData("x", poseEstimate.getX());
-            telemetry.addData("y", poseEstimate.getY());
-            telemetry.addData("pose heading", poseEstimate.getHeading());
+            telemetry.addData("x RR", poseEstimate.getX());
+            telemetry.addData("y RR", poseEstimate.getY());
+            telemetry.addData("pose heading RR", poseEstimate.getHeading());
             telemetry.addData("raw external heading", drive.getRawExternalHeading());
             telemetry.addData("external heading", drive.getExternalHeading());
             telemetry.addData("heading velocity", drive.getExternalHeadingVelocity());
             telemetry.addData("leftInches", drive.getWheelPositions().get(0));
             telemetry.addData("rightInches", drive.getWheelPositions().get(1));
+            telemetry.addData("CAMERA ON", slamra.isStarted());
+            telemetry.addData("CONFIDENCE RR", up.confidence);
+            telemetry.addData("X VALUE COAL", x);
+            telemetry.addData("Y VALUE COAL", y);
+            telemetry.addData("HEADING COAL", heading);
 
             telemetry.update();
         }

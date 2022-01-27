@@ -55,3 +55,4 @@ public class PixieCam implements Component {
         return pos;
     }
 }
+
