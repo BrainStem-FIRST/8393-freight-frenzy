@@ -58,7 +58,7 @@ public class DepositorLift implements Component {
     private static final int LIFT_LEVELONE_TICKS = 30;
     private static final int LIFT_LEVELTWO_TICKS = 170;
     private static final int LIFT_LEVELTHREE_TICKS = 430;
-    private static final int LIFT_CAP_TICKS = 400;
+    private static final int LIFT_CAP_TICKS = 470;
     private int liftTicks = LIFT_LEVELTHREE_TICKS;
 
     private static final double EXTEND_OUT_POWER = 0.8;
@@ -68,6 +68,7 @@ public class DepositorLift implements Component {
     private static final int EXTEND_LEVELONE_TICKS = 0;
     private static final int EXTEND_LEVELTWO_TICKS = 0;
     private static final int EXTEND_LEVELTHREE_TICKS = 0;
+    private static final int EXTEND_CAP_TICKS = 0;
     private int extendTicks = EXTEND_LEVELTHREE_TICKS;
 
     private TimerCanceller rotateClearCanceller = new TimerCanceller(150);
@@ -122,11 +123,7 @@ public class DepositorLift implements Component {
                 isDeploying = true;
                 close();
                 rotateClearCanceller.reset();
-                if (mode != Mode.CAP) {
-                    setGoal(DepositorGoal.ROTATECLEAR);
-                } else {
-
-                }
+                setGoal(DepositorGoal.ROTATECLEAR);
                 break;
             case ROTATECLEAR:
                 rotateClear();
@@ -175,10 +172,10 @@ public class DepositorLift implements Component {
                 if (extendBackCanceller.isConditionMet()) {
                     rotateClearCanceller.reset();
                     setGoal(DepositorGoal.ROTATECLEAR);
-                    setGoal(LiftGoal.LIFTDOWN);
                     if (mode != Mode.STRAIGHT) {
                         //setTurretGoal reset
                     }
+                    setGoal(LiftGoal.LIFTDOWN);
                 }
                 break;
             case ROTATECOLLECT:
@@ -193,10 +190,10 @@ public class DepositorLift implements Component {
                 close();
                 lift.setTargetPosition(liftTicks);
                 lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                setGoal(LiftGoal.LIFTUPACTION);
                 if (mode != Mode.STRAIGHT) {
                     //setTurretGoal rotate
                 }
+                setGoal(LiftGoal.LIFTUPACTION);
                 break;
             case LIFTUPACTION:
                 lift.setPower(LIFT_UP_POWER);
@@ -337,15 +334,19 @@ public class DepositorLift implements Component {
         switch(height) {
             case LOW:
                 liftTicks = LIFT_LEVELONE_TICKS;
+                extendTicks = EXTEND_LEVELONE_TICKS;
                 break;
             case MIDDLE:
                 liftTicks = LIFT_LEVELTWO_TICKS;
+                extendTicks = EXTEND_LEVELTWO_TICKS;
                 break;
             case HIGH:
                 liftTicks = LIFT_LEVELTHREE_TICKS;
+                extendTicks = EXTEND_LEVELTHREE_TICKS;
                 break;
             case CAP:
                 liftTicks = LIFT_CAP_TICKS;
+                extendTicks = EXTEND_CAP_TICKS;
                 break;
         }
     }

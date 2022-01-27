@@ -33,6 +33,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
     private ToggleButton tseReleaseButton = new ToggleButton();
 
     private StickyButton depositButton = new StickyButton();
+    private StickyButton carouselButton = new StickyButton();
 
     private Driver1 driver1 = new Driver1();
     private Driver2 driver2 = new Driver2();
@@ -60,7 +61,6 @@ public class BrainSTEMTeleOp extends LinearOpMode {
     }
 
     private class Driver2 {
-        private float spinCarousel;
         private double aimTurret;
         private float turretLeft;
         private float turretRight;
@@ -176,10 +176,10 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 //            telemetry.addLine("Holding");
 //        }
 
-        if (driver1.spinCarousel || driver2.spinCarousel > 0) {
-            robot.carouselSpin.spinCarousel(color);
+        if (carouselButton.getState()) {
+            robot.carouselSpin.on(color);
         } else {
-            robot.carouselSpin.stopCarousel();
+            robot.carouselSpin.off();
         }
 
 //        if(gamepad2.a) {
@@ -243,7 +243,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 
         driver2.turretLeft = gamepad2.left_trigger;
         driver2.turretRight = gamepad2.right_trigger;
-        driver2.spinCarousel = gamepad2.right_trigger;
+        carouselButton.update(gamepad2.a);
         if (gamepad2.right_stick_x > 0 && gamepad2.right_stick_y > 0) {
             driver2.aimTurret = Math.atan(gamepad2.right_stick_y / gamepad2.right_stick_x) + Math.PI / 2;
         } else if (gamepad2.right_stick_x < 0 && gamepad2.right_stick_y > 0) {

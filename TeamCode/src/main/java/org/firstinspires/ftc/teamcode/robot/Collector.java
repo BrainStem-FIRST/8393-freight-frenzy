@@ -1,46 +1,56 @@
 package org.firstinspires.ftc.teamcode.robot;
 
+import android.graphics.Color;
+
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
+import com.qualcomm.robotcore.util.RollingAverage;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.util.CachingMotor;
 import org.firstinspires.ftc.teamcode.util.CachingServo;
 import org.firstinspires.ftc.teamcode.util.TimerCanceller;
 
 public class Collector implements Component {
     public enum Goal {
-        DEFAULT, DEPLOY, DEPLOYACTION, RETRACT, RETRACTACTION, ONAUTO, OFF, OPEN, OFFAUTO
+        DEFAULT, DEPLOY, DEPLOYACTION, RETRACT, RETRACTACTION, OFF
     }
     private DcMotorEx collector;
     private ServoImplEx tilt;
     private ServoImplEx gate;
+    private ColorSensor color;
 
     private static final double COLLECT_POWER = 1;
+    private static final float COLOR_THRESHOLD = 110;
+    private static final double SCALE_FACTOR = 255;
+    private static final int CURRENT_THRESHOLD = 0; //TODO: find
+
+    private RollingAverage currentRollingAverage = new RollingAverage(5);
     private int sign = 1;
     private Goal goal = Goal.DEFAULT;
     private boolean gateOverride = false;
     private TimerCanceller deployCanceller = new TimerCanceller(75);
-    private TimerCanceller retractAutoCanceller = new TimerCanceller(400);
-    private TimerCanceller retractTeleCanceller = new TimerCanceller(200);
+    private TimerCanceller retractCanceller = new TimerCanceller(200);
     private TimerCanceller offCanceller = new TimerCanceller(700);
-    private TimerCanceller gateCanceller = new TimerCanceller(300); //200
-    private TimerCanceller onCanceller = new TimerCanceller(300); //800
+
     private boolean isAuto = false;
 
     public Collector(HardwareMap map) {
         collector = new CachingMotor(map.get(DcMotorEx.class, "collect"));
         tilt = new CachingServo(map.get(ServoImplEx.class, "collectorTilt"));
         gate = new CachingServo(map.get(ServoImplEx.class, "collectorGate"));
+        color = map.colorSensor.get("color");
 
         collector.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        collector.setDirection(DcMotorSimple.Direction.REVERSE);
+
         tilt.setPwmRange(new PwmControl.PwmRange(1900,2400));
         gate.setPwmRange(new PwmControl.PwmRange(1240,1900));
-
-        collector.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     @Override
@@ -50,6 +60,7 @@ public class Collector implements Component {
 
     @Override
     public void update() {
+        currentRollingAverage.addNumber((int)collector.getCurrent(CurrentUnit.AMPS));
         switch(goal) {
             case DEFAULT:
                 break;
@@ -69,60 +80,32 @@ public class Collector implements Component {
                 }
                 break;
             case RETRACT:
-                if (isAuto) {
-                    retractAutoCanceller.reset();
-                } else {
-                    retractTeleCanceller.reset();
-                }
+                retractCanceller.reset();
                 setGoal(Goal.RETRACTACTION);
                 break;
             case RETRACTACTION:
                 retract();
-                if (isAuto) {
-                    if (retractAutoCanceller.isConditionMet()) {
-                        off();
-                        onCanceller.reset();
-                        setGoal(Goal.ONAUTO);
-
-                    }
-                } else {
-                    if(retractTeleCanceller.isConditionMet()) {
-                        open();
-                        offCanceller.reset();
-                        setGoal(Goal.OFF);
-                    }
-                }
-                break;
-            case OFF:
-                if (offCanceller.isConditionMet()) {
-                    off();
-                }
-                break;
-            case ONAUTO:
-                if (onCanceller.isConditionMet()) {
-                    on();
-                    gateCanceller.reset();
-                    setGoal(Goal.OPEN);
-                }
-                break;
-            case OPEN:
-                if(gateCanceller.isConditionMet()) {
+                if(retractCanceller.isConditionMet()) {
                     open();
                     offCanceller.reset();
                     setGoal(Goal.OFF);
                 }
                 break;
+            case OFF:
+                if (offCanceller.isConditionMet()) {
+                    off();
+                    setGoal(Goal.DEFAULT);
+                }
+                break;
         }
     }
-    /*
-
-     */
 
     @Override
     public String test() {
         return null;
     }
 
+    //Motor
     public void on() {
         collector.setPower(Math.signum(sign) * COLLECT_POWER);
     }
@@ -131,6 +114,11 @@ public class Collector implements Component {
         collector.setPower(0);
     }
 
+    public void setSign(int sign) {
+        this.sign = sign;
+    }
+
+    //Tilt
     public void deploy() {
         tilt.setPosition(1);
     }
@@ -139,24 +127,17 @@ public class Collector implements Component {
         tilt.setPosition(0);
     }
 
+    public double getTiltPosition() {
+        return tilt.getPosition();
+    }
+
+    //Gate
     public void close() {
         gate.setPosition(1);
     }
 
     public void open() {
         gate.setPosition(0);
-    }
-
-    public void setSign(int sign) {
-        this.sign = sign;
-    }
-
-    public void setGoal(Goal goal) {
-        this.goal = goal;
-    }
-
-    public Goal getGoal() {
-        return goal;
     }
 
     public double getGatePosition() {
@@ -167,11 +148,39 @@ public class Collector implements Component {
         gateOverride = override;
     }
 
-    public double getTiltPosition() {
-        return tilt.getPosition();
+    //Goal
+    public void setGoal(Goal goal) {
+        this.goal = goal;
     }
 
+    public Goal getGoal() {
+        return goal;
+    }
+
+    //Boolean setters
     public void setAuto(boolean auto) {
         isAuto = auto;
+    }
+
+    public boolean isFreightCollectedCurrentDraw() {
+        return currentRollingAverage.getAverage() > CURRENT_THRESHOLD;
+    }
+
+    public boolean isFreightCollectedColor() {
+        float[] hsv = new float[3];
+        Color.RGBToHSV((int) (color.red() * SCALE_FACTOR),
+                (int) (color.green() * SCALE_FACTOR),
+                (int) (color.blue() * SCALE_FACTOR),
+                hsv);
+        return hsv[2] > COLOR_THRESHOLD;
+    }
+
+    public double getBrightness() {
+        float[] hsv = new float[3];
+        Color.RGBToHSV((int) (color.red() * SCALE_FACTOR),
+                (int) (color.green() * SCALE_FACTOR),
+                (int) (color.blue() * SCALE_FACTOR),
+                hsv);
+        return hsv[2];
     }
 }

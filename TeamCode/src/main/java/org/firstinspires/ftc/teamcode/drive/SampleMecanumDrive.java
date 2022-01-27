@@ -364,4 +364,8 @@ public class SampleMecanumDrive extends MecanumDrive implements Component {
     public TrajectoryAccelerationConstraint slowAccelerationConstraint() {
         return SLOW_ACCEL_CONSTRAINT;
     }
+
+    public void endTrajectory() {
+        trajectorySequenceRunner.followTrajectorySequenceAsync(null);
+    }
 }
