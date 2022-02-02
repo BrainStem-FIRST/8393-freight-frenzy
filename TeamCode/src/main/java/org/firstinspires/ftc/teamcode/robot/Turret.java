@@ -22,7 +22,7 @@ public class Turret implements Component {
     private static final int TURRET_ENCODER_CONVERSION = 1073;
     private static final double MIN_ANGLE = Math.toRadians(70);
     private static final double MAX_ANGLE = Math.toRadians(290);
-    private static final double TURRET_POWER = 0.5;
+    private static final double TURRET_POWER = 0.4;
     private static final double TURRET_POWER_SLOW = 0.15;
     private DepositorLift dL;
     private Telemetry telemetry;

@@ -55,14 +55,14 @@ public class DepositorLift implements Component {
     private static final double LIFT_DOWN_POWER_SLOW = -0.05;
     private static final double LIFT_DOWN_POWER = -0.4;
 
-    private static final int LIFT_LEVELONE_TICKS = 30;
-    private static final int LIFT_LEVELTWO_TICKS = 170;
-    private static final int LIFT_LEVELTHREE_TICKS = 430;
-    private static final int LIFT_CAP_TICKS = 470;
+    private static final int LIFT_LEVELONE_TICKS = 85;
+    private static final int LIFT_LEVELTWO_TICKS = 339;
+    private static final int LIFT_LEVELTHREE_TICKS = 718;
+    private static final int LIFT_CAP_TICKS = 1015;
     private int liftTicks = LIFT_LEVELTHREE_TICKS;
 
-    private static final double EXTEND_OUT_POWER = 0.8;
-    private static final double EXTEND_BACK_POWER = -0.6;
+    private static final double EXTEND_OUT_POWER = 0.5;
+    private static final double EXTEND_BACK_POWER = -0.5;
 
     private static final int EXTEND_RESET_TICKS = 0;
     private static final int EXTEND_LEVELONE_TICKS = 0;
@@ -72,6 +72,7 @@ public class DepositorLift implements Component {
     private int extendTicks = EXTEND_LEVELTHREE_TICKS;
 
     private TimerCanceller rotateClearCanceller = new TimerCanceller(150);
+    private TimerCanceller extendWaitCanceller = new TimerCanceller(300);
     private TimerCanceller extendOutCanceller = new TimerCanceller(600);
     private TimerCanceller extendBackCanceller = new TimerCanceller(200);
     private TimerCanceller rotateDepositCanceller = new TimerCanceller(500);
@@ -104,8 +105,11 @@ public class DepositorLift implements Component {
         extend.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         extend.setTargetPositionTolerance(3);
 
-        gate.setPwmRange(new PwmControl.PwmRange(1200,2300));
-        rotate.setPwmRange(new PwmControl.PwmRange(760,1920));
+//        gate.setPwmRange(new PwmControl.PwmRange(1200,2300));
+        rotate.setPwmRange(new PwmControl.PwmRange(806,2240));
+        //806 - clear
+        //1000 - collect 0.1352859135
+        //2240 - deposit
     }
 
     @Override
@@ -129,7 +133,7 @@ public class DepositorLift implements Component {
                 rotateClear();
                 if (rotateClearCanceller.isConditionMet()) {
                     if (isDeploying) {
-                        extendOutCanceller.reset();
+                        extendWaitCanceller.reset();
                         setGoal(DepositorGoal.EXTENDOUT);
                         setGoal(LiftGoal.LIFTUP);
                     } else {
@@ -140,8 +144,10 @@ public class DepositorLift implements Component {
             case EXTENDOUT:
                 extend.setTargetPosition(extendTicks);
                 extend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                extendOutCanceller.reset();
-                setGoal(DepositorGoal.EXTENDOUTACTION);
+                if(!extendWaitCanceller.isConditionMet()) {
+                    extendOutCanceller.reset();
+                    setGoal(DepositorGoal.EXTENDOUTACTION);
+                }
                 break;
             case EXTENDOUTACTION:
                 extend.setPower(EXTEND_OUT_POWER);
@@ -187,7 +193,6 @@ public class DepositorLift implements Component {
         }
         switch(liftGoal) {
             case LIFTUP:
-                close();
                 lift.setTargetPosition(liftTicks);
                 lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 if (mode != Mode.STRAIGHT) {
@@ -242,7 +247,6 @@ public class DepositorLift implements Component {
     public void stopLift() {
         lift.setPower(0);
     }
-
     public double getLiftPower() {
         return lift.getPower();
     }
@@ -285,19 +289,22 @@ public class DepositorLift implements Component {
     public void openFull() {
         gate.setPosition(1);
     }
+    public void test(double position) {
+        gate.setPosition(position);
+    }
 
     //Rotate
     public void rotateCollect() {
-        rotate.setPosition(0);
+        rotate.setPosition(0.1352859135);
     }
     public void rotateClear() {
-        rotate.setPosition(0.4);
+        rotate.setPosition(1);
     }
     public void rotateDeposit() {
         switch (depositHeight) {
             case LOW:
-                rotate.setPosition(0.8);
-                break;
+//                rotate.setPosition(0.8);
+//                break;
             case MIDDLE:
             case HIGH:
                 rotate.setPosition(1);
@@ -329,6 +336,7 @@ public class DepositorLift implements Component {
     public DepositorHeight getHeight() {
         return depositHeight;
     }
+
     public void setHeight(DepositorHeight height) {
         depositHeight = height;
         switch(height) {

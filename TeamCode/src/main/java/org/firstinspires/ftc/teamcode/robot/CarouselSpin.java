@@ -49,27 +49,27 @@ public class CarouselSpin implements Component {
 
     @Override
     public void update() {
-        switch(goal) {
-            case START:
-                rampupCanceller.reset();
-                if (counter >= COUNT_MAX) {
-                    goal = Goal.STOP;
-                } else {
-                    goal = Goal.STARTACTION;
-                }
-                break;
-            case STARTACTION:
-                spin.setPower(color == AllianceColor.BLUE ? spinPower : -spinPower);
-                if (rampupCanceller.isConditionMet()) {
-                    spinPower += 0.1;
-                    counter++;
-                    goal = Goal.START;
-                }
-                break;
-            case STOP:
-                spin.setPower(0);
-                break;
-        }
+//        switch(goal) {
+//            case START:
+//                rampupCanceller.reset();
+//                if (counter >= COUNT_MAX) {
+//                    goal = Goal.STOP;
+//                } else {
+//                    goal = Goal.STARTACTION;
+//                }
+//                break;
+//            case STARTACTION:
+//                spin.setPower(color == AllianceColor.BLUE ? spinPower : -spinPower);
+//                if (rampupCanceller.isConditionMet()) {
+//                    spinPower += 0.1;
+//                    counter++;
+//                    goal = Goal.START;
+//                }
+//                break;
+//            case STOP:
+//                spin.setPower(0);
+//                break;
+//        }
     }
 
     @Override

@@ -20,6 +20,9 @@ public class BrainSTEMAutonomousCoordinates {
     private double collectTangent = Math.toRadians(0);
     private double depositTangent = Math.toRadians(180);
     private double collectIncrement = 2;
+
+    private double collectXThreshold = 38;
+
     public BrainSTEMAutonomousCoordinates(AllianceColor color) {
         if (color == AllianceColor.RED) {
             start = new Pose2d(start.getX(), -start.getY(), flipHeading(start.getHeading()));
@@ -37,6 +40,10 @@ public class BrainSTEMAutonomousCoordinates {
 
     public double collectTangent() {
         return collectTangent;
+    }
+
+    public double collectXThreshold() {
+        return collectXThreshold;
     }
 
     public double depositTangent() {

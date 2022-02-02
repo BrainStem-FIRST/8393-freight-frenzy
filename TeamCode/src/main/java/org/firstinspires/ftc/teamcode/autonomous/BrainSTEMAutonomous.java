@@ -23,6 +23,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         robot.collector.setAuto(true);
 
         robot.reset();
+        robot.collector.tiltInit();
         while (!opModeIsActive() && !isStopRequested()) {
             robot.pixie.teamShippingElementUpdate();
             pattern = robot.pixie.tsePos();
@@ -55,6 +56,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 
         BrainSTEMAutonomousCoordinates coordinates = new BrainSTEMAutonomousCoordinates(color);
         robot.drive.setPoseEstimate(coordinates.start());
+
         sleep(800);
 
         robot.depositorLift.open();
@@ -69,7 +71,8 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             robot.collector.setGoal(Collector.Goal.DEPLOY);
             robot.depositorLift.setHeight(DepositorLift.DepositorHeight.HIGH);
             while (robot.drive.isBusy()) {
-                if (robot.collector.isFreightCollectedColor()) {
+                if (robot.collector.isFreightCollectedColor() &&
+                        robot.drive.getPoseEstimate().getX() > coordinates.collectXThreshold()) {
                     //TODO: test endTrajectory()
                     robot.drive.endTrajectory();
                 }
@@ -87,7 +90,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
             robot.drive.waitForIdle();
             coordinates.incrementCollect();
-            //relocalize with COOL
+            //TODO: relocalize with COOL
         }
     }
 }

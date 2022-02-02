@@ -74,8 +74,6 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         robot.depositorLift.setCap(false);
         while (!opModeIsActive() && !isStopRequested()) {
             //Status to show if telemetry was initialized
-            robot.collector.retract();
-            robot.collector.close();
             telemetry.addData("Status", "Initialized");
             telemetry.update();
         }
