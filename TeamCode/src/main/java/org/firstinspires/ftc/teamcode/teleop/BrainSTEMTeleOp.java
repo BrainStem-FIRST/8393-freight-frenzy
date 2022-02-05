@@ -139,13 +139,13 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         }
 
         if(depositButton.getState()) {
-//            if (extended) {
-//                robot.depositorLift.open();
-//                extended = false;
-//            } else {
-//                robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
-//                extended = true;
-//            }
+            if (extended) {
+                robot.depositorLift.open();
+                extended = false;
+            } else {
+                robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
+                extended = true;
+            }
         }
 
         if (driver1.retract) {
@@ -184,13 +184,13 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 //            robot.turret.backToZeroPosition();
 //        }
 //
-        if (driver2.turretLeft > 0) {
-            robot.turret.spinTurret(Direction.LEFT);
-        } else if (driver2.turretRight > 0) {
-            robot.turret.spinTurret(Direction.RIGHT);
-        } else {
-            robot.turret.stopTurret();
-        }
+//        if (driver2.turretLeft > 0) {
+//            robot.turret.spinTurret(Direction.LEFT);
+//        } else if (driver2.turretRight > 0) {
+//            robot.turret.spinTurret(Direction.RIGHT);
+//        } else {
+//            robot.turret.stopTurret();
+//        }
 
         if (tseReleaseButton.getState()) {
 //            robot.depositorLift.releaseSE();

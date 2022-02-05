@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import org.firstinspires.ftc.teamcode.robot.BrainSTEMRobot;
 import org.firstinspires.ftc.teamcode.robot.Collector;
 import org.firstinspires.ftc.teamcode.robot.DepositorLift;
+import org.firstinspires.ftc.teamcode.robot.Direction;
 import org.firstinspires.ftc.teamcode.teleop.StickyButton;
 import org.firstinspires.ftc.teamcode.teleop.ToggleButton;
 
@@ -31,9 +32,10 @@ public class SubsystemTest extends LinearOpMode {
             if (button1.getState()) {
                 position -= 0.05;
             }
-            robot.depositorLift.test(position);
+//            robot.depositorLift.test(position);
             telemetry.addLine("Extend: " + robot.depositorLift.getExtendPosition());
             telemetry.addLine("Lift: " + robot.depositorLift.getLiftPosition());
+            telemetry.addLine("Turret: " + robot.turret.encoderPosition());
             telemetry.addLine("Position of gate: " + position);
             telemetry.update();
         }

@@ -18,17 +18,13 @@ public class Turret implements Component {
     private DcMotorEx turret;
     private DigitalChannel limit;
 
-    private static final double TURRET_DEGREE_CONVERSION = Math.toRadians(145);
-    private static final int TURRET_ENCODER_CONVERSION = 1073;
-    private static final double MIN_ANGLE = Math.toRadians(70);
-    private static final double MAX_ANGLE = Math.toRadians(290);
+    private static final int RESET_TICKS = 0;
+    private static final int DEPOSIT_TICKS = 444;
     private static final double TURRET_POWER = 0.4;
     private static final double TURRET_POWER_SLOW = 0.15;
-    private DepositorLift dL;
     private Telemetry telemetry;
 
-    public Turret (HardwareMap map, DepositorLift dL, Telemetry telemetry) {
-        this.dL = dL;
+    public Turret (HardwareMap map, Telemetry telemetry) {
         this.telemetry = telemetry;
         turret = new CachingMotor(map.get(DcMotorEx.class, "turret"));
 
@@ -55,66 +51,34 @@ public class Turret implements Component {
     }
 
     public void resetTurret() throws InterruptedException {
+        //TODO: fix
         Log.d("Turret", "Resetting");
-        dL.setHold(true);
-        dL.rotateClear();
-        dL.manualLiftUp();
-        sleep(400);
-        dL.manualLiftHold();
         while(!limit.getState()) {
             turret.setPower(0.5);
         }
         turret.setPower(0);
         turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        autoSpinTurret(Math.toRadians(180));
-        while(turret.isBusy()) {
-//            telemetry.addData("Current", turret.getCurrentPosition());
-//            telemetry.addData("Target", turret.getTargetPosition());
-            telemetry.update();
-        }
-        telemetry.clearAll();
-        telemetry.addLine("Out of loop");
-        telemetry.update();
-        dL.setGoal(DepositorLift.LiftGoal.LIFTDOWN);
-        while(dL.getLiftGoal() != DepositorLift.LiftGoal.STOP) {
-            dL.update();
-        }
-        dL.rotateCollect();
-    }
-
-    public void setTurretHold() {
-        turret.setTargetPosition(0);
-        turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        turret.setTargetPositionTolerance(3);
-    }
-
-    public void backToZeroPosition() {
-        turret.setTargetPosition(1);
-        turret.setPower(TURRET_POWER);
-        turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     public void setTurretHoldPower() {
         turret.setPower(0.1);
     }
 
-    public void autoSpinTurret(double theta) { //theta is in degrees, following the unit circle (0 is facing right on the x-axis)
-        if (theta < MIN_ANGLE || theta > MAX_ANGLE) {
-            turret.setPower(0);
-            return;
-        }
+    public void spinTurret(Direction direction) {
+        turret.setPower(direction == Direction.LEFT ? -TURRET_POWER : TURRET_POWER);
+    }
 
-        //TODO: negate theta if needed
-        double targetPosition = -(theta - Math.toRadians(35)) * ((double) TURRET_ENCODER_CONVERSION) / TURRET_DEGREE_CONVERSION;
-
-        turret.setTargetPosition((int)Math.round(targetPosition));
+    public void spinTurretDeposit() {
+        Log.d("Turret", "in method");
+        turret.setTargetPosition(DEPOSIT_TICKS);
         turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         turret.setPower(TURRET_POWER);
     }
 
-    public void spinTurret(Direction direction) {
-        turret.setPower(direction == Direction.LEFT ? -TURRET_POWER : TURRET_POWER);
+    public void spinTurretReset() {
+        turret.setTargetPosition(RESET_TICKS);
+        turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        turret.setPower(TURRET_POWER);
     }
 
     public void spinTurretSlow(Direction direction) {
