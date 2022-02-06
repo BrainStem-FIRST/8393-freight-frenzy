@@ -33,7 +33,7 @@ public class DepositorLift implements Component {
     }
 
     public enum LiftGoal {
-        DEFAULT, STOP, LIFTUP, LIFTUPACTION, LIFTDOWN, LIFTDOWNACTION
+        DEFAULT, LIFTUP, LIFTUPACTION, LIFTDOWN, LIFTDOWNACTION
     }
 
     public enum DepositorHeight {
@@ -54,37 +54,39 @@ public class DepositorLift implements Component {
     private static final double LIFT_HOLD_POWER = 0.2;
     private static final double LIFT_STOP_POWER = 0;
     private static final double LIFT_DOWN_POWER_SLOW = -0.05;
-    private static final double LIFT_DOWN_POWER = -0.4;
+    private static final double LIFT_DOWN_POWER = -0.7;
 
     private static final int LIFT_LEVELONE_TICKS = 85;
-    private static final int LIFT_LEVELTWO_TICKS = 339;
+    private static final int LIFT_LEVELTWO_TICKS = 370;
     private static final int LIFT_LEVELTHREE_TICKS = 825;
     private static final int LIFT_CAP_TICKS = 1015;
     private int liftTicks = LIFT_LEVELTHREE_TICKS;
 
-    private static final double EXTEND_OUT_POWER = 0.5;
+    private static final double EXTEND_OUT_POWER = 0.7;
     private static final double EXTEND_BACK_POWER = -1;
 
     private static final int EXTEND_RESET_TICKS = 0;
     private static final int EXTEND_LEVELONE_TICKS = 1183;
-    private static final int EXTEND_LEVELTWO_TICKS = 1203;
-    private static final int EXTEND_LEVELTHREE_TICKS = 1330;
+    private static final int EXTEND_LEVELTWO_TICKS = 1240;
+    private static final int EXTEND_LEVELTHREE_TICKS = 1360;
     private static final int EXTEND_CAP_TICKS = 1475;
     private int extendTicks = EXTEND_LEVELTHREE_TICKS;
 
-    private static final double EXTEND_CURRENT_THRESHOLD = 7000;
+    private static final double EXTEND_CURRENT_THRESHOLD = 5500;
 
     private TimerCanceller rotateClearCanceller = new TimerCanceller(150);
     private TimerCanceller waitForLiftCanceller = new TimerCanceller(100);
     private TimerCanceller waitForExtendCanceller = new TimerCanceller(100);
-    private TimerCanceller extendBackCancellerTurret = new TimerCanceller(500);
-    private TimerCanceller extendBackCancellerLift = new TimerCanceller(1000);
+    private TimerCanceller waitForGateCanceller = new TimerCanceller(300);
+    private TimerCanceller extendBackCancellerTurret = new TimerCanceller(400);
+    private TimerCanceller extendBackCancellerMotorTimeout = new TimerCanceller(750);
+//    private TimerCanceller extendBackCancellerTurretTimeout
 
     private TimerCanceller liftTimeout = new TimerCanceller(2000);
 
     private DepositorHeight depositHeight = DepositorHeight.HIGH;
     private DepositorGoal depositorGoal = DepositorGoal.DEFAULT;
-    private LiftGoal liftGoal = LiftGoal.STOP;
+    private LiftGoal liftGoal = LiftGoal.DEFAULT;
     private boolean hold = false;
     private boolean cap = false;
     private Mode mode = Mode.ANGLED;
@@ -110,7 +112,7 @@ public class DepositorLift implements Component {
         extend.setTargetPositionTolerance(3);
 
         gate.setPwmRange(new PwmControl.PwmRange(1000,1870));
-        rotate.setPwmRange(new PwmControl.PwmRange(806,2240));
+        rotate.setPwmRange(new PwmControl.PwmRange(1050,2465));
     }
 
     @Override
@@ -121,91 +123,99 @@ public class DepositorLift implements Component {
 
     @Override
     public void update() {
-        switch(depositorGoal) {
-            case DEFAULT:
-                break;
-            case DEPLOY:
-                close();
-                rotateClearCanceller.reset();
-                setGoal(DepositorGoal.ROTATECLEAR);
-                break;
-            case ROTATECLEAR:
-                rotateClear();
-                if (rotateClearCanceller.isConditionMet()) {
-                    waitForExtendCanceller.reset();
-                    setGoal(LiftGoal.LIFTUP);
-                    setGoal(DepositorGoal.EXTENDOUT);
-                }
-                break;
-            case EXTENDOUT:
-                extend.setTargetPosition(extendTicks);
-                extend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                if(waitForExtendCanceller.isConditionMet()) {
-                    extend.setPower(EXTEND_OUT_POWER);
-                    rotateDeposit();
-                }
-                break;
-            case RETRACT:
-                extendBackCancellerTurret.reset();
-                setGoal(DepositorGoal.EXTENDBACK);
-                break;
-            case EXTENDBACK:
-                rotateClear();
-                close();
-                extend.setTargetPosition(EXTEND_RESET_TICKS);
-                extend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                extendBackCancellerTurret.reset();
-                extendBackCancellerLift.reset();
-                setGoal(DepositorGoal.EXTENDBACKACTION);
-                break;
-            case EXTENDBACKACTION:
-                extend.setPower(EXTEND_BACK_POWER);
-                if (getExtendCurrentDraw() > EXTEND_CURRENT_THRESHOLD) {
-                    extend.setPower(0);
-                }
-                if (extendBackCancellerTurret.isConditionMet()) {
-                    if (mode != Mode.STRAIGHT) {
-                        turret.spinTurretReset();
-                    }
-                }
-                if(extendBackCancellerLift.isConditionMet()) {
-                    setGoal(LiftGoal.LIFTDOWN);
-                    setGoal(DepositorGoal.DEFAULT);
-                }
-                break;
-        }
-        switch(liftGoal) {
-            case DEFAULT:
-                break;
-            case LIFTUP:
-                lift.setTargetPosition(liftTicks);
-                lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                waitForLiftCanceller.reset();
-                setGoal(LiftGoal.LIFTUPACTION);
-                break;
-            case LIFTUPACTION:
-                lift.setPower(LIFT_UP_POWER);
-                if (waitForLiftCanceller.isConditionMet()) {
-                    if (mode != Mode.STRAIGHT) {
-                        turret.spinTurretDeposit();
-                    }
-                    setGoal(LiftGoal.DEFAULT);
-                }
-                break;
-            case LIFTDOWN:
-                lift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                liftTimeout.reset();
-                setGoal(LiftGoal.LIFTDOWNACTION);
-                break;
-            case LIFTDOWNACTION:
-                lift.setPower(LIFT_DOWN_POWER);
-                if(touch.isPressed() || liftTimeout.isConditionMet()) {
-                    lift.setPower(0);
-                    rotateCollect();
-                    openCollect();
-                    setGoal(LiftGoal.DEFAULT);
+        if (!cap) {
+            switch (depositorGoal) {
+                case DEFAULT:
                     break;
-                }
+                case DEPLOY:
+                    close();
+                    rotateClearCanceller.reset();
+                    setGoal(DepositorGoal.ROTATECLEAR);
+                    break;
+                case ROTATECLEAR:
+                    rotateClear();
+                    if (rotateClearCanceller.isConditionMet()) {
+                        waitForExtendCanceller.reset();
+                        setHeight(depositHeight);
+                        setGoal(LiftGoal.LIFTUP);
+                        setGoal(DepositorGoal.EXTENDOUT);
+                    }
+                    break;
+                case EXTENDOUT:
+                    extend.setTargetPosition(extendTicks);
+                    extend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    if (waitForExtendCanceller.isConditionMet()) {
+                        extend.setPower(EXTEND_OUT_POWER);
+                        rotateDeposit();
+                    }
+                    break;
+                case RETRACT:
+                    extendBackCancellerTurret.reset();
+                    waitForGateCanceller.reset();
+                    setGoal(DepositorGoal.EXTENDBACK);
+                    break;
+                case EXTENDBACK:
+                    close();
+                    if (waitForGateCanceller.isConditionMet()) {
+                        rotateClear();
+                        extend.setTargetPosition(EXTEND_RESET_TICKS);
+                        extend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                        extendBackCancellerTurret.reset();
+                        extendBackCancellerMotorTimeout.reset();
+                        setGoal(DepositorGoal.EXTENDBACKACTION);
+                    }
+                    break;
+                case EXTENDBACKACTION:
+                    extend.setPower(EXTEND_BACK_POWER);
+                    if (getExtendCurrentDraw() > EXTEND_CURRENT_THRESHOLD || extendBackCancellerMotorTimeout.isConditionMet()) {
+                        extend.setPower(0);
+                        extend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    }
+                    if (extendBackCancellerTurret.isConditionMet()) {
+                        if (mode != Mode.STRAIGHT) {
+                            turret.spinTurretReset();
+                        }
+                        if (!turret.isTurretBusy() && Math.abs(turret.encoderPosition()) < 5) {
+                            turret.stopTurret();
+                            setGoal(LiftGoal.LIFTDOWN);
+                            setGoal(DepositorGoal.DEFAULT);
+                        }
+                    }
+                    break;
+            }
+            switch (liftGoal) {
+                case DEFAULT:
+                    break;
+                case LIFTUP:
+                    lift.setTargetPosition(liftTicks);
+                    lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    waitForLiftCanceller.reset();
+                    setGoal(LiftGoal.LIFTUPACTION);
+                    break;
+                case LIFTUPACTION:
+                    lift.setPower(LIFT_UP_POWER);
+                    if (waitForLiftCanceller.isConditionMet()) {
+                        if (mode != Mode.STRAIGHT) {
+                            turret.spinTurretDeposit();
+                        }
+                        setGoal(LiftGoal.DEFAULT);
+                    }
+                    break;
+                case LIFTDOWN:
+                    lift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                    liftTimeout.reset();
+                    setGoal(LiftGoal.LIFTDOWNACTION);
+                    break;
+                case LIFTDOWNACTION:
+                    lift.setPower(LIFT_DOWN_POWER);
+                    if (touch.isPressed() || liftTimeout.isConditionMet()) {
+                        lift.setPower(0);
+                        rotateCollect();
+                        openCollect();
+                        setGoal(LiftGoal.DEFAULT);
+                        break;
+                    }
+            }
         }
     }
 
@@ -258,6 +268,10 @@ public class DepositorLift implements Component {
     public double getExtendCurrentDraw() {
         return extend.getCurrent(CurrentUnit.MILLIAMPS);
     }
+    public void adjustExtend(int ticks) {
+        extendTicks += ticks;
+        extend.setTargetPosition(extendTicks);
+    }
 
     //Gate
     public void close() {
@@ -289,7 +303,7 @@ public class DepositorLift implements Component {
 
     //Rotate
     public void rotateCollect() {
-        rotate.setPosition(0.1352859135);
+        rotate.setPosition(0.1166);
     }
     public void rotateClear() {
         rotate.setPosition(0);

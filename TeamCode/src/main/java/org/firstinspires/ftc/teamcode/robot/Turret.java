@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.util.CachingMotor;
@@ -27,6 +28,8 @@ public class Turret implements Component {
     private static final int DEPOSIT_TICKS_RED = 444;
     private static final double TURRET_POWER = 0.4;
     private static final double TURRET_POWER_SLOW = 0.15;
+
+    private int turretDepositTicks = DEPOSIT_TICKS_RED;
     private Telemetry telemetry;
 
     public Turret (HardwareMap map, Telemetry telemetry) {
@@ -38,6 +41,7 @@ public class Turret implements Component {
         turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        turret.setTargetPositionTolerance(3);
     }
 
     @Override
@@ -74,12 +78,18 @@ public class Turret implements Component {
     }
 
     public void spinTurretDeposit() {
-        turret.setTargetPosition(DEPOSIT_TICKS_RED);
+        turret.setTargetPosition(turretDepositTicks);
         turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         turret.setPower(TURRET_POWER);
     }
 
+    public void adjustTurret(int ticks) {
+        turretDepositTicks += ticks;
+        turret.setTargetPosition(turretDepositTicks);
+    }
+
     public void spinTurretReset() {
+        turretDepositTicks = DEPOSIT_TICKS_RED;
         turret.setTargetPosition(RESET_TICKS);
         turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         turret.setPower(-TURRET_POWER);
@@ -99,5 +109,9 @@ public class Turret implements Component {
 
     public boolean limitState() {
         return limit.getState();
+    }
+
+    public boolean isTurretBusy() {
+        return turret.isBusy();
     }
 }
