@@ -149,26 +149,26 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         }
 
         if (driver1.retract) {
-//            robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
+            robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
             extended = false;
         }
 
-        if (driver1.raiseLift > 0) {
-            robot.depositorLift.setHold(true);
-            robot.depositorLift.manualLiftUp();
-            telemetry.addLine("Lifting up");
-        } else if (driver1.lowerLiftSlow) {
-            robot.depositorLift.setHold(false);
-            robot.depositorLift.slowLiftDown();
-            telemetry.addLine("Lifting down slow");
-        } else if (driver1.lowerLift > 0) {
-            robot.depositorLift.setHold(false);
-            robot.depositorLift.setGoal(DepositorLift.LiftGoal.LIFTDOWN);
-            telemetry.addLine("Lifting down");
-        } else if (robot.depositorLift.getLiftGoal() == DepositorLift.LiftGoal.STOP) {
-            robot.depositorLift.manualLiftHold();
-            telemetry.addLine("Holding");
-        }
+//        if (driver1.raiseLift > 0) {
+//            robot.depositorLift.setHold(true);
+//            robot.depositorLift.manualLiftUp();
+//            telemetry.addLine("Lifting up");
+//        } else if (driver1.lowerLiftSlow) {
+//            robot.depositorLift.setHold(false);
+//            robot.depositorLift.slowLiftDown();
+//            telemetry.addLine("Lifting down slow");
+//        } else if (driver1.lowerLift > 0) {
+//            robot.depositorLift.setHold(false);
+//            robot.depositorLift.setGoal(DepositorLift.LiftGoal.LIFTDOWN);
+//            telemetry.addLine("Lifting down");
+//        } else if (robot.depositorLift.getLiftGoal() == DepositorLift.LiftGoal.STOP) {
+//            robot.depositorLift.manualLiftHold();
+//            telemetry.addLine("Holding");
+//        }
 //        } else if (!robot.depositorLift.limitState()) {
 //            robot.depositorLift.manualLiftHold();
 //            telemetry.addLine("Holding");
@@ -180,10 +180,6 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             robot.carouselSpin.off();
         }
 
-//        if(gamepad2.a) {
-//            robot.turret.backToZeroPosition();
-//        }
-//
 //        if (driver2.turretLeft > 0) {
 //            robot.turret.spinTurret(Direction.LEFT);
 //        } else if (driver2.turretRight > 0) {
@@ -207,13 +203,12 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         }
 
         telemetry.addData("Running", "Now");
-//        telemetry.addData("Turret encoder", robot.turret.encoderPosition());
         telemetry.addData("Deposit level", robot.depositorLift.getHeight());
         telemetry.addData("Lift encoder", robot.depositorLift.getLiftPosition());
+        telemetry.addData("Extend encoder", robot.depositorLift.getExtendPosition());
         telemetry.addData("Lift limit", robot.depositorLift.isTouchPressed());
-        telemetry.addData("Turret limit", robot.turret.limitState());
-        telemetry.addData("Lift power", robot.depositorLift.getLiftPower());
-        telemetry.addData("Turret Encoder Value", robot.turret.encoderPosition());
+        telemetry.addData("Turret encoder", robot.turret.encoderPosition());
+        telemetry.addData("Extend current draw", robot.depositorLift.getExtendCurrentDraw());
         telemetry.update();
     }
 

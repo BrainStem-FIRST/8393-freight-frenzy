@@ -2,24 +2,29 @@ package org.firstinspires.ftc.teamcode.robot;
 
 import android.util.Log;
 
-import com.acmerobotics.roadrunner.util.Angle;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.util.CachingMotor;
 
 import static java.lang.Thread.sleep;
-
+/*
+           Collector
+        ----|||-----
+    /        0           \
+|                            |
+|                            |
+|    444                     |
+ */
 public class Turret implements Component {
     private DcMotorEx turret;
     private DigitalChannel limit;
 
     private static final int RESET_TICKS = 0;
-    private static final int DEPOSIT_TICKS = 444;
+    private static final int DEPOSIT_TICKS_RED = 444;
     private static final double TURRET_POWER = 0.4;
     private static final double TURRET_POWER_SLOW = 0.15;
     private Telemetry telemetry;
@@ -69,8 +74,7 @@ public class Turret implements Component {
     }
 
     public void spinTurretDeposit() {
-        Log.d("Turret", "in method");
-        turret.setTargetPosition(DEPOSIT_TICKS);
+        turret.setTargetPosition(DEPOSIT_TICKS_RED);
         turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         turret.setPower(TURRET_POWER);
     }
@@ -78,7 +82,7 @@ public class Turret implements Component {
     public void spinTurretReset() {
         turret.setTargetPosition(RESET_TICKS);
         turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        turret.setPower(TURRET_POWER);
+        turret.setPower(-TURRET_POWER);
     }
 
     public void spinTurretSlow(Direction direction) {

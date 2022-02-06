@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.robot;
 
-import android.util.Log;
-
 import com.qualcomm.hardware.rev.RevTouchSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -9,6 +7,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.util.CachingMotor;
 import org.firstinspires.ftc.teamcode.util.CachingServo;
 import org.firstinspires.ftc.teamcode.util.TimerCanceller;
@@ -29,12 +28,12 @@ public class DepositorLift implements Component {
      */
 
     public enum DepositorGoal {
-        DEFAULT, DEPLOY, ROTATECLEAR, EXTENDOUT,  EXTENDOUTACTION,  ROTATEDEPOSIT,
-                 RETRACT,             EXTENDBACK, EXTENDBACKACTION, ROTATECOLLECT
+        DEFAULT, DEPLOY, ROTATECLEAR, EXTENDOUT,
+                 RETRACT,             EXTENDBACK, EXTENDBACKACTION
     }
 
     public enum LiftGoal {
-        STOP, LIFTUP, LIFTUPACTION, LIFTDOWN, LIFTDOWNACTION
+        DEFAULT, STOP, LIFTUP, LIFTUPACTION, LIFTDOWN, LIFTDOWNACTION
     }
 
     public enum DepositorHeight {
@@ -59,30 +58,33 @@ public class DepositorLift implements Component {
 
     private static final int LIFT_LEVELONE_TICKS = 85;
     private static final int LIFT_LEVELTWO_TICKS = 339;
-    private static final int LIFT_LEVELTHREE_TICKS = 718;
+    private static final int LIFT_LEVELTHREE_TICKS = 825;
     private static final int LIFT_CAP_TICKS = 1015;
     private int liftTicks = LIFT_LEVELTHREE_TICKS;
 
     private static final double EXTEND_OUT_POWER = 0.5;
-    private static final double EXTEND_BACK_POWER = -0.5;
+    private static final double EXTEND_BACK_POWER = -1;
 
     private static final int EXTEND_RESET_TICKS = 0;
     private static final int EXTEND_LEVELONE_TICKS = 1183;
     private static final int EXTEND_LEVELTWO_TICKS = 1203;
-    private static final int EXTEND_LEVELTHREE_TICKS = 1380;
-    private static final int EXTEND_CAP_TICKS = 1400;
+    private static final int EXTEND_LEVELTHREE_TICKS = 1330;
+    private static final int EXTEND_CAP_TICKS = 1475;
     private int extendTicks = EXTEND_LEVELTHREE_TICKS;
 
+    private static final double EXTEND_CURRENT_THRESHOLD = 7000;
+
     private TimerCanceller rotateClearCanceller = new TimerCanceller(150);
-    private TimerCanceller extendWaitCanceller = new TimerCanceller(100);
-    private TimerCanceller extendBackCanceller = new TimerCanceller(200);
+    private TimerCanceller waitForLiftCanceller = new TimerCanceller(100);
+    private TimerCanceller waitForExtendCanceller = new TimerCanceller(100);
+    private TimerCanceller extendBackCancellerTurret = new TimerCanceller(500);
+    private TimerCanceller extendBackCancellerLift = new TimerCanceller(1000);
 
     private TimerCanceller liftTimeout = new TimerCanceller(2000);
 
     private DepositorHeight depositHeight = DepositorHeight.HIGH;
     private DepositorGoal depositorGoal = DepositorGoal.DEFAULT;
     private LiftGoal liftGoal = LiftGoal.STOP;
-    private boolean isDeploying = true;
     private boolean hold = false;
     private boolean cap = false;
     private Mode mode = Mode.ANGLED;
@@ -107,14 +109,14 @@ public class DepositorLift implements Component {
         extend.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         extend.setTargetPositionTolerance(3);
 
-        gate.setPwmRange(new PwmControl.PwmRange(1200,2300));
+        gate.setPwmRange(new PwmControl.PwmRange(1000,1870));
         rotate.setPwmRange(new PwmControl.PwmRange(806,2240));
     }
 
     @Override
     public void reset() {
         rotateCollect();
-//        open();
+        openCollect();
     }
 
     @Override
@@ -123,73 +125,72 @@ public class DepositorLift implements Component {
             case DEFAULT:
                 break;
             case DEPLOY:
-                isDeploying = true;
-//                close();
+                close();
                 rotateClearCanceller.reset();
                 setGoal(DepositorGoal.ROTATECLEAR);
                 break;
             case ROTATECLEAR:
                 rotateClear();
                 if (rotateClearCanceller.isConditionMet()) {
-                    if (isDeploying) {
-//                        extendWaitCanceller.reset();
-                        setGoal(LiftGoal.LIFTUP);
-                        setGoal(DepositorGoal.EXTENDOUT);
-                    } else {
-                        setGoal(DepositorGoal.DEFAULT);
-                    }
+                    waitForExtendCanceller.reset();
+                    setGoal(LiftGoal.LIFTUP);
+                    setGoal(DepositorGoal.EXTENDOUT);
                 }
                 break;
             case EXTENDOUT:
-                Log.d("DepositorLift", "Extending");
                 extend.setTargetPosition(extendTicks);
                 extend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                extend.setPower(EXTEND_OUT_POWER);
-//                if(extendWaitCanceller.isConditionMet()) {
-//                    extend.setPower(EXTEND_OUT_POWER);
-//                }
-                break;
-            case ROTATEDEPOSIT:
-                rotateDeposit();
+                if(waitForExtendCanceller.isConditionMet()) {
+                    extend.setPower(EXTEND_OUT_POWER);
+                    rotateDeposit();
+                }
                 break;
             case RETRACT:
-                isDeploying = false;
-                extendBackCanceller.reset();
+                extendBackCancellerTurret.reset();
                 setGoal(DepositorGoal.EXTENDBACK);
                 break;
             case EXTENDBACK:
+                rotateClear();
+                close();
                 extend.setTargetPosition(EXTEND_RESET_TICKS);
                 extend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                extendBackCanceller.reset();
+                extendBackCancellerTurret.reset();
+                extendBackCancellerLift.reset();
                 setGoal(DepositorGoal.EXTENDBACKACTION);
                 break;
             case EXTENDBACKACTION:
                 extend.setPower(EXTEND_BACK_POWER);
-                if (extendBackCanceller.isConditionMet()) {
-                    rotateClearCanceller.reset();
-                    setGoal(DepositorGoal.ROTATECLEAR);
+                if (getExtendCurrentDraw() > EXTEND_CURRENT_THRESHOLD) {
+                    extend.setPower(0);
+                }
+                if (extendBackCancellerTurret.isConditionMet()) {
                     if (mode != Mode.STRAIGHT) {
                         turret.spinTurretReset();
                     }
-                    setGoal(LiftGoal.LIFTDOWN);
                 }
-                break;
-            case ROTATECOLLECT:
-                rotateCollect();
+                if(extendBackCancellerLift.isConditionMet()) {
+                    setGoal(LiftGoal.LIFTDOWN);
+                    setGoal(DepositorGoal.DEFAULT);
+                }
                 break;
         }
         switch(liftGoal) {
+            case DEFAULT:
+                break;
             case LIFTUP:
                 lift.setTargetPosition(liftTicks);
                 lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                if (mode != Mode.STRAIGHT) {
-                   turret.spinTurretDeposit();
-                }
-                setGoal(DepositorGoal.ROTATEDEPOSIT);
+                waitForLiftCanceller.reset();
                 setGoal(LiftGoal.LIFTUPACTION);
                 break;
             case LIFTUPACTION:
                 lift.setPower(LIFT_UP_POWER);
+                if (waitForLiftCanceller.isConditionMet()) {
+                    if (mode != Mode.STRAIGHT) {
+                        turret.spinTurretDeposit();
+                    }
+                    setGoal(LiftGoal.DEFAULT);
+                }
                 break;
             case LIFTDOWN:
                 lift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -200,9 +201,9 @@ public class DepositorLift implements Component {
                 lift.setPower(LIFT_DOWN_POWER);
                 if(touch.isPressed() || liftTimeout.isConditionMet()) {
                     lift.setPower(0);
-                    openFull();
-                    setGoal(DepositorGoal.ROTATECOLLECT);
-                    setGoal(LiftGoal.STOP);
+                    rotateCollect();
+                    openCollect();
+                    setGoal(LiftGoal.DEFAULT);
                     break;
                 }
         }
@@ -254,6 +255,9 @@ public class DepositorLift implements Component {
     public int getExtendPosition() {
         return extend.getCurrentPosition();
     }
+    public double getExtendCurrentDraw() {
+        return extend.getCurrent(CurrentUnit.MILLIAMPS);
+    }
 
     //Gate
     public void close() {
@@ -270,8 +274,11 @@ public class DepositorLift implements Component {
                 break;
         }
     }
+    public void openCollect() {
+        gate.setPosition(0.724);
+    }
     public void openPartial() {
-        gate.setPosition(0.4);
+        gate.setPosition(0.44);
     }
     public void openFull() {
         gate.setPosition(1);
