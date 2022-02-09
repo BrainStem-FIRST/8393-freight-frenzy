@@ -261,6 +261,10 @@ public class SampleMecanumDrive extends MecanumDrive implements Component {
         return trajectorySequenceRunner.isBusy();
     }
 
+    public boolean isTrajectoryRunning() {
+        return !Thread.currentThread().isInterrupted() && isBusy();
+    }
+
     public void setMode(DcMotor.RunMode runMode) {
         for (DcMotorEx motor : motors) {
             motor.setMode(runMode);
@@ -366,6 +370,10 @@ public class SampleMecanumDrive extends MecanumDrive implements Component {
     }
 
     public void endTrajectory() {
-        trajectorySequenceRunner.followTrajectorySequenceAsync(null);
+        trajectorySequenceRunner.endTrajectory();
+    }
+
+    public String getTrajectorySequenceString() {
+        return trajectorySequenceRunner.getTrajectorySequenceString();
     }
 }

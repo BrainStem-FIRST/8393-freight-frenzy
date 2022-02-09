@@ -367,6 +367,14 @@ public class DepositorLift implements Component {
         }
     }
 
+    public int getLiftTarget() {
+        return lift.getTargetPosition();
+    }
+
+    public int getExtendTarget() {
+        return extend.getTargetPosition();
+    }
+
     //Touch
     public boolean isTouchPressed() {
         return touch.isPressed();

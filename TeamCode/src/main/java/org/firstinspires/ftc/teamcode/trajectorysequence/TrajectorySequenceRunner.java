@@ -270,4 +270,13 @@ public class TrajectorySequenceRunner {
     public boolean isBusy() {
         return currentTrajectorySequence != null;
     }
+
+    public void endTrajectory() {
+        currentTrajectorySequence = null;
+        remainingMarkers.clear();
+    }
+
+    public String getTrajectorySequenceString() {
+        return currentTrajectorySequence.toString();
+    }
 }
