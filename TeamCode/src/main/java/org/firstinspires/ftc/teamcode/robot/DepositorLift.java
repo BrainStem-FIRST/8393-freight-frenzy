@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.robot;
 import com.qualcomm.hardware.rev.RevTouchSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
@@ -10,6 +11,7 @@ import com.qualcomm.robotcore.hardware.ServoImplEx;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.util.CachingMotor;
 import org.firstinspires.ftc.teamcode.util.CachingServo;
+import org.firstinspires.ftc.teamcode.util.Encoder;
 import org.firstinspires.ftc.teamcode.util.TimerCanceller;
 
 public class DepositorLift implements Component {
@@ -56,13 +58,14 @@ public class DepositorLift implements Component {
     private static final double LIFT_DOWN_POWER_SLOW = -0.05;
     private static final double LIFT_DOWN_POWER = -0.7;
 
-    private static final int LIFT_LEVELONE_TICKS = 85;
+    private static final int LIFT_LEVELONE_TICKS = 170;
     private static final int LIFT_LEVELTWO_TICKS = 370;
     private static final int LIFT_LEVELTHREE_TICKS = 825;
     private static final int LIFT_CAP_TICKS = 1015;
     private int liftTicks = LIFT_LEVELTHREE_TICKS;
 
-    private static final double EXTEND_OUT_POWER = 0.7;
+    private static final double EXTEND_OUT_POWER = 0.35;
+    private static final double EXTEND_OUT_POWER_AUTO = 0.35;
     private static final double EXTEND_BACK_POWER = -1;
 
     private static final int EXTEND_RESET_TICKS = 0;
@@ -75,7 +78,7 @@ public class DepositorLift implements Component {
     private static final double EXTEND_CURRENT_THRESHOLD = 5500;
 
     private TimerCanceller rotateClearCanceller = new TimerCanceller(150);
-    private TimerCanceller waitForLiftCanceller = new TimerCanceller(100);
+    private TimerCanceller waitForLiftCanceller = new TimerCanceller(600);
     private TimerCanceller waitForExtendCanceller = new TimerCanceller(100);
     private TimerCanceller waitForGateCanceller = new TimerCanceller(300);
     private TimerCanceller extendBackCancellerTurret = new TimerCanceller(400);
@@ -104,6 +107,7 @@ public class DepositorLift implements Component {
         lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         lift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        lift.setDirection(DcMotorSimple.Direction.REVERSE);
         lift.setTargetPositionTolerance(3);
 
         extend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -138,7 +142,7 @@ public class DepositorLift implements Component {
                         waitForExtendCanceller.reset();
                         setHeight(depositHeight);
                         setGoal(LiftGoal.LIFTUP);
-                        setGoal(DepositorGoal.EXTENDOUT);
+                        setGoal(DepositorGoal.DEFAULT);
                     }
                     break;
                 case EXTENDOUT:
@@ -198,6 +202,7 @@ public class DepositorLift implements Component {
                         if (mode != Mode.STRAIGHT) {
                             turret.spinTurretDeposit();
                         }
+                        setGoal(DepositorGoal.EXTENDOUT);
                         setGoal(LiftGoal.DEFAULT);
                     }
                     break;

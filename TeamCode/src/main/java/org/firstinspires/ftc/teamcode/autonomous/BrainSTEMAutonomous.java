@@ -24,7 +24,8 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 
     public void runOpMode() throws InterruptedException {
         BrainSTEMRobot robot = new BrainSTEMRobot(this);
-//        robot.pixie.start();
+        robot.pixie.start();
+        robot.pixie.setColor(color);
 
         robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LOW);
         robot.collector.setAuto(true);
@@ -32,8 +33,8 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         robot.reset();
         robot.collector.tiltInit();
         while (!opModeIsActive() && !isStopRequested()) {
-//            robot.pixie.teamShippingElementUpdate();
-//            pattern = robot.pixie.tsePos();
+            robot.pixie.teamShippingElementUpdate();
+            pattern = robot.pixie.tsePos();
             switch(pattern) {
                 case LEVELONE:
                     robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LOW);
@@ -48,6 +49,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             robot.update();
             telemetry.addLine("Ready for start");
             telemetry.addData("Barcode Pattern", pattern);
+            telemetry.addData("Team Shipping Element X", robot.pixie.tse_x);
             telemetry.update();
         }
 
@@ -55,28 +57,39 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             return;
         }
 
-//        robot.pixie.stop();
+        robot.pixie.stop();
 
         telemetry.clearAll();
         BrainSTEMAutonomousCoordinates coordinates = new BrainSTEMAutonomousCoordinates(color);
         robot.drive.setPoseEstimate(coordinates.start());
 
         //deposit preload
-//        waitForDeployCanceller.reset();
-//        robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
-//
-//        while(!waitForDeployCanceller.isConditionMet()) {
-//            robot.update();
-//        }
-//
+        waitForDeployCanceller.reset();
+        robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
+
+        while(!waitForDeployCanceller.isConditionMet()) {
+            robot.update();
+        }
+
 //        robot.depositorLift.openPartial();
 
-//        for (int i = 0; i < cycleTimes; i++) {
-//            sleep(WAIT_FOR_OPEN);
-//            robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
-//            sleep(WAIT_FOR_RETRACT);
+        while (opModeIsActive()) {
+            telemetry.addData("Lift height", robot.depositorLift.getHeight());
+            telemetry.addData("Lift encoder", robot.depositorLift.getLiftPosition());
+            telemetry.addData("Lift target", robot.depositorLift.getLiftTarget());
+            telemetry.addData("Extension encoder", robot.depositorLift.getExtendPosition());
+            telemetry.addData("Extension target", robot.depositorLift.getExtendTarget());
+            telemetry.addData("Turret encoder", robot.turret.encoderPosition());
+            telemetry.addData("Turret target", robot.turret.getTargetPosition());
+            telemetry.update();
+        }
+
+        for (int i = 0; i < cycleTimes; i++) {
+            sleep(WAIT_FOR_OPEN);
+            robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
+            sleep(WAIT_FOR_RETRACT);
             //deploy collector, retract depositor
-            TrajectorySequence collectTrajectory = robot.drive.trajectorySequenceBuilder(coordinates.start())
+            TrajectorySequence collectTrajectory = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
                     .splineTo(coordinates.collect().vec(), coordinates.collectTangent())
                     .build();
 
@@ -117,7 +130,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             while(opModeIsActive());
             coordinates.incrementCollect();
             //TODO: relocalize with COOL
-//        }
+        }
 
 //        sleep(WAIT_FOR_OPEN);
 //        robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);

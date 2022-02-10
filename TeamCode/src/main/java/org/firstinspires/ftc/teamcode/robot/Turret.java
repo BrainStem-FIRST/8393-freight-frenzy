@@ -107,6 +107,10 @@ public class Turret implements Component {
         return turret.getCurrentPosition();
     }
 
+    public int getTargetPosition() {
+        return turret.getTargetPosition();
+    }
+
     public boolean limitState() {
         return limit.getState();
     }
