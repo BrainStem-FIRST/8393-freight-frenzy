@@ -25,7 +25,7 @@ public class Turret implements Component {
     private DigitalChannel limit;
 
     private static final int RESET_TICKS = 0;
-    private static final int DEPOSIT_TICKS_RED = 444;
+    private static final int DEPOSIT_TICKS_RED = 427;
     private static final double TURRET_POWER = 0.4;
     private static final double TURRET_POWER_SLOW = 0.15;
 

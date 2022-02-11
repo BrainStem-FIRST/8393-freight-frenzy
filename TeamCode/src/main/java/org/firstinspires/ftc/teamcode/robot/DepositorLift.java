@@ -1,9 +1,10 @@
 package org.firstinspires.ftc.teamcode.robot;
 
+import android.util.Log;
+
 import com.qualcomm.hardware.rev.RevTouchSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
@@ -11,7 +12,6 @@ import com.qualcomm.robotcore.hardware.ServoImplEx;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.util.CachingMotor;
 import org.firstinspires.ftc.teamcode.util.CachingServo;
-import org.firstinspires.ftc.teamcode.util.Encoder;
 import org.firstinspires.ftc.teamcode.util.TimerCanceller;
 
 public class DepositorLift implements Component {
@@ -30,16 +30,16 @@ public class DepositorLift implements Component {
      */
 
     public enum DepositorGoal {
-        DEFAULT, DEPLOY, ROTATECLEAR, EXTENDOUT,
+        DEFAULT, DEPLOY, ROTATECLEAR, EXTENDCLEAR, EXTENDCLEARACTION, EXTENDOUT,
                  RETRACT,             EXTENDBACK, EXTENDBACKACTION
     }
 
     public enum LiftGoal {
-        DEFAULT, LIFTUP, LIFTUPACTION, LIFTDOWN, LIFTDOWNACTION
+        DEFAULT, LIFTUP, LIFTUPACTION, LIFTDOWNLEVELONE, LIFTDOWN, LIFTDOWNACTION
     }
 
     public enum DepositorHeight {
-        LOW, MIDDLE, HIGH, CAP
+        LEVELONE, LEVELTWO, LEVELTHREE, CAP
     }
 
     public enum Mode {
@@ -58,19 +58,20 @@ public class DepositorLift implements Component {
     private static final double LIFT_DOWN_POWER_SLOW = -0.05;
     private static final double LIFT_DOWN_POWER = -0.7;
 
-    private static final int LIFT_LEVELONE_TICKS = 170;
-    private static final int LIFT_LEVELTWO_TICKS = 370;
+    private static final int LIFT_LEVELONE_TICKS = 270;
+    private static final int LIFT_LEVELTWO_TICKS = 400;
     private static final int LIFT_LEVELTHREE_TICKS = 825;
     private static final int LIFT_CAP_TICKS = 1015;
     private int liftTicks = LIFT_LEVELTHREE_TICKS;
 
-    private static final double EXTEND_OUT_POWER = 0.35;
-    private static final double EXTEND_OUT_POWER_AUTO = 0.35;
+    private static final double EXTEND_OUT_POWER = 0.7;
+    private static final double EXTEND_OUT_POWER_AUTO = 0.2;
     private static final double EXTEND_BACK_POWER = -1;
 
     private static final int EXTEND_RESET_TICKS = 0;
+    private static final int EXTEND_CLEAR_TICKS = 70;
     private static final int EXTEND_LEVELONE_TICKS = 1183;
-    private static final int EXTEND_LEVELTWO_TICKS = 1240;
+    private static final int EXTEND_LEVELTWO_TICKS = 1260;
     private static final int EXTEND_LEVELTHREE_TICKS = 1360;
     private static final int EXTEND_CAP_TICKS = 1475;
     private int extendTicks = EXTEND_LEVELTHREE_TICKS;
@@ -78,8 +79,8 @@ public class DepositorLift implements Component {
     private static final double EXTEND_CURRENT_THRESHOLD = 5500;
 
     private TimerCanceller rotateClearCanceller = new TimerCanceller(150);
-    private TimerCanceller waitForLiftCanceller = new TimerCanceller(600);
-    private TimerCanceller waitForExtendCanceller = new TimerCanceller(100);
+    private TimerCanceller waitForLiftCanceller = new TimerCanceller(400);
+    private TimerCanceller waitForExtendCanceller = new TimerCanceller(500);
     private TimerCanceller waitForGateCanceller = new TimerCanceller(300);
     private TimerCanceller extendBackCancellerTurret = new TimerCanceller(400);
     private TimerCanceller extendBackCancellerMotorTimeout = new TimerCanceller(750);
@@ -87,14 +88,17 @@ public class DepositorLift implements Component {
 
     private TimerCanceller liftTimeout = new TimerCanceller(2000);
 
-    private DepositorHeight depositHeight = DepositorHeight.HIGH;
+    private DepositorHeight depositHeight = DepositorHeight.LEVELTHREE;
     private DepositorGoal depositorGoal = DepositorGoal.DEFAULT;
     private LiftGoal liftGoal = LiftGoal.DEFAULT;
     private boolean hold = false;
     private boolean cap = false;
+    private boolean auto = false;
     private Mode mode = Mode.ANGLED;
 
     private Turret turret;
+    private int i = 0;
+    private int j = 0;
 
     public DepositorLift(HardwareMap map, Turret turret) {
         this.turret = turret;
@@ -139,18 +143,24 @@ public class DepositorLift implements Component {
                 case ROTATECLEAR:
                     rotateClear();
                     if (rotateClearCanceller.isConditionMet()) {
-                        waitForExtendCanceller.reset();
                         setHeight(depositHeight);
                         setGoal(LiftGoal.LIFTUP);
-                        setGoal(DepositorGoal.DEFAULT);
+                        setGoal(DepositorGoal.EXTENDCLEAR);
                     }
                     break;
-                case EXTENDOUT:
-                    extend.setTargetPosition(extendTicks);
+                case EXTENDCLEAR:
+                    extend.setTargetPosition(EXTEND_CLEAR_TICKS);
                     extend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    extend.setPower(EXTEND_OUT_POWER_AUTO);
+                    setGoal(DepositorGoal.DEFAULT);
+                    break;
+                case EXTENDOUT:
                     if (waitForExtendCanceller.isConditionMet()) {
-                        extend.setPower(EXTEND_OUT_POWER);
+                        extend.setTargetPosition(extendTicks);
+                        extend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                        extend.setPower(auto ? EXTEND_OUT_POWER_AUTO : EXTEND_OUT_POWER);
                         rotateDeposit();
+                        setGoal(DepositorGoal.DEFAULT);
                     }
                     break;
                 case RETRACT:
@@ -202,6 +212,7 @@ public class DepositorLift implements Component {
                         if (mode != Mode.STRAIGHT) {
                             turret.spinTurretDeposit();
                         }
+                        waitForExtendCanceller.reset();
                         setGoal(DepositorGoal.EXTENDOUT);
                         setGoal(LiftGoal.DEFAULT);
                     }
@@ -284,11 +295,11 @@ public class DepositorLift implements Component {
     }
     public void open() {
         switch (depositHeight) {
-            case LOW:
-            case MIDDLE:
+            case LEVELONE:
+            case LEVELTWO:
                 openPartial();
                 break;
-            case HIGH:
+            case LEVELTHREE:
                 openFull();
                 break;
         }
@@ -308,18 +319,21 @@ public class DepositorLift implements Component {
 
     //Rotate
     public void rotateCollect() {
+//        Log.d("DepositorLift", "rotateCollect");
         rotate.setPosition(0.1166);
     }
     public void rotateClear() {
+//        Log.d("DepositorLift", "rotateClear");
         rotate.setPosition(0);
     }
     public void rotateDeposit() {
+//        Log.d("DepositorLift", "rotateDeposit f");
         switch (depositHeight) {
-            case LOW:
+            case LEVELONE:
 //                rotate.setPosition(0.8);
 //                break;
-            case MIDDLE:
-            case HIGH:
+            case LEVELTWO:
+            case LEVELTHREE:
                 rotate.setPosition(1);
                 break;
         }
@@ -353,15 +367,15 @@ public class DepositorLift implements Component {
     public void setHeight(DepositorHeight height) {
         depositHeight = height;
         switch(height) {
-            case LOW:
+            case LEVELONE:
                 liftTicks = LIFT_LEVELONE_TICKS;
                 extendTicks = EXTEND_LEVELONE_TICKS;
                 break;
-            case MIDDLE:
+            case LEVELTWO:
                 liftTicks = LIFT_LEVELTWO_TICKS;
                 extendTicks = EXTEND_LEVELTWO_TICKS;
                 break;
-            case HIGH:
+            case LEVELTHREE:
                 liftTicks = LIFT_LEVELTHREE_TICKS;
                 extendTicks = EXTEND_LEVELTHREE_TICKS;
                 break;
@@ -391,5 +405,8 @@ public class DepositorLift implements Component {
     }
     public void setCap(boolean isCapping) {
         cap = isCapping;
+    }
+    public void setAuto(boolean isAuto) {
+        auto = isAuto;
     }
 }

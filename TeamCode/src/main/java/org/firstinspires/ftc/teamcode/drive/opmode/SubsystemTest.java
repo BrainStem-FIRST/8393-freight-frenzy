@@ -23,11 +23,11 @@ public class SubsystemTest extends LinearOpMode {
         telemetry.addData("Status:", "ready");
         telemetry.update();
         waitForStart();
-        robot.turret.spinTurret(Direction.RIGHT);
-        sleep(600);
-        robot.turret.stopTurret();
+//        robot.turret.spinTurret(Direction.RIGHT);
+//        sleep(600);
+//        robot.turret.stopTurret();
         while(opModeIsActive()) {
-            robot.turret.spinTurretDeposit();
+//            robot.turret.spinTurretDeposit();
             robot.update();
 //            button.update(gamepad1.y);
 //            button1.update(gamepad1.a);

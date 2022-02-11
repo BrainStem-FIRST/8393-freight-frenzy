@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
-import android.util.Log;
-
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
@@ -9,7 +7,6 @@ import org.firstinspires.ftc.teamcode.autonomous.AllianceColor;
 import org.firstinspires.ftc.teamcode.robot.BrainSTEMRobot;
 import org.firstinspires.ftc.teamcode.robot.Collector;
 import org.firstinspires.ftc.teamcode.robot.DepositorLift;
-import org.firstinspires.ftc.teamcode.robot.Direction;
 
 public class BrainSTEMTeleOp extends LinearOpMode {
     //Initializes joystick storage variables'
@@ -184,11 +181,11 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             }
 
             if (driver2.depositHigh) {
-                robot.depositorLift.setHeight(DepositorLift.DepositorHeight.HIGH);
+                robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LEVELTHREE);
             } else if (driver2.depositMid) {
-                robot.depositorLift.setHeight(DepositorLift.DepositorHeight.MIDDLE);
+                robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LEVELTWO);
             } else if (driver2.depositLow) {
-                robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LOW);
+                robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LEVELONE);
             }
         }
 
