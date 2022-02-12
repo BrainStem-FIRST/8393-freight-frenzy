@@ -36,7 +36,7 @@ public class Turret implements Component {
         this.telemetry = telemetry;
         turret = new CachingMotor(map.get(DcMotorEx.class, "turret"));
 
-        limit = map.digitalChannel.get("turretLimit");
+//        limit = map.digitalChannel.get("turretLimit");
 
         turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);

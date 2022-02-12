@@ -15,7 +15,7 @@ public class BrainSTEMAutonomousCoordinates {
 
     private Pose2d start = new Pose2d(16.25, 64.25, Math.toRadians(0));
 
-    private Pose2d collect = new Pose2d(56, start.getY(), Math.toRadians(0)); //x=43
+    private Pose2d collect = new Pose2d(43, start.getY(), Math.toRadians(0)); //x=43
 
     private double collectTangent = Math.toRadians(0);
     private double depositTangent = Math.toRadians(180);

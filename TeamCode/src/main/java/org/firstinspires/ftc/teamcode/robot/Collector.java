@@ -25,7 +25,7 @@ public class Collector implements Component {
     private ServoImplEx gate;
     private ColorSensor color;
 
-    private static final double COLLECT_POWER = 1;
+    private static final double COLLECT_POWER = 0.7;
     private static final float COLOR_THRESHOLD = 110;
     private static final double SCALE_FACTOR = 255;
     private static final int CURRENT_THRESHOLD = 0; //TODO: find

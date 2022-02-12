@@ -31,7 +31,7 @@ public class DepositorLift implements Component {
 
     public enum DepositorGoal {
         DEFAULT, DEPLOY, ROTATECLEAR, EXTENDCLEAR, EXTENDCLEARACTION, EXTENDOUT,
-                 RETRACT,             EXTENDBACK, EXTENDBACKACTION
+                 RETRACT,             EXTENDBACK, EXTENDBACKACTION, TURRETRESET
     }
 
     public enum LiftGoal {
@@ -72,19 +72,20 @@ public class DepositorLift implements Component {
     private static final int EXTEND_CLEAR_TICKS = 70;
     private static final int EXTEND_LEVELONE_TICKS = 1183;
     private static final int EXTEND_LEVELTWO_TICKS = 1260;
-    private static final int EXTEND_LEVELTHREE_TICKS = 1360;
+    private static final int EXTEND_LEVELTHREE_TICKS = 1320;
     private static final int EXTEND_CAP_TICKS = 1475;
     private int extendTicks = EXTEND_LEVELTHREE_TICKS;
 
-    private static final double EXTEND_CURRENT_THRESHOLD = 5500;
+    private static final double EXTEND_CURRENT_THRESHOLD = 6500;
 
     private TimerCanceller rotateClearCanceller = new TimerCanceller(150);
-    private TimerCanceller waitForLiftCanceller = new TimerCanceller(400);
-    private TimerCanceller waitForExtendCanceller = new TimerCanceller(500);
+    private TimerCanceller waitForLiftCanceller = new TimerCanceller(200);
+    private TimerCanceller waitForExtendCanceller = new TimerCanceller(300);
     private TimerCanceller waitForGateCanceller = new TimerCanceller(300);
     private TimerCanceller extendBackCancellerTurret = new TimerCanceller(400);
-    private TimerCanceller extendBackCancellerMotorTimeout = new TimerCanceller(750);
-//    private TimerCanceller extendBackCancellerTurretTimeout
+    private TimerCanceller extendBackCancellerMotorTimeout = new TimerCanceller(1000);
+    private TimerCanceller extendBackCancellerCurrentDrawTimeout = new TimerCanceller(750);
+    private TimerCanceller turretTimeout = new TimerCanceller(800);
 
     private TimerCanceller liftTimeout = new TimerCanceller(2000);
 
@@ -164,7 +165,10 @@ public class DepositorLift implements Component {
                     }
                     break;
                 case RETRACT:
-                    extendBackCancellerTurret.reset();
+                    //these two were timed from the beginning of the entire retract process
+                    extendBackCancellerMotorTimeout.reset();
+                    extendBackCancellerCurrentDrawTimeout.reset();
+
                     waitForGateCanceller.reset();
                     setGoal(DepositorGoal.EXTENDBACK);
                     break;
@@ -175,13 +179,16 @@ public class DepositorLift implements Component {
                         extend.setTargetPosition(EXTEND_RESET_TICKS);
                         extend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                         extendBackCancellerTurret.reset();
-                        extendBackCancellerMotorTimeout.reset();
                         setGoal(DepositorGoal.EXTENDBACKACTION);
                     }
                     break;
                 case EXTENDBACKACTION:
                     extend.setPower(EXTEND_BACK_POWER);
-                    if (getExtendCurrentDraw() > EXTEND_CURRENT_THRESHOLD || extendBackCancellerMotorTimeout.isConditionMet()) {
+                    if (getExtendCurrentDraw() > EXTEND_CURRENT_THRESHOLD && extendBackCancellerCurrentDrawTimeout.isConditionMet()
+                            || extendBackCancellerMotorTimeout.isConditionMet()) {
+                        if (getExtendCurrentDraw() > EXTEND_CURRENT_THRESHOLD) {
+                            Log.d("DepositorLift", "passed threshold with value of " + getExtendCurrentDraw());
+                        }
                         extend.setPower(0);
                         extend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     }
@@ -189,13 +196,18 @@ public class DepositorLift implements Component {
                         if (mode != Mode.STRAIGHT) {
                             turret.spinTurretReset();
                         }
-                        if (!turret.isTurretBusy() && Math.abs(turret.encoderPosition()) < 5) {
-                            turret.stopTurret();
-                            setGoal(LiftGoal.LIFTDOWN);
-                            setGoal(DepositorGoal.DEFAULT);
-                        }
+                        turretTimeout.reset();
+                        setGoal(DepositorGoal.TURRETRESET);
                     }
                     break;
+                case TURRETRESET:
+                    if (turretTimeout.isConditionMet() && !turret.isTurretBusy()
+                            && Math.abs(turret.encoderPosition()) < 5) {
+                        turret.stopTurret();
+                        setGoal(LiftGoal.LIFTDOWN);
+                        setGoal(DepositorGoal.DEFAULT);
+                    }
+                     break;
             }
             switch (liftGoal) {
                 case DEFAULT:
