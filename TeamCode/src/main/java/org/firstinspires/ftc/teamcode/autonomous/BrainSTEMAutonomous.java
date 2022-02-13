@@ -11,10 +11,10 @@ import org.firstinspires.ftc.teamcode.util.TimerCanceller;
 public class BrainSTEMAutonomous extends LinearOpMode {
     private TimerCanceller waitForDeployCanceller = new TimerCanceller(2000); //2250
     private static final int WAIT_FOR_OPEN = 250;
-    private TimerCanceller waitForRetractCanceller = new TimerCanceller(750);
+    private TimerCanceller waitForRetractCanceller = new TimerCanceller(600);
     private TimerCanceller waitForLiftAfterDriveCanceller = new TimerCanceller(300);
-    private TimerCanceller waitForCollectorCanceller = new TimerCanceller(800);
-    private TimerCanceller liftDefaultOffsetCanceller = new TimerCanceller(400);
+    private TimerCanceller waitForCollectorCanceller = new TimerCanceller(600);
+    private TimerCanceller waitToRetractCollectorCanceller = new TimerCanceller(400);
     protected AllianceColor color = AllianceColor.BLUE;
     protected StartLocation startLocation = StartLocation.WAREHOUSE;
     private BarcodePattern pattern = BarcodePattern.LEVELTWO;
@@ -111,11 +111,12 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                     .build();
 
             robot.drive.followTrajectorySequenceAsync(depositTrajectory);
-            liftDefaultOffsetCanceller.reset();
+            waitToRetractCollectorCanceller.reset();
             while(robot.drive.isTrajectoryRunning()) {
                 robot.update();
                 robot.drive.update();
-                if (firstTimeRetract && robot.depositorLift.getLiftGoal() == DepositorLift.LiftGoal.DEFAULT) {
+                if (firstTimeRetract && waitToRetractCollectorCanceller.isConditionMet()
+                        && robot.depositorLift.getLiftGoal() == DepositorLift.LiftGoal.DEFAULT) {
                     robot.collector.setGoal(Collector.Goal.RETRACT);
                     firstTimeRetract = false;
                     waitForCollectorCanceller.reset();

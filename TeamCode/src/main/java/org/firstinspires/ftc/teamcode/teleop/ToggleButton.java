@@ -4,8 +4,7 @@ public class ToggleButton {
     private boolean previousState = false, currentState = false;
     private boolean toggle = false;
 
-    public ToggleButton()
-    {
+    public ToggleButton() {
         toggle = false;
     }
 
@@ -19,15 +18,13 @@ public class ToggleButton {
         return toggle;
     }
 
-    public void setState(boolean state)
-    {
+    public void setState(boolean state) {
         toggle = state;
         previousState = false;
         currentState = false;
     }
 
-    public boolean update(boolean currentState)
-    {
+    public boolean update(boolean currentState) {
         previousState = this.currentState;
         this.currentState = currentState;
 

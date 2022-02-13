@@ -30,6 +30,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 
     private ToggleButton collectOnButton = new ToggleButton();
     private ToggleButton capModeButton = new ToggleButton();
+    private ToggleButton depositorGateCapButton = new ToggleButton();
 
     private StickyButton depositButton = new StickyButton();
     private StickyButton carouselButton = new StickyButton();
@@ -93,27 +94,31 @@ public class BrainSTEMTeleOp extends LinearOpMode {
                     )
             );
 
+            if (depositButton.getState()) {
+                robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
+            }
+
             if (driver1.liftUpCap) {
                 robot.depositorLift.setHold(true);
                 robot.depositorLift.manualLiftUp();
+            } else if (driver1.liftDownCap) {
+                robot.depositorLift.setHold(false);
+                robot.depositorLift.manualLiftDown();
+            } else {
+                robot.depositorLift.manualLiftHold();
             }
 
-//            if (driver1.raiseLift > 0) {
-//                robot.depositorLift.setHold(true);
-//                robot.depositorLift.manualLiftUp();
-//                telemetry.addLine("Lifting up");
-//            } else if (driver1.lowerLiftSlow) {
-//                robot.depositorLift.setHold(false);
-//                robot.depositorLift.slowLiftDown();
-//                telemetry.addLine("Lifting down slow");
-//            } else if (driver1.lowerLift > 0) {
-//                robot.depositorLift.setHold(false);
-//                robot.depositorLift.setGoal(DepositorLift.LiftGoal.LIFTDOWN);
-//                telemetry.addLine("Lifting down");
-//            } else if (robot.depositorLift.getLiftGoal() == DepositorLift.LiftGoal.STOP) {
-//                robot.depositorLift.manualLiftHold();
-//                telemetry.addLine("Holding");
-//            }
+            if (driver1.extendOutCap) {
+                robot.depositorLift.manualExtendOut();
+            } else if (driver1.extendRetractCap) {
+                robot.depositorLift.manualExtendBack();
+            }
+
+            if (depositorGateCapButton.getState()) {
+                robot.depositorLift.openCollect();
+            } else {
+                robot.depositorLift.close();
+            }
         } else {
             robot.depositorLift.setCap(false);
             robot.drive.setWeightedDrivePower(
@@ -225,6 +230,8 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 
         driver1.extendOutCap = gamepad1.right_bumper;
         driver1.extendRetractCap = gamepad1.left_bumper;
+
+        depositorGateCapButton.update(gamepad1.b);
 
         extendAdjustOutButton.update(gamepad1.dpad_up);
         extendAdjustInButton.update(gamepad1.dpad_down);

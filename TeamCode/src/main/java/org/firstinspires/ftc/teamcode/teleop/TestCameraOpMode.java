@@ -66,7 +66,7 @@ public class TestCameraOpMode extends OpMode
 
     @Override
     public void start() {
-        slamra.start();
+//        slamra.start();
 
         pixyCam = hardwareMap.i2cDeviceSynch.get("Pixy Cam");
 
@@ -78,62 +78,58 @@ public class TestCameraOpMode extends OpMode
 
         telemetry.update();
 
-
-
-
-
     }
 
     @Override
     public void loop() {
 
-        //tele op movement
-        drive.setWeightedDrivePower(
-                new Pose2d(
-                        -gamepad1.left_stick_y,
-                        -gamepad1.left_stick_x,
-                        -gamepad1.right_stick_x
-                )
-        );
-
-        drive.update();
-
-
-
-
-        final int robotRadius = 9; // inches
-
-        TelemetryPacket packet = new TelemetryPacket();
-        Canvas field = packet.fieldOverlay();
-
-        T265Camera.CameraUpdate up = slamra.getLastReceivedCameraUpdate();
-
-
-        if (up == null) return;
-
-
-
-        // We divide by 0.0254 to convert meters to inches
-        Translation2d translation = new Translation2d(up.pose.getTranslation().getX() / 0.0254, up.pose.getTranslation().getY() / 0.0254);
-        Rotation2d rotation = up.pose.getRotation();
-
-        x = translation.getX() * xCorrection;
-        y = translation.getY() * yCorrection;
-        heading = up.pose.getHeading() * headingCorrection;
-
-        field.strokeCircle(translation.getX(), translation.getY(), robotRadius);
-        double arrowX = rotation.getCos() * robotRadius, arrowY = rotation.getSin() * robotRadius;
-        double x1 = x + arrowX  / 2, y1 = y + arrowY / 2;
-        double x2 = x + arrowX, y2 = y + arrowY;
-        field.strokeLine(x1, y1, x2, y2);
-
-        dashboard.sendTelemetryPacket(packet);
-
-        telemetry.addData("CAMERA ON", slamra.isStarted());
-        telemetry.addData("CONFIDENCE", up.confidence);
-        telemetry.addData("X VALUE", x);
-        telemetry.addData("Y VALUE", y);
-        telemetry.addData("HEADING", heading);
+//        //tele op movement
+//        drive.setWeightedDrivePower(
+//                new Pose2d(
+//                        -gamepad1.left_stick_y,
+//                        -gamepad1.left_stick_x,
+//                        -gamepad1.right_stick_x
+//                )
+//        );
+//
+//        drive.update();
+//
+//
+//
+//
+//        final int robotRadius = 9; // inches
+//
+//        TelemetryPacket packet = new TelemetryPacket();
+//        Canvas field = packet.fieldOverlay();
+//
+//        T265Camera.CameraUpdate up = slamra.getLastReceivedCameraUpdate();
+//
+//
+//        if (up == null) return;
+//
+//
+//
+//        // We divide by 0.0254 to convert meters to inches
+//        Translation2d translation = new Translation2d(up.pose.getTranslation().getX() / 0.0254, up.pose.getTranslation().getY() / 0.0254);
+//        Rotation2d rotation = up.pose.getRotation();
+//
+//        x = translation.getX() * xCorrection;
+//        y = translation.getY() * yCorrection;
+//        heading = up.pose.getHeading() * headingCorrection;
+//
+//        field.strokeCircle(translation.getX(), translation.getY(), robotRadius);
+//        double arrowX = rotation.getCos() * robotRadius, arrowY = rotation.getSin() * robotRadius;
+//        double x1 = x + arrowX  / 2, y1 = y + arrowY / 2;
+//        double x2 = x + arrowX, y2 = y + arrowY;
+//        field.strokeLine(x1, y1, x2, y2);
+//
+//        dashboard.sendTelemetryPacket(packet);
+//
+//        telemetry.addData("CAMERA ON", slamra.isStarted());
+//        telemetry.addData("CONFIDENCE", up.confidence);
+//        telemetry.addData("X VALUE", x);
+//        telemetry.addData("Y VALUE", y);
+//        telemetry.addData("HEADING", heading);
 
 
         team_element_x = 0xff&pixyCam.read(0x51,5)[1];
@@ -144,15 +140,15 @@ public class TestCameraOpMode extends OpMode
 
         if(team_element_x <= (LEFT_X+MIDDLE_X)/2.0 && team_element_x >= 100)
         {
-            telemetry.addData("BARDCODE POS", "left");
+            telemetry.addData("BARCODE POS", "left");
         }
         else if(team_element_x <= (MIDDLE_X+RIGHT_X)/2.0)
         {
-            telemetry.addData("BARDCODE POS", "middle");
+            telemetry.addData("BARCODE POS", "middle");
         }
         else
         {
-            telemetry.addData("BARDCODE POS", "right");
+            telemetry.addData("BARCODE POS", "right");
         }
         telemetry.update();
 

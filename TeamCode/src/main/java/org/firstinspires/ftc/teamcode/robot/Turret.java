@@ -25,7 +25,8 @@ public class Turret implements Component {
     private DigitalChannel limit;
 
     private static final int RESET_TICKS = 0;
-    private static final int DEPOSIT_TICKS_RED = 427;
+    private static final int DEPOSIT_TICKS_RED = 435;
+    private static final double TURRET_POWER_ADJUST = 1;
     private static final double TURRET_POWER = 0.4;
     private static final double TURRET_POWER_SLOW = 0.15;
 
@@ -85,6 +86,7 @@ public class Turret implements Component {
 
     public void adjustTurret(int ticks) {
         turretDepositTicks += ticks;
+        turret.setPower(TURRET_POWER_ADJUST);
         turret.setTargetPosition(turretDepositTicks);
     }
 
