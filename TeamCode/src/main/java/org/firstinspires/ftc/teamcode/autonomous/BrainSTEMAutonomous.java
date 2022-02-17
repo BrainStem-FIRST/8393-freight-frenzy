@@ -6,26 +6,28 @@ import org.firstinspires.ftc.teamcode.robot.BrainSTEMRobot;
 import org.firstinspires.ftc.teamcode.robot.Collector;
 import org.firstinspires.ftc.teamcode.robot.DepositorLift;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
+import org.firstinspires.ftc.teamcode.util.Direction;
 import org.firstinspires.ftc.teamcode.util.TimerCanceller;
 
 public class BrainSTEMAutonomous extends LinearOpMode {
-    private TimerCanceller waitForDeployCanceller = new TimerCanceller(2000); //2250
+    private TimerCanceller waitForDeployCanceller = new TimerCanceller(1800);
     private static final int WAIT_FOR_OPEN = 250;
     private TimerCanceller waitForRetractCanceller = new TimerCanceller(600);
     private TimerCanceller waitForLiftAfterDriveCanceller = new TimerCanceller(300);
-    private TimerCanceller waitForCollectorCanceller = new TimerCanceller(600);
+    private TimerCanceller waitForCollectorCanceller = new TimerCanceller(200);
     private TimerCanceller waitToRetractCollectorCanceller = new TimerCanceller(400);
     protected AllianceColor color = AllianceColor.BLUE;
     protected StartLocation startLocation = StartLocation.WAREHOUSE;
     private BarcodePattern pattern = BarcodePattern.LEVELTWO;
-    private int cycleTimes = 3;
+    private int cycleTimes = 4;
     private boolean firstTimeRetract = true;
     private boolean depositDriveLoopCondition = true;
 
     public void runOpMode() throws InterruptedException {
         BrainSTEMRobot robot = new BrainSTEMRobot(this);
-        robot.pixie.start();
-        robot.pixie.setColor(color);
+//        robot.pixie.start();
+        robot.pixyCam.setColor(color);
+        robot.turret.setColor(color);
 
         robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LEVELONE);
         robot.collector.setAuto(true);
@@ -33,8 +35,8 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         robot.reset();
         robot.collector.tiltInit();
         while (!opModeIsActive() && !isStopRequested()) {
-            robot.pixie.teamShippingElementUpdate();
-//            pattern = robot.pixie.tsePos();
+            robot.pixyCam.teamShippingElementUpdate();
+            pattern = robot.pixyCam.tsePos();
             switch(pattern) {
                 case LEVELONE:
                     robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LEVELONE);
@@ -46,10 +48,25 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                     robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LEVELTHREE);
                     break;
             }
+            if (gamepad1.x) {
+                robot.pixyCam.setThreshold(Direction.LEFT, robot.pixyCam.tse_x);
+            }
+            if (gamepad1.y) {
+                robot.pixyCam.setThreshold(Direction.CENTER, robot.pixyCam.tse_x);
+            }
+            if (gamepad1.b) {
+                robot.pixyCam.setThreshold(Direction.RIGHT, robot.pixyCam.tse_x);
+            }
             robot.update();
             telemetry.addLine("Ready for start");
+            telemetry.addData("Gamepad 1 X: Set Left Threshold", robot.pixyCam.getThreshold(Direction.LEFT));
+            telemetry.addData("Gamepad 1 Y: Set Center Threshold", robot.pixyCam.getThreshold(Direction.CENTER));
+            telemetry.addData("Gamepad 1 B: Set Right Threshold", robot.pixyCam.getThreshold(Direction.RIGHT));
             telemetry.addData("Barcode Pattern", pattern);
-            telemetry.addData("Team Shipping Element X", robot.pixie.tse_x);
+            telemetry.addData("Team Shipping Element X", robot.pixyCam.tse_x);
+//            telemetry.addData("Health", robot.pixie.getHealth());
+//            telemetry.addData("Connection", robot.pixie.getConnectionInfo());
+
             telemetry.update();
         }
 
@@ -57,7 +74,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             return;
         }
 
-        robot.pixie.stop();
+//        robot.pixyCam.stop();
 
         telemetry.clearAll();
         BrainSTEMAutonomousCoordinates coordinates = new BrainSTEMAutonomousCoordinates(color);

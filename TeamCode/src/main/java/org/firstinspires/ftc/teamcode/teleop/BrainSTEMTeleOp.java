@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
+import android.util.Log;
+
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
@@ -7,6 +9,7 @@ import org.firstinspires.ftc.teamcode.autonomous.AllianceColor;
 import org.firstinspires.ftc.teamcode.robot.BrainSTEMRobot;
 import org.firstinspires.ftc.teamcode.robot.Collector;
 import org.firstinspires.ftc.teamcode.robot.DepositorLift;
+import org.firstinspires.ftc.teamcode.util.Direction;
 
 public class BrainSTEMTeleOp extends LinearOpMode {
     //Initializes joystick storage variables'
@@ -31,6 +34,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
     private ToggleButton collectOnButton = new ToggleButton();
     private ToggleButton capModeButton = new ToggleButton();
     private ToggleButton depositorGateCapButton = new ToggleButton();
+    private ToggleButton turboButton = new ToggleButton();
 
     private StickyButton depositButton = new StickyButton();
     private StickyButton carouselButton = new StickyButton();
@@ -48,6 +52,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 
     private boolean extended = false;
     private boolean deployFirstTime = false, retractFirstTime = false;
+    private boolean isDeployCap = false;
 
     private class Driver1 {
         private boolean collectOn;
@@ -56,6 +61,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         private boolean retract;
         private boolean liftUpCap, liftDownCap;
         private boolean extendOutCap, extendRetractCap;
+        private boolean turretLeftCap, turretRightCap;
     }
 
     private class Driver2 {
@@ -67,6 +73,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         robot = new BrainSTEMRobot(this);
         robot.reset();
         robot.depositorLift.setCap(false);
+        robot.turret.setColor(color);
         while (!opModeIsActive() && !isStopRequested()) {
             //Status to show if telemetry was initialized
             telemetry.addData("Status", "Initialized");
@@ -86,6 +93,8 @@ public class BrainSTEMTeleOp extends LinearOpMode {
     public void runLoop() {
         if (capModeButton.getState()) {
             robot.depositorLift.setCap(true);
+            robot.depositorLift.setHold(true);
+            telemetry.addLine("in cap mode");
             robot.drive.setWeightedDrivePower(
                     new Pose2d(
                             -gamepad1.left_stick_y * 0.5,
@@ -95,27 +104,42 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             );
 
             if (depositButton.getState()) {
+                Log.d("BrainSTEM", "deposit button true");
                 robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
+                isDeployCap = true;
             }
 
-            if (driver1.liftUpCap) {
-                robot.depositorLift.setHold(true);
-                robot.depositorLift.manualLiftUp();
-            } else if (driver1.liftDownCap) {
-                robot.depositorLift.setHold(false);
-                robot.depositorLift.manualLiftDown();
-            } else {
-                robot.depositorLift.manualLiftHold();
+            if (isDeployCap) {
+                if (driver1.liftUpCap) {
+                    robot.depositorLift.manualLiftUp();
+                } else if (driver1.liftDownCap) {
+                    robot.depositorLift.manualLiftDown();
+                } else {
+                    robot.depositorLift.manualLiftHold();
+                }
+
+                if (driver1.extendOutCap) {
+                    robot.depositorLift.manualExtendOut();
+                } else if (driver1.extendRetractCap) {
+                    robot.depositorLift.manualExtendBack();
+                } else {
+                    robot.depositorLift.stopExtend();
+                }
+                if ((driver1.turretLeftCap && color == AllianceColor.RED)
+                        || (driver1.turretRightCap && color == AllianceColor.BLUE)) {
+                    robot.turret.spinTurretSlow(Direction.LEFT);
+                } else if ((driver1.turretLeftCap && color == AllianceColor.BLUE)
+                        || (driver1.turretRightCap && color == AllianceColor.RED)) {
+                    robot.turret.spinTurretSlow(Direction.RIGHT);
+                } else {
+                    robot.turret.stopTurret();
+                }
             }
 
-            if (driver1.extendOutCap) {
-                robot.depositorLift.manualExtendOut();
-            } else if (driver1.extendRetractCap) {
-                robot.depositorLift.manualExtendBack();
-            }
+            robot.depositorLift.setTurbo(turboButton.getState());
 
             if (depositorGateCapButton.getState()) {
-                robot.depositorLift.openCollect();
+                robot.depositorLift.gateCap();
             } else {
                 robot.depositorLift.close();
             }
@@ -158,7 +182,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 
             if (depositButton.getState()) {
                 if (extended) {
-                    robot.depositorLift.open();
+                    robot.depositorLift.openPartial();
                     extended = false;
                 } else {
                     robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
@@ -202,6 +226,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 
         telemetry.addData("Running", "Now");
         telemetry.addData("Deposit level", robot.depositorLift.getHeight());
+        telemetry.addData("Cap mode on?", capModeButton.getState());
         telemetry.addData("Lift encoder", robot.depositorLift.getLiftPosition());
         telemetry.addData("Extend encoder", robot.depositorLift.getExtendPosition());
         telemetry.addData("Lift limit", robot.depositorLift.isTouchPressed());
@@ -230,6 +255,10 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 
         driver1.extendOutCap = gamepad1.right_bumper;
         driver1.extendRetractCap = gamepad1.left_bumper;
+
+        driver1.turretLeftCap = gamepad1.dpad_left;
+        driver1.turretRightCap = gamepad1.dpad_right;
+        turboButton.update(gamepad1.dpad_up);
 
         depositorGateCapButton.update(gamepad1.b);
 

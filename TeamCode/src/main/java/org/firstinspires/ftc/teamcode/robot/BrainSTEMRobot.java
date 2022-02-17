@@ -20,7 +20,7 @@ public class BrainSTEMRobot implements Component {
     public DepositorLift depositorLift;
     public SampleMecanumDrive drive;
     public Turret turret;
-    public PixyCam pixie;
+    public PixyCam pixyCam;
 
     //Instance of linear opmode to use for hwMap
     private LinearOpMode opMode;
@@ -61,7 +61,7 @@ public class BrainSTEMRobot implements Component {
         collector = new Collector(map);
         turret = new Turret(map, opMode.telemetry);
         depositorLift = new DepositorLift(map, turret);
-        pixie = new PixyCam(map);
+        pixyCam = new PixyCam(map);
 
         //Add all components to an array list so they can be easily initialized
         components.add(carouselSpin);

@@ -19,7 +19,7 @@ public class BrainSTEMAutonomousCoordinates {
 
     private double collectTangent = Math.toRadians(0);
     private double depositTangent = Math.toRadians(180);
-    private double collectIncrement = 2;
+    private double collectIncrement = 2.5;
 
     private double collectXThreshold = 38;
 

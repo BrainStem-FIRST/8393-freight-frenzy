@@ -9,7 +9,9 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.autonomous.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.CachingMotor;
+import org.firstinspires.ftc.teamcode.util.Direction;
 
 import static java.lang.Thread.sleep;
 /*
@@ -25,12 +27,15 @@ public class Turret implements Component {
     private DigitalChannel limit;
 
     private static final int RESET_TICKS = 0;
-    private static final int DEPOSIT_TICKS_RED = 435;
+    private static final int DEPOSIT_TICKS_RED = 470;
+    private static final int DEPOSIT_TICKS_BLUE = -470;
     private static final double TURRET_POWER_ADJUST = 1;
-    private static final double TURRET_POWER = 0.4;
-    private static final double TURRET_POWER_SLOW = 0.15;
+    private static final double TURRET_POWER = 0.6;
+    private static final double TURRET_POWER_SLOW = 0.4;
+    private static final PIDFCoefficients TURRET_PID = new PIDFCoefficients(25,0,1,0);
 
-    private int turretDepositTicks = DEPOSIT_TICKS_RED;
+    private int turretDepositTicks = 0;
+    private AllianceColor color;
     private Telemetry telemetry;
 
     public Turret (HardwareMap map, Telemetry telemetry) {
@@ -42,7 +47,7 @@ public class Turret implements Component {
         turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        turret.setTargetPositionTolerance(3);
+        turret.setTargetPositionTolerance(7);
     }
 
     @Override
@@ -79,8 +84,12 @@ public class Turret implements Component {
     }
 
     public void spinTurretDeposit() {
+        if (turretDepositTicks == 0) {
+            turretDepositTicks = color == AllianceColor.BLUE ? DEPOSIT_TICKS_BLUE : DEPOSIT_TICKS_RED;
+        }
         turret.setTargetPosition(turretDepositTicks);
         turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        turret.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, TURRET_PID);
         turret.setPower(TURRET_POWER);
     }
 
@@ -91,13 +100,15 @@ public class Turret implements Component {
     }
 
     public void spinTurretReset() {
-        turretDepositTicks = DEPOSIT_TICKS_RED;
+        turretDepositTicks = color == AllianceColor.BLUE ? DEPOSIT_TICKS_BLUE : DEPOSIT_TICKS_RED;
         turret.setTargetPosition(RESET_TICKS);
         turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        turret.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, TURRET_PID);
         turret.setPower(-TURRET_POWER);
     }
 
     public void spinTurretSlow(Direction direction) {
+        turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         turret.setPower(direction == Direction.LEFT ? -TURRET_POWER_SLOW : TURRET_POWER_SLOW);
     }
 
@@ -119,5 +130,9 @@ public class Turret implements Component {
 
     public boolean isTurretBusy() {
         return turret.isBusy();
+    }
+
+    public void setColor(AllianceColor color) {
+        this.color = color;
     }
 }

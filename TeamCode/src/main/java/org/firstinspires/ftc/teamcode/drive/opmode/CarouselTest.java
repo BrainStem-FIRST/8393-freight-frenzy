@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.drive.opmode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -8,6 +9,7 @@ import org.firstinspires.ftc.teamcode.robot.CarouselSpin;
 import org.firstinspires.ftc.teamcode.teleop.StickyButton;
 
 @TeleOp
+@Disabled
 public class CarouselTest extends LinearOpMode {
 
     @Override

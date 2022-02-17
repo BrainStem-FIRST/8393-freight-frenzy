@@ -44,7 +44,7 @@ public class Collector implements Component {
         collector = new CachingMotor(map.get(DcMotorEx.class, "collect"));
         tilt = new CachingServo(map.get(ServoImplEx.class, "collectorTilt"));
         gate = new CachingServo(map.get(ServoImplEx.class, "collectorGate"));
-        color = map.colorSensor.get("color");
+//        color = map.colorSensor.get("color");
 
         collector.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         collector.setDirection(DcMotorSimple.Direction.REVERSE);
