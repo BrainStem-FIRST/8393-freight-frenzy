@@ -26,15 +26,19 @@ public class Turret implements Component {
     private DcMotorEx turret;
     private DigitalChannel limit;
 
-    private static final int RESET_TICKS = 0;
+    private static final int RESET_TICKS_BLUE = 7;
+    private static final int RESET_TICKS_RED = -7;
     private static final int DEPOSIT_TICKS_RED = 470;
     private static final int DEPOSIT_TICKS_BLUE = -470;
     private static final double TURRET_POWER_ADJUST = 1;
     private static final double TURRET_POWER = 0.6;
     private static final double TURRET_POWER_SLOW = 0.4;
+    private static final double TURRET_POWER_MANUALRESET = 0.3;
     private static final PIDFCoefficients TURRET_PID = new PIDFCoefficients(25,0,1,0);
 
     private int turretDepositTicks = 0;
+    private int resetTicks = 0;
+    private boolean auto = false;
     private AllianceColor color;
     private Telemetry telemetry;
 
@@ -101,15 +105,25 @@ public class Turret implements Component {
 
     public void spinTurretReset() {
         turretDepositTicks = color == AllianceColor.BLUE ? DEPOSIT_TICKS_BLUE : DEPOSIT_TICKS_RED;
-        turret.setTargetPosition(RESET_TICKS);
+        turret.setTargetPosition(resetTicks);
         turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         turret.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, TURRET_PID);
         turret.setPower(-TURRET_POWER);
     }
 
-    public void spinTurretSlow(Direction direction) {
+    public void spinTurretCap(Direction direction) {
         turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         turret.setPower(direction == Direction.LEFT ? -TURRET_POWER_SLOW : TURRET_POWER_SLOW);
+    }
+
+    public void spinTurretZeroAdjust(Direction direction) {
+        turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        turret.setPower(direction == Direction.LEFT ? -TURRET_POWER_MANUALRESET : TURRET_POWER_MANUALRESET);
+    }
+
+    public void resetTurretEncoder() {
+        stopTurret();
+        turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
 
     public void stopTurret() {
@@ -134,5 +148,14 @@ public class Turret implements Component {
 
     public void setColor(AllianceColor color) {
         this.color = color;
+    }
+
+    public void setAuto(boolean auto) {
+        this.auto = auto;
+        if (auto) {
+            resetTicks = 0;
+        } else {
+            resetTicks = color == AllianceColor.BLUE ? RESET_TICKS_BLUE : RESET_TICKS_RED;
+        }
     }
 }

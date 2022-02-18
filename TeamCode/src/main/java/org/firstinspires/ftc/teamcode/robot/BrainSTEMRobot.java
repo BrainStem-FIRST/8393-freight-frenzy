@@ -14,6 +14,9 @@ import java.util.List;
 import static java.lang.Thread.sleep;
 
 public class BrainSTEMRobot implements Component {
+    public enum Mode {
+        ANGLED, STRAIGHT, CAP
+    }
     //Various components of the  robot
     public CarouselSpin carouselSpin;
     public Collector collector;
@@ -21,6 +24,7 @@ public class BrainSTEMRobot implements Component {
     public SampleMecanumDrive drive;
     public Turret turret;
     public PixyCam pixyCam;
+    public static Mode mode = Mode.ANGLED;
 
     //Instance of linear opmode to use for hwMap
     private LinearOpMode opMode;
@@ -63,7 +67,7 @@ public class BrainSTEMRobot implements Component {
         depositorLift = new DepositorLift(map, turret);
         pixyCam = new PixyCam(map);
 
-        //Add all components to an array list so they can be easily initialized
+        //Add components to an array list so they can be easily initialized
         components.add(carouselSpin);
         components.add(collector);
         components.add(depositorLift);

@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
+import android.util.Log;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.robot.BrainSTEMRobot;
@@ -32,6 +34,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LEVELONE);
         robot.collector.setAuto(true);
         robot.depositorLift.setAuto(true);
+        robot.turret.setAuto(true);
 
         robot.reset();
         robot.collector.tiltInit();
@@ -76,6 +79,9 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         }
 
 //        robot.pixyCam.stop();
+//        if (pattern == BarcodePattern.LEVELONE) {
+//            cycleTimes --;
+//        }
 
         telemetry.clearAll();
         BrainSTEMAutonomousCoordinates coordinates = new BrainSTEMAutonomousCoordinates(color);
@@ -87,6 +93,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 
         while(!waitForDeployCanceller.isConditionMet()) {
             robot.update();
+            Log.d("BrainSTEM", "lift target " + robot.depositorLift.getLiftTarget());
         }
 
         robot.depositorLift.openPartial();
@@ -96,6 +103,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             sleep(WAIT_FOR_OPEN);
             waitForRetractCanceller.reset();
             robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
+            robot.collector.setGoal(Collector.Goal.DEPLOY);
             while (!waitForRetractCanceller.isConditionMet()) {
                 robot.update();
             }
@@ -105,10 +113,8 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                     .build();
 
             robot.drive.followTrajectorySequenceAsync(collectTrajectory);
-            robot.collector.setGoal(Collector.Goal.DEPLOY);
             robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LEVELTHREE);
             while (robot.drive.isTrajectoryRunning()) {
-                robot.update();
                 robot.drive.update();
 //                if (robot.collector.isFreightCollectedColor() &&
 //                        robot.drive.getPoseEstimate().getX() > coordinates.collectXThreshold()) {
@@ -158,12 +164,12 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             robot.update();
         }
         TrajectorySequence parkTrajectory = robot.drive.trajectorySequenceBuilder(coordinates.start())
-                .splineTo(coordinates.collect().vec(), coordinates.collectTangent())
+                .splineTo(coordinates.park().vec(), coordinates.collectTangent())
                 .build();
 
         robot.drive.followTrajectorySequenceAsync(parkTrajectory);
         while(opModeIsActive()) {
-            robot.update();
+            robot.drive.update();
         }
     }
 }
