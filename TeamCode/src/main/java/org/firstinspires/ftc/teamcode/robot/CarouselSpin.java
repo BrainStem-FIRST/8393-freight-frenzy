@@ -23,7 +23,7 @@ public class CarouselSpin implements Component {
 
     private static final int COUNT_MAX = 10;
 
-    //+ for blue, - for red
+    //- for blue, + for red
     private double spinPower = 1;
 
     private TimerCanceller rampupCanceller = new TimerCanceller(100);
@@ -78,7 +78,7 @@ public class CarouselSpin implements Component {
     }
 
     public void on(AllianceColor color) {
-        spin.setPower(color == AllianceColor.BLUE ? spinPower : -spinPower);
+        spin.setPower(color == AllianceColor.BLUE ? -spinPower : spinPower);
 //        this.color = color;
 //        rampupCanceller.reset();
 //        goal = Goal.START;

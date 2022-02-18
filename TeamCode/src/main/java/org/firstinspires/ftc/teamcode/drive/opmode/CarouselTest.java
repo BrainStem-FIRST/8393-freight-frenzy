@@ -9,7 +9,6 @@ import org.firstinspires.ftc.teamcode.robot.CarouselSpin;
 import org.firstinspires.ftc.teamcode.teleop.StickyButton;
 
 @TeleOp
-@Disabled
 public class CarouselTest extends LinearOpMode {
 
     @Override
@@ -24,7 +23,7 @@ public class CarouselTest extends LinearOpMode {
 
         while (opModeIsActive()) {
             button.update(gamepad1.a);
-            spin.setPower(power);
+            spin.setPower(-power);
             if (button.getState()) {
                 power += 0.1;
             }

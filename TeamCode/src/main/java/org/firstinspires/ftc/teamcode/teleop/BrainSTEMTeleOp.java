@@ -37,7 +37,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
     private ToggleButton turboButton = new ToggleButton();
 
     private StickyButton depositButton = new StickyButton();
-    private StickyButton carouselButton = new StickyButton();
+    private ToggleButton carouselButton = new ToggleButton();
     private StickyButton extendAdjustOutButton = new StickyButton();
     private StickyButton extendAdjustInButton = new StickyButton();
     private StickyButton turretAdjustLeftButton = new StickyButton();
@@ -125,24 +125,21 @@ public class BrainSTEMTeleOp extends LinearOpMode {
                 } else {
                     robot.depositorLift.stopExtend();
                 }
-                if ((driver1.turretLeftCap && color == AllianceColor.RED)
-                        || (driver1.turretRightCap && color == AllianceColor.BLUE)) {
+                if (driver1.turretLeftCap) {
                     robot.turret.spinTurretSlow(Direction.LEFT);
-                } else if ((driver1.turretLeftCap && color == AllianceColor.BLUE)
-                        || (driver1.turretRightCap && color == AllianceColor.RED)) {
+                } else if (driver1.turretRightCap) {
                     robot.turret.spinTurretSlow(Direction.RIGHT);
                 } else {
                     robot.turret.stopTurret();
                 }
             }
 
-            robot.depositorLift.setTurbo(turboButton.getState());
-
             if (depositorGateCapButton.getState()) {
                 robot.depositorLift.gateCap();
             } else {
                 robot.depositorLift.close();
             }
+
         } else {
             robot.depositorLift.setCap(false);
             robot.drive.setWeightedDrivePower(
@@ -227,6 +224,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         telemetry.addData("Running", "Now");
         telemetry.addData("Deposit level", robot.depositorLift.getHeight());
         telemetry.addData("Cap mode on?", capModeButton.getState());
+        telemetry.addData("Extend power", robot.depositorLift.getExtendPower());
         telemetry.addData("Lift encoder", robot.depositorLift.getLiftPosition());
         telemetry.addData("Extend encoder", robot.depositorLift.getExtendPosition());
         telemetry.addData("Lift limit", robot.depositorLift.isTouchPressed());
@@ -253,8 +251,8 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         driver1.liftUpCap = gamepad1.right_trigger > 0;
         driver1.liftDownCap = gamepad1.left_trigger > 0;
 
-        driver1.extendOutCap = gamepad1.right_bumper;
-        driver1.extendRetractCap = gamepad1.left_bumper;
+        driver1.extendOutCap = gamepad1.dpad_up;
+        driver1.extendRetractCap = gamepad1.dpad_down;
 
         driver1.turretLeftCap = gamepad1.dpad_left;
         driver1.turretRightCap = gamepad1.dpad_right;

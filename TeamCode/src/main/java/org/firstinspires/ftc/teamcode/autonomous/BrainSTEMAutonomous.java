@@ -10,7 +10,7 @@ import org.firstinspires.ftc.teamcode.util.Direction;
 import org.firstinspires.ftc.teamcode.util.TimerCanceller;
 
 public class BrainSTEMAutonomous extends LinearOpMode {
-    private TimerCanceller waitForDeployCanceller = new TimerCanceller(1800);
+    private TimerCanceller waitForDeployCanceller = new TimerCanceller(1550);
     private static final int WAIT_FOR_OPEN = 250;
     private TimerCanceller waitForRetractCanceller = new TimerCanceller(600);
     private TimerCanceller waitForLiftAfterDriveCanceller = new TimerCanceller(300);
@@ -31,6 +31,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 
         robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LEVELONE);
         robot.collector.setAuto(true);
+        robot.depositorLift.setAuto(true);
 
         robot.reset();
         robot.collector.tiltInit();
@@ -139,7 +140,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                     waitForCollectorCanceller.reset();
                 }
             }
-            while(!waitForCollectorCanceller.isConditionMet());
+//            while(!waitForCollectorCanceller.isConditionMet());
             waitForDeployCanceller.reset();
             robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
             while(!waitForDeployCanceller.isConditionMet()) {
@@ -160,6 +161,9 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                 .splineTo(coordinates.collect().vec(), coordinates.collectTangent())
                 .build();
 
-        robot.drive.followTrajectorySequence(parkTrajectory);
+        robot.drive.followTrajectorySequenceAsync(parkTrajectory);
+        while(opModeIsActive()) {
+            robot.update();
+        }
     }
 }

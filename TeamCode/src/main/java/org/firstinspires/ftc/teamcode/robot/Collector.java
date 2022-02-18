@@ -124,7 +124,7 @@ public class Collector implements Component {
     }
 
     public void retract() {
-        tilt.setPosition(0.838);
+        tilt.setPosition(0.85);
     }
 
     public void tiltInit() {
