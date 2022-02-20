@@ -29,7 +29,7 @@ public class PixyCam implements Component {
     private static final double RIGHT_X_THRESHOLD_RED = 2.65;
 
     private static final double LEFT_X_THRESHOLD_BLUE = 2.65;
-    private static final double CENTER_X_THRESHOLD_BLUE = 2.975;
+    private static final double CENTER_X_THRESHOLD_BLUE = 2.985;
     private static final double RIGHT_X_THRESHOLD_BLUE = 3.0;
 
     private static final double MINIMUM_X = 0.1;
@@ -100,10 +100,10 @@ public class PixyCam implements Component {
     }
     */
 
-    public BarcodePattern tsePos() {
-        if (tse_x >= (centerXThreshold + rightXThreshold) / 2.0 && tse_x > MINIMUM_X) {
+    public BarcodePattern tsePos(double x) {
+        if (x >= (centerXThreshold + rightXThreshold) / 2.0 && x > MINIMUM_X) {
             pos = BarcodePattern.LEVELTHREE;
-        } else if (tse_x >= (leftXThreshold + centerXThreshold) / 2.0  && tse_x > MINIMUM_X) {
+        } else if (x >= (leftXThreshold + centerXThreshold) / 2.0  && x > MINIMUM_X) {
             pos = BarcodePattern.LEVELTWO;
         } else {
             pos = BarcodePattern.LEVELONE;

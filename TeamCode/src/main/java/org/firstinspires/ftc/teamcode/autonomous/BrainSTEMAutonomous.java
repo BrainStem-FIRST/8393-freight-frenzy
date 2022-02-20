@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.autonomous;
 import android.util.Log;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.util.MovingStatistics;
 
 import org.firstinspires.ftc.teamcode.robot.BrainSTEMRobot;
 import org.firstinspires.ftc.teamcode.robot.Collector;
@@ -14,7 +15,7 @@ import org.firstinspires.ftc.teamcode.util.TimerCanceller;
 public class BrainSTEMAutonomous extends LinearOpMode {
     private TimerCanceller waitForDeployCanceller = new TimerCanceller(1550);
     private static final int WAIT_FOR_OPEN = 250;
-    private TimerCanceller waitForRetractCanceller = new TimerCanceller(600);
+    private TimerCanceller waitForRetractCanceller = new TimerCanceller(700);
     private TimerCanceller waitForLiftAfterDriveCanceller = new TimerCanceller(300);
     private TimerCanceller waitForCollectorCanceller = new TimerCanceller(200);
     private TimerCanceller waitToRetractCollectorCanceller = new TimerCanceller(400);
@@ -24,6 +25,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
     private int cycleTimes = 4;
     private boolean firstTimeRetract = true;
     private boolean depositDriveLoopCondition = true;
+    private MovingStatistics stats = new MovingStatistics(10);
 
     public void runOpMode() throws InterruptedException {
         BrainSTEMRobot robot = new BrainSTEMRobot(this);
@@ -40,7 +42,8 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         robot.collector.tiltInit();
         while (!opModeIsActive() && !isStopRequested()) {
             robot.pixyCam.teamShippingElementUpdate();
-            pattern = robot.pixyCam.tsePos();
+            stats.add(robot.pixyCam.tse_x);
+            pattern = robot.pixyCam.tsePos(stats.getMean());
             switch(pattern) {
                 case LEVELONE:
                     robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LEVELONE);
@@ -67,7 +70,8 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             telemetry.addData("Gamepad 1 Y: Set Center Threshold", robot.pixyCam.getThreshold(Direction.CENTER));
             telemetry.addData("Gamepad 1 B: Set Right Threshold", robot.pixyCam.getThreshold(Direction.RIGHT));
             telemetry.addData("Barcode Pattern", pattern);
-            telemetry.addData("Team Shipping Element X", robot.pixyCam.tse_x);
+            telemetry.addData("Current Team Shipping Element X", robot.pixyCam.tse_x);
+            telemetry.addData("Mean Team Shipping Element X", stats.getMean());
 //            telemetry.addData("Health", robot.pixie.getHealth());
 //            telemetry.addData("Connection", robot.pixie.getConnectionInfo());
 

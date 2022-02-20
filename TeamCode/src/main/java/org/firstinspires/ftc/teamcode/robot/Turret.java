@@ -28,13 +28,13 @@ public class Turret implements Component {
 
     private static final int RESET_TICKS_BLUE = 7;
     private static final int RESET_TICKS_RED = -7;
-    private static final int DEPOSIT_TICKS_RED = 470;
-    private static final int DEPOSIT_TICKS_BLUE = -470;
+    private static final int DEPOSIT_TICKS_RED = (int) (470 * 1.596);
+    private static final int DEPOSIT_TICKS_BLUE = (int) (-470 * 1.596);
     private static final double TURRET_POWER_ADJUST = 1;
-    private static final double TURRET_POWER = 0.6;
+    private static final double TURRET_POWER = 0.8;
     private static final double TURRET_POWER_SLOW = 0.4;
     private static final double TURRET_POWER_MANUALRESET = 0.3;
-    private static final PIDFCoefficients TURRET_PID = new PIDFCoefficients(25,0,1,0);
+    private static final PIDFCoefficients TURRET_PID = new PIDFCoefficients(20,0,1,0);
 
     private int turretDepositTicks = 0;
     private int resetTicks = 0;

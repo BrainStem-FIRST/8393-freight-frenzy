@@ -14,6 +14,8 @@ import org.firstinspires.ftc.teamcode.util.CachingMotor;
 import org.firstinspires.ftc.teamcode.util.CachingServo;
 import org.firstinspires.ftc.teamcode.util.TimerCanceller;
 
+import java.util.Timer;
+
 public class DepositorLift implements Component {
     /*
     Out: isDeploying = true
@@ -57,13 +59,14 @@ public class DepositorLift implements Component {
 
     private static final int LIFT_LEVELONE_TICKS = 175;
     private static final int LIFT_LEVELTWO_TICKS = 500;
+    private static final int LIFT_RETURN_TICKS = 700;
     private static final int LIFT_LEVELTHREE_TICKS = 900;
     private static final int LIFT_CAP_TICKS = 1015;
     private int liftTicks = LIFT_LEVELTHREE_TICKS;
 
     private static final double EXTEND_OUT_POWER = 0.7;
     private static final double EXTEND_OUT_POWER_AUTO = 0.4;
-    private static final double EXTEND_BACK_POWER = -1;
+    private static final double EXTEND_BACK_POWER = -0.8;
     private static final double EXTEND_BACK_POWER_MANUAL = -0.6;
     private static final double EXTEND_OUT_POWER_CAP = 0.4;
     private static final double EXTEND_BACK_POWER_CAP = -0.2;
@@ -87,10 +90,13 @@ public class DepositorLift implements Component {
     private TimerCanceller waitForLiftCanceller = new TimerCanceller(200);
     private TimerCanceller waitForExtendCanceller = new TimerCanceller(300);
     private TimerCanceller waitForGateCanceller = new TimerCanceller(300);
-    private TimerCanceller extendBackCancellerTurret = new TimerCanceller(400);
+    private TimerCanceller extendBackCancellerLift = new TimerCanceller(300);
+    private TimerCanceller extendBackCancellerTurret = new TimerCanceller(700);
     private TimerCanceller extendBackCancellerMotorTimeout = new TimerCanceller(1800);
     private TimerCanceller extendBackCancellerCurrentDrawTimeout = new TimerCanceller(750);
-    private TimerCanceller turretTimeout = new TimerCanceller(1500);
+    private TimerCanceller turretTimeout;
+    private TimerCanceller turretTimeoutOriginal = new TimerCanceller(1500);
+    private TimerCanceller turretTimeoutStraight = new TimerCanceller(400);
     private TimerCanceller turretTimeoutInitial = new TimerCanceller(300);
     private TimerCanceller waitForLiftCancellerCap = new TimerCanceller(850);
     private TimerCanceller liftDownAutoL1Canceller = new TimerCanceller(100);
@@ -140,6 +146,17 @@ public class DepositorLift implements Component {
 
     @Override
     public void update() {
+        if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.SHARED
+                || BrainSTEMRobot.mode ==  BrainSTEMRobot.Mode.STRAIGHT) {
+            extendTicks = EXTEND_NORMAL_TICKS;
+            liftTicks = LIFT_LEVELTWO_TICKS;
+
+        } else if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.CAP) {
+            extendTicks = EXTEND_OUT_TICKS;
+            liftTicks = LIFT_LEVELTWO_TICKS;
+        } else {
+            setHeight(depositHeight);
+        }
         if (BrainSTEMRobot.mode != BrainSTEMRobot.Mode.CAP) {
             switch (depositorGoal) {
                 case DEFAULT:
@@ -167,11 +184,7 @@ public class DepositorLift implements Component {
                 case EXTENDOUT:
                     rotateDeposit();
                     if (waitForExtendCanceller.isConditionMet()) {
-                        if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.STRAIGHT) {
-                            extend.setTargetPosition(EXTEND_NORMAL_TICKS);
-                        } else {
-                            extend.setTargetPosition(extendTicks);
-                        }
+                        extend.setTargetPosition(extendTicks);
                         extend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                         extend.setPower(EXTEND_OUT_POWER);
                         if (auto && depositHeight == DepositorHeight.LEVELONE) {
@@ -197,6 +210,7 @@ public class DepositorLift implements Component {
                         if (auto && depositHeight != DepositorHeight.LEVELTHREE) {
                             liftUpAutoL1_2Canceller.reset();
                         }
+//                        extendBackCancellerLift.reset();
                         extend.setPower(EXTEND_BACK_POWER);
                         extendStop = true;
                         setGoal(DepositorGoal.EXTENDBACKACTION);
@@ -204,11 +218,17 @@ public class DepositorLift implements Component {
                     break;
                 case EXTENDBACKACTION:
                     if (auto && depositHeight != DepositorHeight.LEVELTHREE & liftUpAutoL1_2Canceller.isConditionMet()) {
-                            lift.setTargetPosition(LIFT_LEVELTHREE_TICKS);
+                        lift.setTargetPosition(LIFT_LEVELTHREE_TICKS);
                     }
+//                    if (extendBackCancellerLift.isConditionMet()) {
+//                        lift.setTargetPosition(LIFT_RETURN_TICKS);
+//                    }
                     if (extendBackCancellerTurret.isConditionMet()) {
-                        if (BrainSTEMRobot.mode != BrainSTEMRobot.Mode.STRAIGHT) {
-                            turret.spinTurretReset();
+                        turret.spinTurretReset();
+                        if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.STRAIGHT) {
+                            turretTimeout = turretTimeoutStraight;
+                        } else {
+                            turretTimeout = turretTimeoutOriginal;
                         }
                         turretTimeout.reset();
                         turretTimeoutInitial.reset();
@@ -294,7 +314,6 @@ public class DepositorLift implements Component {
                 case DEFAULT:
                     break;
                 case DEPLOY:
-                    Log.d("BrainSTEM", "in deploy");
                     close();
                     rotateClearCanceller.reset();
                     setGoal(DepositorGoal.ROTATECLEAR);
@@ -308,7 +327,7 @@ public class DepositorLift implements Component {
                     }
                     break;
                 case EXTENDCLEAR:
-                    extend.setTargetPosition(EXTEND_OUT_TICKS);
+                    extend.setTargetPosition(extendTicks);
                     extend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     extend.setPower(EXTEND_OUT_POWER_AUTO);
                     setGoal(DepositorGoal.DEFAULT);

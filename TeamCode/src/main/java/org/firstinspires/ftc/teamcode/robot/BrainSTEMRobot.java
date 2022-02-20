@@ -15,7 +15,7 @@ import static java.lang.Thread.sleep;
 
 public class BrainSTEMRobot implements Component {
     public enum Mode {
-        ANGLED, STRAIGHT, CAP
+        ANGLED, STRAIGHT, CAP, SHARED
     }
     //Various components of the  robot
     public CarouselSpin carouselSpin;

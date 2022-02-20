@@ -38,6 +38,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
     private ToggleButton turboButton = new ToggleButton();
     private ToggleButton fullDepositButton = new ToggleButton();
     private ToggleButton carouselButton = new ToggleButton();
+    private ToggleButton sharedHubButton = new ToggleButton();
 
     private StickyButton depositButton = new StickyButton();
     private StickyButton extendAdjustOutButton = new StickyButton();
@@ -72,6 +73,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 
     private class Driver2 {
         private boolean depositHigh, depositMid, depositLow;
+        private boolean carousel;
     }
 
     @Override
@@ -100,13 +102,21 @@ public class BrainSTEMTeleOp extends LinearOpMode {
     public void runLoop() {
         if (capModeButton.getState()) {
             BrainSTEMRobot.mode = BrainSTEMRobot.Mode.CAP;
+        } else if (sharedHubButton.getState()) {
+//            BrainSTEMRobot.mode = BrainSTEMRobot.Mode.SHARED;
+        } else if (straightModeButton.getState()) {
+            BrainSTEMRobot.mode = BrainSTEMRobot.Mode.STRAIGHT;
+        } else {
+            BrainSTEMRobot.mode = BrainSTEMRobot.Mode.ANGLED;
+        }
+        if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.CAP) {
             robot.depositorLift.setHold(true);
             telemetry.addLine("in cap mode");
             robot.drive.setWeightedDrivePower(
                     new Pose2d(
-                            -gamepad1.left_stick_y * 0.5,
-                            -gamepad1.left_stick_x * 0.5,
-                            -gamepad1.right_stick_x * 0.5
+                            (-gamepad1.left_stick_y * 0.5) + (-gamepad2.left_stick_y * 0.1),
+                            (-gamepad1.left_stick_x * 0.5) + (-gamepad2.left_stick_x * 0.2),
+                            (-gamepad1.right_stick_x * 0.5) + (-gamepad2.right_stick_x * 0.05)
                     )
             );
 
@@ -150,9 +160,9 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         } else {
             robot.drive.setWeightedDrivePower(
                     new Pose2d(
-                            -gamepad1.left_stick_y,
-                            -gamepad1.left_stick_x,
-                            -gamepad1.right_stick_x * 0.9
+                            -gamepad1.left_stick_y + (-gamepad2.left_stick_y * 0.1),
+                            -gamepad1.left_stick_x + (-gamepad2.left_stick_x * 0.2),
+                            (-gamepad1.right_stick_x * 0.9) + + (-gamepad2.right_stick_x * 0.05)
                     )
             );
 
@@ -196,12 +206,6 @@ public class BrainSTEMTeleOp extends LinearOpMode {
                 robot.turret.spinTurretZeroAdjust(Direction.RIGHT);
             } else if (manualTurretResetLeftButton.getOppositeState() || manualTurretResetRightButton.getOppositeState()) {
                 robot.turret.resetTurretEncoder();
-            }
-
-            if (straightModeButton.getState()) {
-                BrainSTEMRobot.mode = BrainSTEMRobot.Mode.STRAIGHT;
-            } else {
-                BrainSTEMRobot.mode = BrainSTEMRobot.Mode.ANGLED;
             }
 
             if (depositButton.getState()) {
@@ -269,7 +273,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             }
         }
 
-        if (carouselButton.getState()) {
+        if (driver2.carousel) {
             robot.carouselSpin.on(color);
         } else {
             robot.carouselSpin.off();
@@ -324,7 +328,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         //DRIVER 2//
         ////////////
 
-        carouselButton.update(gamepad2.a);
+        driver2.carousel = gamepad2.a;
         straightModeButton.update(gamepad2.y);
         driver2.depositHigh = gamepad2.dpad_up;
         driver2.depositMid = gamepad2.dpad_left;
@@ -333,5 +337,6 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         manualDepositorRetractButton.update(gamepad2.right_trigger > 0);
         manualTurretResetLeftButton.update(gamepad2.left_bumper);
         manualTurretResetRightButton.update(gamepad2.right_bumper);
+        sharedHubButton.update(gamepad2.left_trigger > 0);
     }
 }
