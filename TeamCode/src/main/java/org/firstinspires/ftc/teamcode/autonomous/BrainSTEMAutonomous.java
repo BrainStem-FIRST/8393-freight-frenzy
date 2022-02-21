@@ -13,8 +13,8 @@ import org.firstinspires.ftc.teamcode.util.Direction;
 import org.firstinspires.ftc.teamcode.util.TimerCanceller;
 
 public class BrainSTEMAutonomous extends LinearOpMode {
-    private TimerCanceller waitForDeployCanceller = new TimerCanceller(1550);
-    private static final int WAIT_FOR_OPEN = 250;
+    private TimerCanceller waitForDeployCanceller = new TimerCanceller(1500);
+    private static final int WAIT_FOR_OPEN = 300;
     private TimerCanceller waitForRetractCanceller = new TimerCanceller(700);
     private TimerCanceller waitForLiftAfterDriveCanceller = new TimerCanceller(300);
     private TimerCanceller waitForCollectorCanceller = new TimerCanceller(200);
