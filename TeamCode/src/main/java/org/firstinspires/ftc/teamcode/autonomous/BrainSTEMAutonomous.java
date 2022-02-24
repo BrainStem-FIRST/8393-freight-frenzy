@@ -5,12 +5,15 @@ import android.util.Log;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.MovingStatistics;
 
+import org.firstinspires.ftc.teamcode.drive.COOLLocalizer;
 import org.firstinspires.ftc.teamcode.robot.BrainSTEMRobot;
 import org.firstinspires.ftc.teamcode.robot.Collector;
 import org.firstinspires.ftc.teamcode.robot.DepositorLift;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.teamcode.util.Direction;
 import org.firstinspires.ftc.teamcode.util.TimerCanceller;
+
+import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 
 public class BrainSTEMAutonomous extends LinearOpMode {
     private TimerCanceller waitForDeployCanceller = new TimerCanceller(1500);
@@ -27,9 +30,11 @@ public class BrainSTEMAutonomous extends LinearOpMode {
     private boolean depositDriveLoopCondition = true;
     private MovingStatistics stats = new MovingStatistics(10);
 
+
     public void runOpMode() throws InterruptedException {
         BrainSTEMRobot robot = new BrainSTEMRobot(this);
 //        robot.pixie.start();
+
         robot.pixyCam.setColor(color);
         robot.turret.setColor(color);
 
@@ -159,6 +164,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             robot.depositorLift.openPartial();
             coordinates.incrementCollect();
             //TODO: relocalize with COOL
+            robot.drive.setPoseEstimate(robot.cool.getPoseEstimate());
         }
 
         sleep(WAIT_FOR_OPEN);

@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.drive.COOLLocalizer;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.util.MinMaxAverage;
 
@@ -24,6 +25,8 @@ public class BrainSTEMRobot implements Component {
     public SampleMecanumDrive drive;
     public Turret turret;
     public PixyCam pixyCam;
+
+    public COOLLocalizer cool;
     public static Mode mode = Mode.ANGLED;
 
     //Instance of linear opmode to use for hwMap
@@ -57,6 +60,8 @@ public class BrainSTEMRobot implements Component {
         }
 
         drive = new SampleMecanumDrive(opMode.hardwareMap, this);
+        cool = new COOLLocalizer(map);
+
 
         components = new ArrayList<>();
 

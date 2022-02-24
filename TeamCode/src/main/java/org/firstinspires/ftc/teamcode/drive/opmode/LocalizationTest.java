@@ -39,9 +39,15 @@ public class LocalizationTest extends LinearOpMode {
         if (slamra == null) {
             slamra = new T265Camera(new Transform2d(), 0.0, hardwareMap.appContext);
         }
+
+        slamra.stop();
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
 
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        drive.setPoseEstimate(new Pose2d(16.25, 64.25, Math.toRadians(0)));
+
+        slamra.setPose(new com.arcrobotics.ftclib.geometry.Pose2d(new Translation2d(16.25, 64.25), new Rotation2d(Math.toRadians(0))));
 
         slamra.start();
 
@@ -78,16 +84,16 @@ public class LocalizationTest extends LinearOpMode {
             telemetry.addData("x RR", poseEstimate.getX());
             telemetry.addData("y RR", poseEstimate.getY());
             telemetry.addData("pose heading RR", poseEstimate.getHeading());
-            telemetry.addData("raw external heading", drive.getRawExternalHeading());
-            telemetry.addData("external heading", drive.getExternalHeading());
-            telemetry.addData("heading velocity", drive.getExternalHeadingVelocity());
-            telemetry.addData("leftInches", drive.getWheelPositions().get(0));
-            telemetry.addData("rightInches", drive.getWheelPositions().get(1));
-            telemetry.addData("CAMERA ON", slamra.isStarted());
-            telemetry.addData("CONFIDENCE RR", up.confidence);
-            telemetry.addData("X VALUE COAL", x);
-            telemetry.addData("Y VALUE COAL", y);
-            telemetry.addData("HEADING COAL", heading);
+            //telemetry.addData("raw external heading", drive.getRawExternalHeading());
+            //telemetry.addData("external heading", drive.getExternalHeading());
+            //telemetry.addData("heading velocity", drive.getExternalHeadingVelocity());
+            //telemetry.addData("leftInches", drive.getWheelPositions().get(0));
+            ///telemetry.addData("rightInches", drive.getWheelPositions().get(1));
+            //telemetry.addData("CAMERA ON", slamra.isStarted());
+            telemetry.addData("CONFIDENCE COOL", up.confidence);
+            telemetry.addData("X VALUE COOL", x);
+            telemetry.addData("Y VALUE COOL", y);
+            telemetry.addData("HEADING COOL", heading);
 
             telemetry.update();
         }
