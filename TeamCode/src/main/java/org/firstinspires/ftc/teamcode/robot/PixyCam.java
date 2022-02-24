@@ -43,9 +43,22 @@ public class PixyCam implements Component {
     private BarcodePattern pos;
     private AllianceColor color;
 
-    public PixyCam(HardwareMap map) {
+    public PixyCam(HardwareMap map, AllianceColor color) {
+        this.color = color;
 //        pixyCam = map.i2cDeviceSynch.get("Pixy Cam");
         pixyCamAnalog = map.analogInput.get("Pixy Cam");
+        switch(color) {
+            case RED:
+                leftXThreshold = LEFT_X_THRESHOLD_RED;
+                centerXThreshold = CENTER_X_THRESHOLD_RED;
+                rightXThreshold = RIGHT_X_THRESHOLD_RED;
+                break;
+            case BLUE:
+                leftXThreshold = LEFT_X_THRESHOLD_BLUE;
+                centerXThreshold = CENTER_X_THRESHOLD_BLUE;
+                rightXThreshold = RIGHT_X_THRESHOLD_BLUE;
+                break;
+        }
     }
 
     @Override
@@ -115,22 +128,6 @@ public class PixyCam implements Component {
         double val = pixyCamAnalog.getVoltage();
         if (color == AllianceColor.RED || pixyCamAnalog.getVoltage() > 2.4) {
             tse_x = val;
-        }
-    }
-
-    public void setColor(AllianceColor color) {
-        this.color = color;
-        switch(color) {
-            case RED:
-                leftXThreshold = LEFT_X_THRESHOLD_RED;
-                centerXThreshold = CENTER_X_THRESHOLD_RED;
-                rightXThreshold = RIGHT_X_THRESHOLD_RED;
-                break;
-            case BLUE:
-                leftXThreshold = LEFT_X_THRESHOLD_BLUE;
-                centerXThreshold = CENTER_X_THRESHOLD_BLUE;
-                rightXThreshold = RIGHT_X_THRESHOLD_BLUE;
-                break;
         }
     }
 

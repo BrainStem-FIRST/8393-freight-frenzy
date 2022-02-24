@@ -14,8 +14,6 @@ import org.firstinspires.ftc.teamcode.util.CachingMotor;
 import org.firstinspires.ftc.teamcode.util.CachingServo;
 import org.firstinspires.ftc.teamcode.util.TimerCanceller;
 
-import java.util.Timer;
-
 public class DepositorLift implements Component {
     /*
     Out: isDeploying = true
@@ -32,7 +30,7 @@ public class DepositorLift implements Component {
      */
 
     public enum DepositorGoal {
-        DEFAULT, DEPLOY, ROTATECLEAR, EXTENDCLEAR, EXTENDCLEARACTION, EXTENDOUT,
+        DEFAULT, DEPLOY, ROTATECLEAR, EXTENDCLEAR, EXTENDCLEARACTION, EXTENDOUT, EXTENDOUTACTION,
                  RETRACT,             EXTENDBACK, EXTENDBACKACTION, TURRETRESET
     }
 
@@ -90,7 +88,6 @@ public class DepositorLift implements Component {
     private TimerCanceller waitForLiftCanceller = new TimerCanceller(200);
     private TimerCanceller waitForExtendCanceller = new TimerCanceller(300);
     private TimerCanceller waitForGateCanceller = new TimerCanceller(300);
-    private TimerCanceller extendBackCancellerLift = new TimerCanceller(300);
     private TimerCanceller extendBackCancellerTurret = new TimerCanceller(700);
     private TimerCanceller extendBackCancellerMotorTimeout = new TimerCanceller(1800);
     private TimerCanceller extendBackCancellerCurrentDrawTimeout = new TimerCanceller(750);
@@ -108,15 +105,17 @@ public class DepositorLift implements Component {
     private DepositorGoal depositorGoal = DepositorGoal.DEFAULT;
     private LiftGoal liftGoal = LiftGoal.DEFAULT;
     private boolean hold = false;
-    private boolean auto = false;
+    private boolean isAuto = false;
     private boolean extendStop = false;
     private boolean turbo = false;
     private Turret turret;
     private int i = 0;
     private int j = 0;
 
-    public DepositorLift(HardwareMap map, Turret turret) {
+    public DepositorLift(HardwareMap map, Turret turret, boolean isAuto) {
         this.turret = turret;
+        this.isAuto = isAuto;
+
         lift = new CachingMotor(map.get(DcMotorEx.class, "lift"));
         extend = new CachingMotor(map.get(DcMotorEx.class, "extend"));
         gate = new CachingServo(map.get(ServoImplEx.class, "depositorGate"));
@@ -150,7 +149,6 @@ public class DepositorLift implements Component {
                 || BrainSTEMRobot.mode ==  BrainSTEMRobot.Mode.STRAIGHT) {
             extendTicks = EXTEND_NORMAL_TICKS;
             liftTicks = LIFT_LEVELTWO_TICKS;
-
         } else if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.CAP) {
             extendTicks = EXTEND_OUT_TICKS;
             liftTicks = LIFT_LEVELTWO_TICKS;
@@ -182,12 +180,15 @@ public class DepositorLift implements Component {
                     setGoal(DepositorGoal.DEFAULT);
                     break;
                 case EXTENDOUT:
-                    rotateDeposit();
+                    waitForExtendCanceller.reset();
+                    setGoal(DepositorGoal.EXTENDOUTACTION);
+                    break;
+                case EXTENDOUTACTION:
                     if (waitForExtendCanceller.isConditionMet()) {
                         extend.setTargetPosition(extendTicks);
                         extend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                         extend.setPower(EXTEND_OUT_POWER);
-                        if (auto && depositHeight == DepositorHeight.LEVELONE) {
+                        if (isAuto && depositHeight == DepositorHeight.LEVELONE) {
                             liftDownAutoL1Canceller.reset();
                             setGoal(LiftGoal.LIFTDOWNAUTOL1);
                         }
@@ -207,22 +208,18 @@ public class DepositorLift implements Component {
                         rotateClear();
                         extend.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                         extendBackCancellerTurret.reset();
-                        if (auto && depositHeight != DepositorHeight.LEVELTHREE) {
+                        if (isAuto && depositHeight != DepositorHeight.LEVELTHREE) {
                             liftUpAutoL1_2Canceller.reset();
                         }
-//                        extendBackCancellerLift.reset();
                         extend.setPower(EXTEND_BACK_POWER);
                         extendStop = true;
                         setGoal(DepositorGoal.EXTENDBACKACTION);
                     }
                     break;
                 case EXTENDBACKACTION:
-                    if (auto && depositHeight != DepositorHeight.LEVELTHREE & liftUpAutoL1_2Canceller.isConditionMet()) {
+                    if (isAuto && depositHeight != DepositorHeight.LEVELTHREE & liftUpAutoL1_2Canceller.isConditionMet()) {
                         lift.setTargetPosition(LIFT_LEVELTHREE_TICKS);
                     }
-//                    if (extendBackCancellerLift.isConditionMet()) {
-//                        lift.setTargetPosition(LIFT_RETURN_TICKS);
-//                    }
                     if (extendBackCancellerTurret.isConditionMet()) {
                         turret.spinTurretReset();
                         if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.STRAIGHT) {
@@ -248,7 +245,7 @@ public class DepositorLift implements Component {
                 case DEFAULT:
                     break;
                 case LIFTUP:
-                    if (auto && depositHeight == DepositorHeight.LEVELONE) {
+                    if (isAuto && depositHeight == DepositorHeight.LEVELONE) {
                         lift.setTargetPosition(LIFT_LEVELTWO_TICKS);
                     } else {
                         lift.setTargetPosition(liftTicks);
@@ -263,8 +260,10 @@ public class DepositorLift implements Component {
                         if (BrainSTEMRobot.mode != BrainSTEMRobot.Mode.STRAIGHT) {
                             turret.spinTurretDeposit();
                         }
-                        waitForExtendCanceller.reset();
-                        setGoal(DepositorGoal.EXTENDOUT);
+                        rotateDeposit();
+                        if (isAuto) {
+                            setGoal(DepositorGoal.EXTENDOUT);
+                        }
                         setGoal(LiftGoal.DEFAULT);
                     }
                     break;
@@ -430,19 +429,8 @@ public class DepositorLift implements Component {
     public void close() {
         gate.setPosition(0);
     }
-    public void gateCap() {
+    public void openCap() {
         gate.setPosition(0.4);
-    }
-    public void open() {
-        switch (depositHeight) {
-            case LEVELONE:
-            case LEVELTWO:
-                openPartial();
-                break;
-            case LEVELTHREE:
-                openFull();
-                break;
-        }
     }
     public void openCollect() {
         gate.setPosition(0.724);
@@ -465,15 +453,7 @@ public class DepositorLift implements Component {
         rotate.setPosition(0);
     }
     public void rotateDeposit() {
-        switch (depositHeight) {
-            case LEVELONE:
-//                rotate.setPosition(0.8);
-//                break;
-            case LEVELTWO:
-            case LEVELTHREE:
-                rotate.setPosition(1);
-                break;
-        }
+        rotate.setPosition(1);
     }
 
     //LiftGoal
@@ -523,7 +503,7 @@ public class DepositorLift implements Component {
         }
     }
 
-    //Touch
+    //Sensors
     public boolean isTouchPressed() {
         return touch.isPressed();
     }
@@ -531,11 +511,5 @@ public class DepositorLift implements Component {
     //Setters/Getters
     public void setHold(boolean isHolding) {
         hold = isHolding;
-    }
-    public void setAuto(boolean isAuto) {
-        auto = isAuto;
-    }
-    public void setTurbo(boolean isTurbo) {
-        turbo = isTurbo;
     }
 }

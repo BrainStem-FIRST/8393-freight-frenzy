@@ -12,32 +12,15 @@ import org.firstinspires.ftc.teamcode.robot.DepositorLift;
 import org.firstinspires.ftc.teamcode.util.Direction;
 
 public class BrainSTEMTeleOp extends LinearOpMode {
-    //Initializes joystick storage variables'
-    private double leftStickX, leftStickY, rightStickX;
 
     private static final int EXTEND_ADJUST_INTERVAL = 80;
     private static final int TURRET_ADJUST_INTERVAL = 15;
-    //driving tuning factor
-    private double leftYTuning = 1;
-    //strafing tuning factor
-    private double leftXTuning = 1;
-    //turning tuning factor
-    private double rightXTuning = 1;
-
-    //Variables for polar coordinate driving
-    private double r;
-    private double theta;
-    private double turning;
-
-    private double driveInterpolationFactor = 3;
 
     private ToggleButton collectOnButton = new ToggleButton();
     private ToggleButton capModeButton = new ToggleButton();
     private ToggleButton straightModeButton = new ToggleButton();
     private ToggleButton depositorGateCapButton = new ToggleButton();
-    private ToggleButton turboButton = new ToggleButton();
     private ToggleButton fullDepositButton = new ToggleButton();
-    private ToggleButton carouselButton = new ToggleButton();
     private ToggleButton sharedHubButton = new ToggleButton();
 
     private StickyButton depositButton = new StickyButton();
@@ -56,7 +39,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 
     protected AllianceColor color = null;
 
-    private boolean extended = false;
+    private int extendedCount = 1;
     private boolean straightAdjustFirstTime = true;
     private boolean deployFirstTime = false, retractFirstTime = false;
     private boolean isDeployCap = false;
@@ -78,18 +61,13 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        robot = new BrainSTEMRobot(this);
+        robot = new BrainSTEMRobot(this, color, false);
         robot.reset();
         BrainSTEMRobot.mode = BrainSTEMRobot.Mode.ANGLED;
-        robot.turret.setColor(color);
-        robot.turret.setAuto(false);
         while (!opModeIsActive() && !isStopRequested()) {
-            //Status to show if telemetry was initialized
             telemetry.addData("Status", "Initialized");
             telemetry.update();
         }
-        robot.depositorLift.rotateCollect();
-//        robot.turret.resetTurret();
 
         while(opModeIsActive()) {
             robot.update();
@@ -134,7 +112,6 @@ public class BrainSTEMTeleOp extends LinearOpMode {
                 } else {
                     robot.depositorLift.manualLiftHold();
                 }
-
                 if (driver1.extendOutCap) {
                     robot.depositorLift.manualExtendOutCap();
                 } else if (driver1.extendRetractCap) {
@@ -152,7 +129,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             }
 
             if (depositorGateCapButton.getState()) {
-                robot.depositorLift.gateCap();
+                robot.depositorLift.openCap();
             } else {
                 robot.depositorLift.close();
             }
@@ -209,23 +186,29 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             }
 
             if (depositButton.getState()) {
-                if (extended) {
-                    if(fullDepositButton.getState()) {
-                        robot.depositorLift.openFull();
-                    } else {
-                        robot.depositorLift.openPartial();
-                    }
-                    extended = false;
-                } else {
-                    robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
-                    extended = true;
+                switch(extendedCount) {
+                    case 1:
+                        robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
+                        break;
+                    case 2:
+                        robot.depositorLift.setGoal(DepositorLift.DepositorGoal.EXTENDOUT);
+                        break;
+                    case 3:
+                        if(fullDepositButton.getState()) {
+                            robot.depositorLift.openFull();
+                        } else {
+                            robot.depositorLift.openPartial();
+                        }
+                        break;
                 }
+                extendedCount ++;
+                if (extendedCount == 4) extendedCount = 1;
             }
 
             if (driver1.retract) {
                 straightAdjustFirstTime = true;
                 robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
-                extended = false;
+                extendedCount = 1;
             }
 
             switch(BrainSTEMRobot.mode) {
@@ -235,7 +218,6 @@ public class BrainSTEMTeleOp extends LinearOpMode {
                     } else if (extendAdjustInButton.getState()) {
                         robot.depositorLift.adjustExtend(-EXTEND_ADJUST_INTERVAL);
                     }
-
                     if (turretAdjustRightButton.getState()) {
                         robot.turret.adjustTurret(TURRET_ADJUST_INTERVAL);
                     } else if (turretAdjustLeftButton.getState()) {
@@ -274,7 +256,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         }
 
         if (driver2.carousel) {
-            robot.carouselSpin.on(color);
+            robot.carouselSpin.on();
         } else {
             robot.carouselSpin.off();
         }
@@ -296,14 +278,22 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         //DRIVER 1//
         ////////////
 
-        //Scale the input of the right stick in the x direction
+        //Collecting controls
         driver1.collectOn = collectOnButton.update(gamepad1.right_bumper);
         driver1.reverseCollect = gamepad1.left_bumper;
         driver1.gateOverride = gamepad1.a;
 
+        //Depositing controls
         depositButton.update(gamepad1.x);
         driver1.retract = gamepad1.b;
 
+        extendAdjustOutButton.update(gamepad1.dpad_up);
+        extendAdjustInButton.update(gamepad1.dpad_down);
+
+        turretAdjustLeftButton.update(gamepad1.dpad_left);
+        turretAdjustRightButton.update(gamepad1.dpad_right);
+
+        //Capping controls
         capModeButton.update(gamepad1.y);
 
         driver1.liftUpCap = gamepad1.right_trigger > 0;
@@ -314,29 +304,29 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 
         driver1.turretLeftCap = gamepad1.dpad_left;
         driver1.turretRightCap = gamepad1.dpad_right;
-        turboButton.update(gamepad1.dpad_up);
 
         depositorGateCapButton.update(gamepad1.b);
-
-        extendAdjustOutButton.update(gamepad1.dpad_up);
-        extendAdjustInButton.update(gamepad1.dpad_down);
-
-        turretAdjustLeftButton.update(gamepad1.dpad_left);
-        turretAdjustRightButton.update(gamepad1.dpad_right);
 
         ////////////
         //DRIVER 2//
         ////////////
 
+        //Carousel Controls
         driver2.carousel = gamepad2.a;
-        straightModeButton.update(gamepad2.y);
-        driver2.depositHigh = gamepad2.dpad_up;
-        driver2.depositMid = gamepad2.dpad_left;
-        driver2.depositLow = gamepad2.dpad_down;
-        fullDepositButton.update(gamepad2.x);
+
+        //Depositor Reset Controls
         manualDepositorRetractButton.update(gamepad2.right_trigger > 0);
         manualTurretResetLeftButton.update(gamepad2.left_bumper);
         manualTurretResetRightButton.update(gamepad2.right_bumper);
+
+        //Mode Controls
+        straightModeButton.update(gamepad2.y);
         sharedHubButton.update(gamepad2.left_trigger > 0);
+
+        driver2.depositHigh = gamepad2.dpad_up;
+        driver2.depositMid = gamepad2.dpad_left;
+        driver2.depositLow = gamepad2.dpad_down;
+
+        fullDepositButton.update(gamepad2.x);
     }
 }

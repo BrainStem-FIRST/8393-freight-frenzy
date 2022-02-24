@@ -36,7 +36,8 @@ public class CarouselSpin implements Component {
     private int counter = 0;
     private Goal goal;
 
-    public CarouselSpin(HardwareMap map) {
+    public CarouselSpin(HardwareMap map, AllianceColor color) {
+        this.color = color;
         spin = map.crservo.get("spin");
 
 //        spin.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -77,7 +78,7 @@ public class CarouselSpin implements Component {
         return null;
     }
 
-    public void on(AllianceColor color) {
+    public void on() {
         spin.setPower(color == AllianceColor.BLUE ? -spinPower : spinPower);
 //        this.color = color;
 //        rampupCanceller.reset();

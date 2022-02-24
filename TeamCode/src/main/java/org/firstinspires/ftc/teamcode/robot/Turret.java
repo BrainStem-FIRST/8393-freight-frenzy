@@ -38,12 +38,12 @@ public class Turret implements Component {
 
     private int turretDepositTicks = 0;
     private int resetTicks = 0;
-    private boolean auto = false;
     private AllianceColor color;
-    private Telemetry telemetry;
+    private boolean isAuto = false;
 
-    public Turret (HardwareMap map, Telemetry telemetry) {
-        this.telemetry = telemetry;
+    public Turret (HardwareMap map, AllianceColor color, boolean isAuto) {
+        this.color = color;
+        this.isAuto = isAuto;
         turret = new CachingMotor(map.get(DcMotorEx.class, "turret"));
 
 //        limit = map.digitalChannel.get("turretLimit");
@@ -57,6 +57,11 @@ public class Turret implements Component {
     @Override
     public void reset() {
         stopTurret();
+        if (isAuto) {
+            resetTicks = 0;
+        } else {
+            resetTicks = color == AllianceColor.BLUE ? RESET_TICKS_BLUE : RESET_TICKS_RED;
+        }
     }
 
     @Override
@@ -67,24 +72,6 @@ public class Turret implements Component {
     @Override
     public String test() {
         return null;
-    }
-
-    public void resetTurret() throws InterruptedException {
-        //TODO: fix
-        Log.d("Turret", "Resetting");
-        while(!limit.getState()) {
-            turret.setPower(0.5);
-        }
-        turret.setPower(0);
-        turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-    }
-
-    public void setTurretHoldPower() {
-        turret.setPower(0.1);
-    }
-
-    public void spinTurret(Direction direction) {
-        turret.setPower(direction == Direction.LEFT ? -TURRET_POWER : TURRET_POWER);
     }
 
     public void spinTurretDeposit() {
@@ -144,18 +131,5 @@ public class Turret implements Component {
 
     public boolean isTurretBusy() {
         return turret.isBusy();
-    }
-
-    public void setColor(AllianceColor color) {
-        this.color = color;
-    }
-
-    public void setAuto(boolean auto) {
-        this.auto = auto;
-        if (auto) {
-            resetTicks = 0;
-        } else {
-            resetTicks = color == AllianceColor.BLUE ? RESET_TICKS_BLUE : RESET_TICKS_RED;
-        }
     }
 }

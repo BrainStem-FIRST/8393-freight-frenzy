@@ -27,15 +27,14 @@ public class COOLLocalizer implements Localizer {
     public double y = 0;
     public double heading = 0;
 
-    public COOLLocalizer (HardwareMap map)
-    {
+    public COOLLocalizer (HardwareMap map) {
         if (slamra == null) {
             slamra = new T265Camera(new Transform2d(), 0.0, map.appContext);
         }
 
-        slamra.setPose(new com.arcrobotics.ftclib.geometry.Pose2d(new Translation2d(16.25, 64.25), new Rotation2d(Math.toRadians(0))));
+        //slamra.setPose(new com.arcrobotics.ftclib.geometry.Pose2d(new Translation2d(16.25, 64.25), new Rotation2d(Math.toRadians(0))));
 
-        slamra.start();
+//        slamra.start();
 
 
     }
