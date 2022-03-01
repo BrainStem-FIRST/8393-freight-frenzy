@@ -56,8 +56,8 @@ public class BrainSTEMAutonomousCoordinates {
         return depositTangent;
     }
 
-    public void incrementCollect() {
-        collect = collect.plus(new Pose2d(collectIncrement,0,0));
+    public void updateCollect(double x) {
+        collect = new Pose2d(x, collect.getY(),collect.getHeading());
     }
 
     private double flipHeading(double heading) { // radians

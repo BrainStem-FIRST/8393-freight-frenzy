@@ -50,7 +50,8 @@ public class Collector implements Component {
         collector.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         collector.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        tilt.setPwmRange(new PwmControl.PwmRange(550,1130));
+        tilt.setPwmRange(new PwmControl.PwmRange(600,1150));
+        //640 down, 1000 up, 1150 up init
 
         gate.setPwmRange(new PwmControl.PwmRange(1240,1900));
     }
@@ -81,12 +82,12 @@ public class Collector implements Component {
                 }
                 break;
             case RETRACT:
+                retract();
                 retractCanceller.reset();
-                setGoal(Goal.RETRACTACTION);
+                if (!isAuto) setGoal(Goal.RETRACTACTION);
                 break;
             case RETRACTACTION:
-                retract();
-                if(retractCanceller.isConditionMet()) {
+                if(isAuto || retractCanceller.isConditionMet()) {
                     open();
                     offCanceller.reset();
                     setGoal(Goal.OFF);
@@ -125,7 +126,7 @@ public class Collector implements Component {
     }
 
     public void retract() {
-        tilt.setPosition(0.85);
+        tilt.setPosition(0.7);
     }
 
     public void tiltInit() {

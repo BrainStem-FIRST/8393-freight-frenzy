@@ -1,13 +1,9 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
-import android.util.Log;
-
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.MovingStatistics;
-import com.qualcomm.robotcore.util.RollingAverage;
 
-import org.firstinspires.ftc.teamcode.drive.COOLLocalizer;
 import org.firstinspires.ftc.teamcode.robot.BrainSTEMRobot;
 import org.firstinspires.ftc.teamcode.robot.Collector;
 import org.firstinspires.ftc.teamcode.robot.DepositorLift;
@@ -17,15 +13,10 @@ import org.firstinspires.ftc.teamcode.util.TimerCanceller;
 
 import java.text.DecimalFormat;
 
-import java.util.concurrent.locks.AbstractQueuedSynchronizer;
-
 public class BrainSTEMAutonomous extends LinearOpMode {
     private TimerCanceller waitForDeployCanceller = new TimerCanceller(1500);
     private static final int WAIT_FOR_OPEN = 300;
     private TimerCanceller waitForRetractCanceller = new TimerCanceller(700);
-    private TimerCanceller waitForLiftAfterDriveCanceller = new TimerCanceller(300);
-    private TimerCanceller waitForCollectorCanceller = new TimerCanceller(200);
-    private TimerCanceller waitToRetractCollectorCanceller = new TimerCanceller(400);
     protected AllianceColor color = AllianceColor.BLUE;
     protected StartLocation startLocation = StartLocation.WAREHOUSE;
     private BarcodePattern pattern = BarcodePattern.LEVELTWO;
@@ -34,12 +25,9 @@ public class BrainSTEMAutonomous extends LinearOpMode {
     private MovingStatistics stats = new MovingStatistics(10);
     private DecimalFormat tseDF = new DecimalFormat("###.##");
 
-
     public void runOpMode() throws InterruptedException {
         BrainSTEMRobot robot = new BrainSTEMRobot(this, color, true);
 //        robot.pixyCam.start();
-
-        robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LEVELONE);
 
         robot.reset();
         robot.collector.tiltInit();
@@ -112,8 +100,12 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 
             robot.drive.followTrajectorySequenceAsync(collectTrajectory);
             robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LEVELTHREE);
-            while (robot.drive.isTrajectoryRunning()) {
+            while (!robot.collector.isFreightCollected() ||
+                    robot.drive.getPoseEstimate().getX() <= coordinates.collectXThreshold()) {
                 robot.drive.update();
+                if (!robot.drive.isTrajectoryRunning()) {
+                    robot.drive.setDrivePower(new Pose2d(0.2,0,0));
+                }
 
 //                telemetry.addData("x RR", robot.drive.getPoseEstimate().getX());
 //                telemetry.addData("y RR", robot.drive.getPoseEstimate().getY());
@@ -122,19 +114,13 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 //                telemetry.addData("x COOL", robot.cool.getPoseEstimate().getX());
 //                telemetry.addData("y COOL", robot.cool.getPoseEstimate().getY());
 //                telemetry.addData("pose heading COOL", robot.cool.getPoseEstimate().getHeading());
-
-                if (robot.collector.isFreightCollected() &&
-                        robot.drive.getPoseEstimate().getX() > coordinates.collectXThreshold()) {
-                    //TODO: test endTrajectory()
-                    robot.drive.endTrajectory();
-                    robot.drive.setDrivePower(new Pose2d());
-                    telemetry.addLine("Ending early");
-                    telemetry.update();
-                    robot.drive.update();
-                    break;
-                }
             }
-            robot.drive.waitForIdle();
+            //TODO: may need to move setGoal statement
+            robot.drive.setDrivePower(new Pose2d());
+            robot.collector.setGoal(Collector.Goal.RETRACT);
+            robot.drive.endTrajectory();
+            robot.drive.update();
+            coordinates.updateCollect(robot.drive.getPoseEstimate().getX());
 
             TrajectorySequence depositTrajectory = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
                     .setReversed(true)
@@ -142,27 +128,24 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                     .build();
 
             robot.drive.followTrajectorySequenceAsync(depositTrajectory);
-            waitToRetractCollectorCanceller.reset();
             while(robot.drive.isTrajectoryRunning()) {
-                robot.update();
                 robot.drive.update();
 
-                if (firstTimeRetract && waitToRetractCollectorCanceller.isConditionMet()
-                        && robot.depositorLift.getLiftGoal() == DepositorLift.LiftGoal.DEFAULT) {
-                    robot.collector.setGoal(Collector.Goal.RETRACT);
+                if (firstTimeRetract && robot.depositorLift.getLiftGoal() == DepositorLift.LiftGoal.DEFAULT
+                        && robot.turret.isTurretZero()) {
+                    robot.collector.setGoal(Collector.Goal.RETRACTACTION);
                     firstTimeRetract = false;
-                    waitForCollectorCanceller.reset();
                 }
             }
+
             waitForDeployCanceller.reset();
             robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
             while(!waitForDeployCanceller.isConditionMet()) {
                 robot.update();
             }
             robot.depositorLift.openPartial();
-            coordinates.incrementCollect();
             //TODO: relocalize with COOL
-            robot.drive.setPoseEstimate(robot.cool.getPoseEstimate());
+//            robot.drive.setPoseEstimate(robot.cool.getPoseEstimate());
         }
 
         sleep(WAIT_FOR_OPEN);
@@ -171,6 +154,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         while (!waitForRetractCanceller.isConditionMet()) {
             robot.update();
         }
+
         TrajectorySequence parkTrajectory = robot.drive.trajectorySequenceBuilder(coordinates.start())
                 .splineTo(coordinates.park().vec(), coordinates.collectTangent())
                 .build();

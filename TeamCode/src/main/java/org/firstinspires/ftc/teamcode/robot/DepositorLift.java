@@ -55,6 +55,8 @@ public class DepositorLift implements Component {
     private static final double LIFT_DOWN_POWER_CAP = -0.05;
     private static final double LIFT_DOWN_POWER = -0.8;
 
+    //TODO: find actual value
+    private static final int LIFT_CLEAR_TICKS = 300;
     private static final int LIFT_LEVELONE_TICKS = 175;
     private static final int LIFT_LEVELTWO_TICKS = 500;
     private static final int LIFT_RETURN_TICKS = 700;
@@ -81,8 +83,6 @@ public class DepositorLift implements Component {
     private int extendTicks = EXTEND_LEVELTHREE_TICKS;
 
     private static final double EXTEND_CURRENT_THRESHOLD = 7000;
-
-    //x - deploys depositor a bit to clear
 
     private TimerCanceller rotateClearCanceller = new TimerCanceller(150);
     private TimerCanceller waitForLiftCanceller = new TimerCanceller(200);
@@ -134,7 +134,7 @@ public class DepositorLift implements Component {
         extend.setTargetPositionTolerance(3);
 
         gate.setPwmRange(new PwmControl.PwmRange(960,1870));
-        rotate.setPwmRange(new PwmControl.PwmRange(990,2405));
+        rotate.setPwmRange(new PwmControl.PwmRange(1050,2420));
     }
 
     @Override
@@ -221,6 +221,7 @@ public class DepositorLift implements Component {
                         lift.setTargetPosition(LIFT_LEVELTHREE_TICKS);
                     }
                     if (extendBackCancellerTurret.isConditionMet()) {
+                        lift.setTargetPosition(LIFT_CLEAR_TICKS);
                         turret.spinTurretReset();
                         if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.STRAIGHT) {
                             turretTimeout = turretTimeoutStraight;
@@ -234,8 +235,8 @@ public class DepositorLift implements Component {
                     break;
                 case TURRETRESET:
                     if (turretTimeout.isConditionMet()
-                            || (!turret.isTurretBusy() && turretTimeoutInitial.isConditionMet())) {
-                        turret.stopTurret();
+                            || (turret.isCurrentDrawPastThreshold() && turretTimeoutInitial.isConditionMet())) {
+                        turret.stopTurretFloat();
                         setGoal(LiftGoal.LIFTDOWN);
                         setGoal(DepositorGoal.DEFAULT);
                     }
@@ -447,13 +448,19 @@ public class DepositorLift implements Component {
 
     //Rotate
     public void rotateCollect() {
-        rotate.setPosition(0.1166);
-    }
+        rotate.setPosition(0.8591);
+    } //2227
     public void rotateClear() {
-        rotate.setPosition(0);
-    }
-    public void rotateDeposit() {
         rotate.setPosition(1);
+    } //2420
+    public void rotateDeposit() {
+        rotate.setPosition(0);
+    } //1050
+    public void setRotateExternal(double pos) {
+        rotate.setPosition(pos);
+    }
+    public double getRotatePosition() {
+        return rotate.getPosition();
     }
 
     //LiftGoal
