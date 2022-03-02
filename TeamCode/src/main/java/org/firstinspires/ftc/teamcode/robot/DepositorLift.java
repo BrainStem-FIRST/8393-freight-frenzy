@@ -55,11 +55,9 @@ public class DepositorLift implements Component {
     private static final double LIFT_DOWN_POWER_CAP = -0.05;
     private static final double LIFT_DOWN_POWER = -0.8;
 
-    //TODO: find actual value
-    private static final int LIFT_CLEAR_TICKS = 300;
+    private static final int LIFT_CLEAR_TICKS = 380;
     private static final int LIFT_LEVELONE_TICKS = 175;
     private static final int LIFT_LEVELTWO_TICKS = 500;
-    private static final int LIFT_RETURN_TICKS = 700;
     private static final int LIFT_LEVELTHREE_TICKS = 900;
     private static final int LIFT_CAP_TICKS = 1015;
     private int liftTicks = LIFT_LEVELTHREE_TICKS;
@@ -133,8 +131,9 @@ public class DepositorLift implements Component {
         extend.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         extend.setTargetPositionTolerance(3);
 
-        gate.setPwmRange(new PwmControl.PwmRange(960,1870));
-        rotate.setPwmRange(new PwmControl.PwmRange(1050,2420));
+        gate.setPwmRange(new PwmControl.PwmRange(1180,1800));
+
+        rotate.setPwmRange(new PwmControl.PwmRange(935,2305));
     }
 
     @Override
@@ -431,13 +430,13 @@ public class DepositorLift implements Component {
         gate.setPosition(0);
     }
     public void openCap() {
-        gate.setPosition(0.4);
+        gate.setPosition(0.37);
     }
     public void openCollect() {
-        gate.setPosition(0.724);
+        gate.setPosition(0.69);
     }
     public void openPartial() {
-        gate.setPosition(0.44);
+        gate.setPosition(0.435);
     }
     public void openFull() {
         gate.setPosition(1);
@@ -449,13 +448,13 @@ public class DepositorLift implements Component {
     //Rotate
     public void rotateCollect() {
         rotate.setPosition(0.8591);
-    } //2227
+    }
     public void rotateClear() {
         rotate.setPosition(1);
-    } //2420
+    }
     public void rotateDeposit() {
         rotate.setPosition(0);
-    } //1050
+    }
     public void setRotateExternal(double pos) {
         rotate.setPosition(pos);
     }

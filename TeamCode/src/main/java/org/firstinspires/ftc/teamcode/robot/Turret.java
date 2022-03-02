@@ -34,6 +34,7 @@ public class Turret implements Component {
 
     private static final int RESET_TICKS_BLUE = 7;
     private static final int RESET_TICKS_RED = -7;
+    //TODO: fix turret encoder values
     private static final int DEPOSIT_TICKS_RED = (int) (470 * 1.596 / 1.3798);
     private static final int DEPOSIT_TICKS_BLUE = (int) (-470 * 1.596 / 1.3798);
 
@@ -64,8 +65,7 @@ public class Turret implements Component {
         turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         turret.setTargetPositionTolerance(7);
 
-        //2027 lock 2123 unlock
-        lock.setPwmRange(new PwmControl.PwmRange(2027, 2123));
+        lock.setPwmRange(new PwmControl.PwmRange(1990, 2123));
     }
 
     @Override
@@ -80,13 +80,6 @@ public class Turret implements Component {
 
     @Override
     public void update() {
-        if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.STRAIGHT
-                || BrainSTEMRobot.mode == BrainSTEMRobot.Mode.ANGLED) {
-            lock();
-        } else if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.CAP
-                || BrainSTEMRobot.mode == BrainSTEMRobot.Mode.SHARED) {
-            unlock();
-        }
     }
 
     @Override

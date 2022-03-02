@@ -80,12 +80,16 @@ public class BrainSTEMTeleOp extends LinearOpMode {
     public void runLoop() {
         if (capModeButton.getState()) {
             BrainSTEMRobot.mode = BrainSTEMRobot.Mode.CAP;
+            robot.turret.unlock();
         } else if (sharedHubButton.getState()) {
 //            BrainSTEMRobot.mode = BrainSTEMRobot.Mode.SHARED;
+            robot.turret.unlock();
         } else if (straightModeButton.getState()) {
             BrainSTEMRobot.mode = BrainSTEMRobot.Mode.STRAIGHT;
+            robot.turret.lock();
         } else {
             BrainSTEMRobot.mode = BrainSTEMRobot.Mode.ANGLED;
+            robot.turret.lock();
         }
         if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.CAP) {
             robot.depositorLift.setHold(true);
@@ -270,6 +274,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         telemetry.addData("Lift limit", robot.depositorLift.isTouchPressed());
         telemetry.addData("Turret encoder", robot.turret.encoderPosition());
         telemetry.addData("Extend current draw", robot.depositorLift.getExtendCurrentDraw());
+        telemetry.addData("Turret current draw", robot.turret.getCurrentDraw());
         telemetry.update();
     }
 

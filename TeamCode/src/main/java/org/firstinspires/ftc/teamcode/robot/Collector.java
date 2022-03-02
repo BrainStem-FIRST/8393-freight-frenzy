@@ -50,8 +50,7 @@ public class Collector implements Component {
         collector.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         collector.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        tilt.setPwmRange(new PwmControl.PwmRange(600,1150));
-        //640 down, 1000 up, 1150 up init
+        tilt.setPwmRange(new PwmControl.PwmRange(1160,1710));
 
         gate.setPwmRange(new PwmControl.PwmRange(1240,1900));
     }
