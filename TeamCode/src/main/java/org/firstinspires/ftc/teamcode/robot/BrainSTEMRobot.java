@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.autonomous.AllianceColor;
 import org.firstinspires.ftc.teamcode.drive.COOLLocalizer;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.util.MinMaxAverage;
@@ -18,16 +19,16 @@ public class BrainSTEMRobot implements Component {
     public enum Mode {
         ANGLED, STRAIGHT, CAP, SHARED
     }
+    public static Mode mode = Mode.ANGLED;
+
     //Various components of the  robot
     public CarouselSpin carouselSpin;
     public Collector collector;
+    public Turret turret;
     public DepositorLift depositorLift;
     public SampleMecanumDrive drive;
-    public Turret turret;
     public PixyCam pixyCam;
-
     public COOLLocalizer cool;
-    public static Mode mode = Mode.ANGLED;
 
     //Instance of linear opmode to use for hwMap
     private LinearOpMode opMode;
@@ -43,7 +44,7 @@ public class BrainSTEMRobot implements Component {
      *
      * @param opMode the op mode
      */
-    public BrainSTEMRobot(LinearOpMode opMode) {
+    public BrainSTEMRobot(LinearOpMode opMode, AllianceColor color, boolean isAuto) {
         this.opMode = opMode;
 
         //Get instance of hardware map and telemetry
@@ -60,23 +61,22 @@ public class BrainSTEMRobot implements Component {
         }
 
         drive = new SampleMecanumDrive(opMode.hardwareMap, this);
-        cool = new COOLLocalizer(map);
-
 
         components = new ArrayList<>();
 
         //Initialize robot components
-        carouselSpin = new CarouselSpin(map);
-        collector = new Collector(map);
-        turret = new Turret(map, opMode.telemetry);
-        depositorLift = new DepositorLift(map, turret);
-        pixyCam = new PixyCam(map);
+        carouselSpin = new CarouselSpin(map, color);
+        collector = new Collector(map, isAuto);
+        turret = new Turret(map, color, isAuto);
+        depositorLift = new DepositorLift(map, turret, isAuto);
+        pixyCam = new PixyCam(map, color);
+        cool = new COOLLocalizer(map);
 
         //Add components to an array list so they can be easily initialized
         components.add(carouselSpin);
         components.add(collector);
-        components.add(depositorLift);
         components.add(turret);
+        components.add(depositorLift);
     }
 
     @Override

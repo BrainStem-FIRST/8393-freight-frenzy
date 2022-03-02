@@ -45,9 +45,9 @@ public class LocalizationTest extends LinearOpMode {
 
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        drive.setPoseEstimate(new Pose2d(16.25, 64.25, Math.toRadians(0)));
+        //drive.setPoseEstimate(new Pose2d(16.25, 64.25, Math.toRadians(0)));
 
-        slamra.setPose(new com.arcrobotics.ftclib.geometry.Pose2d(new Translation2d(16.25, 64.25), new Rotation2d(Math.toRadians(0))));
+        //slamra.setPose(new com.arcrobotics.ftclib.geometry.Pose2d(new Translation2d(16.25, 64.25), new Rotation2d(Math.toRadians(0))));
 
         slamra.start();
 

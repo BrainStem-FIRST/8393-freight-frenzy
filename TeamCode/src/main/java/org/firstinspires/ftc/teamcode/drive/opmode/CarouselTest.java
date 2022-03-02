@@ -13,7 +13,7 @@ public class CarouselTest extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        CarouselSpin spin = new CarouselSpin(hardwareMap);
+        CarouselSpin spin = new CarouselSpin(hardwareMap, AllianceColor.RED);
         double power = 0.1;
         StickyButton button = new StickyButton();
 

@@ -2,16 +2,9 @@ package org.firstinspires.ftc.teamcode.robot;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.CRServoImplEx;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
-import org.checkerframework.checker.units.qual.A;
 import org.firstinspires.ftc.teamcode.autonomous.AllianceColor;
-import org.firstinspires.ftc.teamcode.util.CachingMotor;
 import org.firstinspires.ftc.teamcode.util.TimerCanceller;
 
 @Config
@@ -19,7 +12,8 @@ public class CarouselSpin implements Component {
     private enum Goal {
         START, STARTACTION, STOP
     }
-    private CRServo spin;
+    private CRServo spinLeft;
+    private CRServo spinRight;
 
     private static final int COUNT_MAX = 10;
 
@@ -36,15 +30,17 @@ public class CarouselSpin implements Component {
     private int counter = 0;
     private Goal goal;
 
-    public CarouselSpin(HardwareMap map) {
-        spin = map.crservo.get("spin");
+    public CarouselSpin(HardwareMap map, AllianceColor color) {
+        this.color = color;
+        spinLeft = map.crservo.get("spinLeft");
+        spinRight = map.crservo.get("spinRight");
 
 //        spin.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     @Override
     public void reset() {
-        spin.setPower(0);
+        spinLeft.setPower(0);
     }
 
     @Override
@@ -77,23 +73,26 @@ public class CarouselSpin implements Component {
         return null;
     }
 
-    public void on(AllianceColor color) {
-        spin.setPower(color == AllianceColor.BLUE ? -spinPower : spinPower);
+    public void on() {
+        spinLeft.setPower(color == AllianceColor.BLUE ? -spinPower : spinPower);
+        spinRight.setPower(color == AllianceColor.BLUE ? -spinPower : spinPower);
 //        this.color = color;
 //        rampupCanceller.reset();
 //        goal = Goal.START;
     }
 
     public void off() {
-        spin.setPower(0);
+        spinLeft.setPower(0);
+        spinRight.setPower(0);
 //        goal = Goal.STOP;
     }
 
     public void setPower(double power) {
-        spin.setPower(power);
+        spinLeft.setPower(power);
+        spinRight.setPower(power);
     }
 
     public double getPower() {
-        return spin.getPower();
+        return spinLeft.getPower();
     }
 }

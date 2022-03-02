@@ -23,12 +23,12 @@ public class Collector implements Component {
     private DcMotorEx collector;
     private ServoImplEx tilt;
     private ServoImplEx gate;
-    private ColorSensor color;
+    private ColorSensor colorSensor;
 
     private static final double COLLECT_POWER = 1;
     private static final float COLOR_THRESHOLD = 110;
     private static final double SCALE_FACTOR = 255;
-    private static final int CURRENT_THRESHOLD = 0; //TODO: find
+    private static final int CURRENT_THRESHOLD = 1200;
 
     private RollingAverage currentRollingAverage = new RollingAverage(5);
     private int sign = 1;
@@ -38,18 +38,19 @@ public class Collector implements Component {
     private TimerCanceller retractCanceller = new TimerCanceller(200);
     private TimerCanceller offCanceller = new TimerCanceller(800);
 
-    private boolean isAuto = false;
+    private boolean isAuto;
 
-    public Collector(HardwareMap map) {
+    public Collector(HardwareMap map, boolean isAuto) {
+        this.isAuto = isAuto;
         collector = new CachingMotor(map.get(DcMotorEx.class, "collect"));
         tilt = new CachingServo(map.get(ServoImplEx.class, "collectorTilt"));
         gate = new CachingServo(map.get(ServoImplEx.class, "collectorGate"));
-//        color = map.colorSensor.get("color");
+        colorSensor = map.colorSensor.get("color");
 
         collector.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         collector.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        tilt.setPwmRange(new PwmControl.PwmRange(550,1130));
+        tilt.setPwmRange(new PwmControl.PwmRange(1160,1710));
 
         gate.setPwmRange(new PwmControl.PwmRange(1240,1900));
     }
@@ -60,7 +61,7 @@ public class Collector implements Component {
 
     @Override
     public void update() {
-        currentRollingAverage.addNumber((int)collector.getCurrent(CurrentUnit.AMPS));
+        currentRollingAverage.addNumber((int)collector.getCurrent(CurrentUnit.MILLIAMPS));
         switch(goal) {
             case DEFAULT:
                 break;
@@ -80,12 +81,12 @@ public class Collector implements Component {
                 }
                 break;
             case RETRACT:
+                retract();
                 retractCanceller.reset();
-                setGoal(Goal.RETRACTACTION);
+                if (!isAuto) setGoal(Goal.RETRACTACTION);
                 break;
             case RETRACTACTION:
-                retract();
-                if(retractCanceller.isConditionMet()) {
+                if(isAuto || retractCanceller.isConditionMet()) {
                     open();
                     offCanceller.reset();
                     setGoal(Goal.OFF);
@@ -124,7 +125,7 @@ public class Collector implements Component {
     }
 
     public void retract() {
-        tilt.setPosition(0.85);
+        tilt.setPosition(0.7);
     }
 
     public void tiltInit() {
@@ -161,30 +162,29 @@ public class Collector implements Component {
         return goal;
     }
 
-    //Boolean setters
-    public void setAuto(boolean auto) {
-        isAuto = auto;
+    //Sensors
+    public boolean isFreightCollectedCurrentDraw() {
+        return getCurrentDrawAverage() > CURRENT_THRESHOLD;
     }
 
-    public boolean isFreightCollectedCurrentDraw() {
-        return currentRollingAverage.getAverage() > CURRENT_THRESHOLD;
+    public int getCurrentDrawAverage() {
+        return currentRollingAverage.getAverage();
     }
 
     public boolean isFreightCollectedColor() {
-        float[] hsv = new float[3];
-        Color.RGBToHSV((int) (color.red() * SCALE_FACTOR),
-                (int) (color.green() * SCALE_FACTOR),
-                (int) (color.blue() * SCALE_FACTOR),
-                hsv);
-        return hsv[2] > COLOR_THRESHOLD;
+        return getBrightness() > COLOR_THRESHOLD;
     }
 
     public double getBrightness() {
         float[] hsv = new float[3];
-        Color.RGBToHSV((int) (color.red() * SCALE_FACTOR),
-                (int) (color.green() * SCALE_FACTOR),
-                (int) (color.blue() * SCALE_FACTOR),
+        Color.RGBToHSV((int) (colorSensor.red() * SCALE_FACTOR),
+                (int) (colorSensor.green() * SCALE_FACTOR),
+                (int) (colorSensor.blue() * SCALE_FACTOR),
                 hsv);
         return hsv[2];
+    }
+
+    public boolean isFreightCollected() {
+        return isFreightCollectedColor() || isFreightCollectedCurrentDraw();
     }
 }

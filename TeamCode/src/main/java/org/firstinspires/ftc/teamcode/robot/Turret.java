@@ -2,15 +2,20 @@ package org.firstinspires.ftc.teamcode.robot;
 
 import android.util.Log;
 
+import com.arcrobotics.ftclib.hardware.ServoEx;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.PwmControl;
+import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.autonomous.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.CachingMotor;
+import org.firstinspires.ftc.teamcode.util.CachingServo;
 import org.firstinspires.ftc.teamcode.util.Direction;
 
 import static java.lang.Thread.sleep;
@@ -25,11 +30,16 @@ import static java.lang.Thread.sleep;
 public class Turret implements Component {
     private DcMotorEx turret;
     private DigitalChannel limit;
+    private ServoImplEx lock;
 
     private static final int RESET_TICKS_BLUE = 7;
     private static final int RESET_TICKS_RED = -7;
-    private static final int DEPOSIT_TICKS_RED = (int) (470 * 1.596);
-    private static final int DEPOSIT_TICKS_BLUE = (int) (-470 * 1.596);
+    //TODO: fix turret encoder values
+    private static final int DEPOSIT_TICKS_RED = (int) (470 * 1.596 / 1.3798);
+    private static final int DEPOSIT_TICKS_BLUE = (int) (-470 * 1.596 / 1.3798);
+
+    private static final int CURRENT_THRESHOLD = 6000;
+
     private static final double TURRET_POWER_ADJUST = 1;
     private static final double TURRET_POWER = 0.8;
     private static final double TURRET_POWER_SLOW = 0.4;
@@ -38,13 +48,15 @@ public class Turret implements Component {
 
     private int turretDepositTicks = 0;
     private int resetTicks = 0;
-    private boolean auto = false;
     private AllianceColor color;
-    private Telemetry telemetry;
+    private boolean isAuto = false;
+    private boolean isTurretZero = true;
 
-    public Turret (HardwareMap map, Telemetry telemetry) {
-        this.telemetry = telemetry;
+    public Turret (HardwareMap map, AllianceColor color, boolean isAuto) {
+        this.color = color;
+        this.isAuto = isAuto;
         turret = new CachingMotor(map.get(DcMotorEx.class, "turret"));
+        lock = new CachingServo(map.get(ServoImplEx.class, "lock"));
 
 //        limit = map.digitalChannel.get("turretLimit");
 
@@ -52,16 +64,22 @@ public class Turret implements Component {
         turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         turret.setTargetPositionTolerance(7);
+
+        lock.setPwmRange(new PwmControl.PwmRange(1990, 2123));
     }
 
     @Override
     public void reset() {
         stopTurret();
+        if (isAuto) {
+            resetTicks = 0;
+        } else {
+            resetTicks = color == AllianceColor.BLUE ? RESET_TICKS_BLUE : RESET_TICKS_RED;
+        }
     }
 
     @Override
     public void update() {
-
     }
 
     @Override
@@ -69,25 +87,9 @@ public class Turret implements Component {
         return null;
     }
 
-    public void resetTurret() throws InterruptedException {
-        //TODO: fix
-        Log.d("Turret", "Resetting");
-        while(!limit.getState()) {
-            turret.setPower(0.5);
-        }
-        turret.setPower(0);
-        turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-    }
-
-    public void setTurretHoldPower() {
-        turret.setPower(0.1);
-    }
-
-    public void spinTurret(Direction direction) {
-        turret.setPower(direction == Direction.LEFT ? -TURRET_POWER : TURRET_POWER);
-    }
-
     public void spinTurretDeposit() {
+        isTurretZero = false;
+        turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         if (turretDepositTicks == 0) {
             turretDepositTicks = color == AllianceColor.BLUE ? DEPOSIT_TICKS_BLUE : DEPOSIT_TICKS_RED;
         }
@@ -97,6 +99,10 @@ public class Turret implements Component {
         turret.setPower(TURRET_POWER);
     }
 
+    public void spinTurretManual(double power) {
+        turret.setPower(power);
+    }
+
     public void adjustTurret(int ticks) {
         turretDepositTicks += ticks;
         turret.setPower(TURRET_POWER_ADJUST);
@@ -104,11 +110,13 @@ public class Turret implements Component {
     }
 
     public void spinTurretReset() {
-        turretDepositTicks = color == AllianceColor.BLUE ? DEPOSIT_TICKS_BLUE : DEPOSIT_TICKS_RED;
-        turret.setTargetPosition(resetTicks);
-        turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        turret.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, TURRET_PID);
-        turret.setPower(-TURRET_POWER);
+        turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        turret.setPower(color == AllianceColor.BLUE ? TURRET_POWER : -TURRET_POWER);
+//        turretDepositTicks = color == AllianceColor.BLUE ? DEPOSIT_TICKS_BLUE : DEPOSIT_TICKS_RED;
+//        turret.setTargetPosition(resetTicks);
+//        turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        turret.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, TURRET_PID);
+//        turret.setPower(-TURRET_POWER);
     }
 
     public void spinTurretCap(Direction direction) {
@@ -130,6 +138,12 @@ public class Turret implements Component {
         turret.setPower(0);
     }
 
+    public void stopTurretFloat() {
+        isTurretZero = true;
+        turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        stopTurret();
+    }
+
     public int encoderPosition() {
         return turret.getCurrentPosition();
     }
@@ -146,16 +160,23 @@ public class Turret implements Component {
         return turret.isBusy();
     }
 
-    public void setColor(AllianceColor color) {
-        this.color = color;
+    public boolean isTurretZero() {
+        return isTurretZero;
     }
 
-    public void setAuto(boolean auto) {
-        this.auto = auto;
-        if (auto) {
-            resetTicks = 0;
-        } else {
-            resetTicks = color == AllianceColor.BLUE ? RESET_TICKS_BLUE : RESET_TICKS_RED;
-        }
+    public double getCurrentDraw() {
+        return turret.getCurrent(CurrentUnit.MILLIAMPS);
+    }
+
+    public boolean isCurrentDrawPastThreshold() {
+        return getCurrentDraw() > CURRENT_THRESHOLD;
+    }
+
+    public void lock() {
+        lock.setPosition(0);
+    }
+
+    public void unlock() {
+        lock.setPosition(1);
     }
 }
