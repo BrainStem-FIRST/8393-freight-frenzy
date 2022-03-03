@@ -16,11 +16,11 @@ import java.text.DecimalFormat;
 public class BrainSTEMAutonomous extends LinearOpMode {
     private TimerCanceller waitForDeployCanceller = new TimerCanceller(1500);
     private static final int WAIT_FOR_OPEN = 300;
-    private TimerCanceller waitForRetractCanceller = new TimerCanceller(700);
+    private TimerCanceller waitForRetractCanceller = new TimerCanceller(200);
     protected AllianceColor color = AllianceColor.BLUE;
     protected StartLocation startLocation = StartLocation.WAREHOUSE;
     private BarcodePattern pattern = BarcodePattern.LEVELTWO;
-    private int cycleTimes = 4;
+    private int cycleTimes = 5;
     private boolean firstTimeRetract = true;
     private MovingStatistics stats = new MovingStatistics(10);
     private DecimalFormat tseDF = new DecimalFormat("###.##");
@@ -30,8 +30,9 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 //        robot.pixyCam.start();
 
         robot.reset();
-        robot.collector.tiltInit();
         while (!opModeIsActive() && !isStopRequested()) {
+            robot.turret.lock();
+            robot.collector.tiltInit();
             robot.pixyCam.teamShippingElementUpdate();
             stats.add(robot.pixyCam.tse_x);
             pattern = robot.pixyCam.tsePos(stats.getMean());
@@ -58,6 +59,8 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             telemetry.addData("Barcode Pattern", pattern);
             telemetry.addData("Current Team Shipping Element X", tseDF.format(robot.pixyCam.tse_x));
             telemetry.addData("Mean Team Shipping Element X", tseDF.format(stats.getMean()));
+            telemetry.addData("Color Sensor Brightness", robot.collector.getBrightness());
+            telemetry.addData("Is Freight Detected? ", robot.collector.isFreightCollectedColor());
 //            telemetry.addData("Health", robot.pixie.getHealth());
 //            telemetry.addData("Connection", robot.pixie.getConnectionInfo());
 
@@ -100,11 +103,25 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 
             robot.drive.followTrajectorySequenceAsync(collectTrajectory);
             robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LEVELTHREE);
-            while (!robot.collector.isFreightCollected() ||
-                    robot.drive.getPoseEstimate().getX() <= coordinates.collectXThreshold()) {
+            /*
+            Keep running loop while:
+            (color boolean is false or not past pose threshold) and not past second threshold
+            Get out of loop when:
+            (color boolean is true and past pose threshold) or past second threshold
+             */
+            boolean forward = true;
+            while ((!robot.collector.isFreightCollectedColor() ||
+                    robot.drive.getPoseEstimate().getX() <= coordinates.collectXMinThreshold()) &&
+                        robot.drive.getPoseEstimate().getX() <= coordinates.collectXMaxThreshold()) {
                 robot.drive.update();
                 if (!robot.drive.isTrajectoryRunning()) {
-                    robot.drive.setDrivePower(new Pose2d(0.2,0,0));
+                    if (forward) {
+                        robot.drive.followTrajectoryAsync(robot.drive.trajectoryBuilder(robot.drive.getPoseEstimate()).forward(4).build());
+                        forward = false;
+                    } else {
+                        robot.drive.followTrajectoryAsync(robot.drive.trajectoryBuilder(robot.drive.getPoseEstimate()).back(2).build());
+                        forward = true;
+                    }
                 }
 
 //                telemetry.addData("x RR", robot.drive.getPoseEstimate().getX());
@@ -117,6 +134,11 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             }
             //TODO: may need to move setGoal statement
             robot.drive.setDrivePower(new Pose2d());
+            if (robot.depositorLift.getLiftGoal() == DepositorLift.LiftGoal.DEFAULT && robot.turret.isTurretZero()) {
+                robot.collector.setRetractFull(true);
+            } else {
+                robot.collector.setRetractFull(false);
+            }
             robot.collector.setGoal(Collector.Goal.RETRACT);
             robot.drive.endTrajectory();
             robot.drive.update();
@@ -124,6 +146,10 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 
             TrajectorySequence depositTrajectory = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
                     .setReversed(true)
+                    .addTemporalMarker(0.65, 0, () -> {
+                        waitForDeployCanceller.reset();
+                        robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
+                    })
                     .splineTo(coordinates.start().vec(), coordinates.depositTangent())
                     .build();
 
@@ -132,14 +158,12 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                 robot.drive.update();
 
                 if (firstTimeRetract && robot.depositorLift.getLiftGoal() == DepositorLift.LiftGoal.DEFAULT
-                        && robot.turret.isTurretZero()) {
+                        && robot.turret.isTurretZero() && !robot.collector.getRetractFull()) {
                     robot.collector.setGoal(Collector.Goal.RETRACTACTION);
                     firstTimeRetract = false;
                 }
             }
 
-            waitForDeployCanceller.reset();
-            robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
             while(!waitForDeployCanceller.isConditionMet()) {
                 robot.update();
             }

@@ -35,8 +35,8 @@ public class Turret implements Component {
     private static final int RESET_TICKS_BLUE = 7;
     private static final int RESET_TICKS_RED = -7;
     //TODO: fix turret encoder values
-    private static final int DEPOSIT_TICKS_RED = (int) (470 * 1.596 / 1.3798);
-    private static final int DEPOSIT_TICKS_BLUE = (int) (-470 * 1.596 / 1.3798);
+    private static final int DEPOSIT_TICKS_RED = 680;
+    private static final int DEPOSIT_TICKS_BLUE = -DEPOSIT_TICKS_RED;
 
     private static final int CURRENT_THRESHOLD = 6000;
 
@@ -142,6 +142,10 @@ public class Turret implements Component {
         isTurretZero = true;
         turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         stopTurret();
+    }
+
+    public void resetTurretTicks() {
+        turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
 
     public int encoderPosition() {

@@ -261,9 +261,7 @@ public class DepositorLift implements Component {
                             turret.spinTurretDeposit();
                         }
                         rotateDeposit();
-                        if (isAuto) {
-                            setGoal(DepositorGoal.EXTENDOUT);
-                        }
+                        setGoal(DepositorGoal.EXTENDOUT);
                         setGoal(LiftGoal.DEFAULT);
                     }
                     break;
@@ -275,9 +273,9 @@ public class DepositorLift implements Component {
                 case LIFTDOWNACTION:
                     lift.setPower(LIFT_DOWN_POWER);
                     if (touch.isPressed() || liftTimeout.isConditionMet()) {
-                        extend.setPower(0);
+                        resetExtendEncoder();
                         lift.setPower(0);
-                        extend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                        turret.resetTurretTicks();
                         rotateCollect();
                         openCollect();
                         setGoal(LiftGoal.DEFAULT);

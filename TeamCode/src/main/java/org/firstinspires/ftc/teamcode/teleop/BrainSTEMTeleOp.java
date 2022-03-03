@@ -39,7 +39,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 
     protected AllianceColor color = null;
 
-    private int extendedCount = 1;
+    private boolean extended = false;
     private boolean straightAdjustFirstTime = true;
     private boolean deployFirstTime = false, retractFirstTime = false;
     private boolean isDeployCap = false;
@@ -63,6 +63,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         robot = new BrainSTEMRobot(this, color, false);
         robot.reset();
+        robot.turret.lock();
         BrainSTEMRobot.mode = BrainSTEMRobot.Mode.ANGLED;
         while (!opModeIsActive() && !isStopRequested()) {
             telemetry.addData("Status", "Initialized");
@@ -190,29 +191,23 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             }
 
             if (depositButton.getState()) {
-                switch(extendedCount) {
-                    case 1:
-                        robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
-                        break;
-                    case 2:
-                        robot.depositorLift.setGoal(DepositorLift.DepositorGoal.EXTENDOUT);
-                        break;
-                    case 3:
-                        if(fullDepositButton.getState()) {
-                            robot.depositorLift.openFull();
-                        } else {
-                            robot.depositorLift.openPartial();
-                        }
-                        break;
+                if (extended) {
+                    if(fullDepositButton.getState()) {
+                        robot.depositorLift.openFull();
+                    } else {
+                        robot.depositorLift.openPartial();
+                    }
+                    extended = false;
+                } else {
+                    robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
+                    extended = true;
                 }
-                extendedCount ++;
-                if (extendedCount == 4) extendedCount = 1;
             }
 
             if (driver1.retract) {
                 straightAdjustFirstTime = true;
                 robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
-                extendedCount = 1;
+                extended = false;
             }
 
             switch(BrainSTEMRobot.mode) {

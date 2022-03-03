@@ -1,11 +1,7 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
-import android.util.Log;
-
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.util.Angle;
-
-import java.util.ArrayList;
 
 public class BrainSTEMAutonomousCoordinates {
     /*
@@ -22,7 +18,8 @@ public class BrainSTEMAutonomousCoordinates {
     private double depositTangent = Math.toRadians(180);
     private double collectIncrement = 3;
 
-    private double collectXThreshold = 38;
+    private double collectXMinThreshold = 38;
+    private double collectXMaxThreshold = 60;
 
     public BrainSTEMAutonomousCoordinates(AllianceColor color) {
         if (color == AllianceColor.RED) {
@@ -48,8 +45,12 @@ public class BrainSTEMAutonomousCoordinates {
         return collectTangent;
     }
 
-    public double collectXThreshold() {
-        return collectXThreshold;
+    public double collectXMinThreshold() {
+        return collectXMinThreshold;
+    }
+
+    public double collectXMaxThreshold() {
+        return collectXMaxThreshold;
     }
 
     public double depositTangent() {
