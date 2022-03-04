@@ -35,7 +35,7 @@ public class Turret implements Component {
     private static final int RESET_TICKS_BLUE = 7;
     private static final int RESET_TICKS_RED = -7;
     //TODO: fix turret encoder values
-    private static final int DEPOSIT_TICKS_RED = 680;
+    private static final int DEPOSIT_TICKS_RED = 710;
     private static final int DEPOSIT_TICKS_BLUE = -DEPOSIT_TICKS_RED;
 
     private static final int CURRENT_THRESHOLD = 6000;

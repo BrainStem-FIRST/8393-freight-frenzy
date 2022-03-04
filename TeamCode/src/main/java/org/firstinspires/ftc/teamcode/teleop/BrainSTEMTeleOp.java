@@ -97,7 +97,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             telemetry.addLine("in cap mode");
             robot.drive.setWeightedDrivePower(
                     new Pose2d(
-                            (-gamepad1.left_stick_y * 0.5) + (-gamepad2.left_stick_y * 0.1),
+                            (-gamepad1.left_stick_y * 0.5) + (-gamepad2.left_stick_y * 0.15),
                             (-gamepad1.left_stick_x * 0.5) + (-gamepad2.left_stick_x * 0.2),
                             (-gamepad1.right_stick_x * 0.5) + (-gamepad2.right_stick_x * 0.05)
                     )

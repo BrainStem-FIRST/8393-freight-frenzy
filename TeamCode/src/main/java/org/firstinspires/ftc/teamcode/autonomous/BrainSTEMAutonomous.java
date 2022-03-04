@@ -1,7 +1,10 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
+import android.util.Log;
+
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.MovingStatistics;
 
 import org.firstinspires.ftc.teamcode.robot.BrainSTEMRobot;
@@ -17,11 +20,14 @@ public class BrainSTEMAutonomous extends LinearOpMode {
     private TimerCanceller waitForDeployCanceller = new TimerCanceller(1500);
     private static final int WAIT_FOR_OPEN = 300;
     private TimerCanceller waitForRetractCanceller = new TimerCanceller(200);
+    private ElapsedTime autoTime = new ElapsedTime();
+    private double TIME_THRESHOLD = 25.0;
     protected AllianceColor color = AllianceColor.BLUE;
     protected StartLocation startLocation = StartLocation.WAREHOUSE;
     private BarcodePattern pattern = BarcodePattern.LEVELTWO;
     private int cycleTimes = 5;
     private boolean firstTimeRetract = true;
+    private boolean endEarly = false;
     private MovingStatistics stats = new MovingStatistics(10);
     private DecimalFormat tseDF = new DecimalFormat("###.##");
 
@@ -70,6 +76,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         if (!opModeIsActive()) {
             return;
         }
+        autoTime.reset();
 
 //        robot.pixyCam.stop();
 
@@ -119,7 +126,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                         robot.drive.followTrajectoryAsync(robot.drive.trajectoryBuilder(robot.drive.getPoseEstimate()).forward(4).build());
                         forward = false;
                     } else {
-                        robot.drive.followTrajectoryAsync(robot.drive.trajectoryBuilder(robot.drive.getPoseEstimate()).back(2).build());
+                        robot.drive.followTrajectoryAsync(robot.drive.trajectoryBuilder(robot.drive.getPoseEstimate()).back(1).build());
                         forward = true;
                     }
                 }
@@ -132,6 +139,10 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 //                telemetry.addData("y COOL", robot.cool.getPoseEstimate().getY());
 //                telemetry.addData("pose heading COOL", robot.cool.getPoseEstimate().getHeading());
             }
+            Log.d("BrainSTEM", "Time of collect number " + i + " : " + autoTime.seconds());
+            if (autoTime.seconds() > TIME_THRESHOLD) {
+                endEarly = true;
+            }
             //TODO: may need to move setGoal statement
             robot.drive.setDrivePower(new Pose2d());
             if (robot.depositorLift.getLiftGoal() == DepositorLift.LiftGoal.DEFAULT && robot.turret.isTurretZero()) {
@@ -143,6 +154,10 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             robot.drive.endTrajectory();
             robot.drive.update();
             coordinates.updateCollect(robot.drive.getPoseEstimate().getX());
+
+            if (endEarly) {
+                break;
+            }
 
             TrajectorySequence depositTrajectory = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
                     .setReversed(true)
@@ -172,20 +187,22 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 //            robot.drive.setPoseEstimate(robot.cool.getPoseEstimate());
         }
 
-        sleep(WAIT_FOR_OPEN);
-        waitForRetractCanceller.reset();
-        robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
-        while (!waitForRetractCanceller.isConditionMet()) {
-            robot.update();
-        }
+        if (!endEarly) {
+            sleep(WAIT_FOR_OPEN);
+            waitForRetractCanceller.reset();
+            robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
+            while (!waitForRetractCanceller.isConditionMet()) {
+                robot.update();
+            }
 
-        TrajectorySequence parkTrajectory = robot.drive.trajectorySequenceBuilder(coordinates.start())
-                .splineTo(coordinates.park().vec(), coordinates.collectTangent())
-                .build();
+            TrajectorySequence parkTrajectory = robot.drive.trajectorySequenceBuilder(coordinates.start())
+                    .splineTo(coordinates.park().vec(), coordinates.collectTangent())
+                    .build();
 
-        robot.drive.followTrajectorySequenceAsync(parkTrajectory);
-        while(opModeIsActive()) {
-            robot.drive.update();
+            robot.drive.followTrajectorySequenceAsync(parkTrajectory);
+            while (opModeIsActive()) {
+                robot.drive.update();
+            }
         }
     }
 }
