@@ -21,7 +21,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
     private static final int WAIT_FOR_OPEN = 300;
     private TimerCanceller waitForRetractCanceller = new TimerCanceller(200);
     private ElapsedTime autoTime = new ElapsedTime();
-    private double TIME_THRESHOLD = 25.0;
+    private double TIME_THRESHOLD = 25.5;
     protected AllianceColor color = AllianceColor.BLUE;
     protected StartLocation startLocation = StartLocation.WAREHOUSE;
     private BarcodePattern pattern = BarcodePattern.LEVELTWO;
@@ -29,7 +29,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
     private boolean firstTimeRetract = true;
     private boolean endEarly = false;
     private MovingStatistics stats = new MovingStatistics(10);
-    private DecimalFormat tseDF = new DecimalFormat("###.##");
+    private DecimalFormat tseDF = new DecimalFormat("###.###");
 
     public void runOpMode() throws InterruptedException {
         BrainSTEMRobot robot = new BrainSTEMRobot(this, color, true);
@@ -121,17 +121,22 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             (color boolean is true and past pose threshold) or past second threshold
              */
             boolean forward = true;
+            int count = 0;
             while ((!robot.collector.isFreightCollectedColor() ||
                     robot.drive.getPoseEstimate().getX() <= coordinates.collectXMinThreshold()) &&
                     robot.drive.getPoseEstimate().getX() <= coordinates.collectXMaxThreshold()) {
                 robot.drive.update();
                 if (!robot.drive.isTrajectoryRunning()) {
-                    if (forward) {
+                    if (count >= 2) {
+                        robot.drive.followTrajectoryAsync(robot.drive.trajectoryBuilder(robot.drive.getPoseEstimate()).back(4).build());
+                        count = 0;
+                    } else if (forward) {
                         robot.drive.followTrajectoryAsync(robot.drive.trajectoryBuilder(robot.drive.getPoseEstimate()).forward(4).build());
                         forward = false;
                     } else {
-                        robot.drive.followTrajectoryAsync(robot.drive.trajectoryBuilder(robot.drive.getPoseEstimate()).back(1).build());
+                        robot.drive.followTrajectoryAsync(robot.drive.trajectoryBuilder(robot.drive.getPoseEstimate()).back(2).build());
                         forward = true;
+                        count++;
                     }
                 }
 
@@ -164,7 +169,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             }
 
             TrajectorySequence depositTrajectory;
-            if (cycleTimes >= 3) {
+            if (i >= 3) {
                 depositTrajectory = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate(), coordinates.depositStartTangent())
                         .addTemporalMarker(0.65, 0, () -> {
                             waitForDeployCanceller.reset();
@@ -179,7 +184,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                             waitForDeployCanceller.reset();
                             robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
                         })
-                        .splineTo(coordinates.start().vec(), coordinates.depositEndTangent())
+                        .lineToSplineHeading(coordinates.start())
                         .build();
             }
 

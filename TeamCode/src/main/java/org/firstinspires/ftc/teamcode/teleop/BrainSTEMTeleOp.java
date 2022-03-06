@@ -213,10 +213,8 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             switch(BrainSTEMRobot.mode) {
                 case ANGLED:
                     if (extendAdjustOutButton.getState()) {
-                        Log.d("BrainSTEM", "Adjusting out");
                         robot.depositorLift.adjustExtend(EXTEND_ADJUST_INTERVAL);
                     } else if (extendAdjustInButton.getState()) {
-                        Log.d("BrainSTEM", "Adjusting in");
                         robot.depositorLift.adjustExtend(-EXTEND_ADJUST_INTERVAL);
                     }
                     if (turretAdjustRightButton.getState()) {

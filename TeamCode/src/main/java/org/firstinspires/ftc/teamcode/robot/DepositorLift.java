@@ -57,7 +57,7 @@ public class DepositorLift implements Component {
     private static final double LIFT_DOWN_POWER = -0.8;
 
     private static final int LIFT_CLEAR_TICKS = 380;
-    private static final int LIFT_LEVELONE_TICKS = 175;
+    private static final int LIFT_LEVELONE_TICKS = 200;
     private static final int LIFT_LEVELTWO_TICKS = 500;
     private static final int LIFT_LEVELTHREE_TICKS = 900;
     private static final int LIFT_CAP_TICKS = 1015;
@@ -76,7 +76,7 @@ public class DepositorLift implements Component {
     private static final int EXTEND_OUT_TICKS = 300;
     private static final int EXTEND_NORMAL_TICKS = 350;
     private static final int EXTEND_SHARED_TICKS = 550;
-    private static final int EXTEND_LEVELONE_TICKS = 1183;
+    private static final int EXTEND_LEVELONE_TICKS = 1200;
     private static final int EXTEND_LEVELTWO_TICKS = 1260;
     private static final int EXTEND_LEVELTHREE_TICKS = 1320;
     private static final int EXTEND_CAP_TICKS = 1475;
@@ -110,6 +110,7 @@ public class DepositorLift implements Component {
     private boolean extendStop = false;
     private boolean turbo = false;
     private Turret turret;
+    private BrainSTEMRobot.Mode prevMode = BrainSTEMRobot.Mode.ANGLED;
     private int i = 0;
     private int j = 0;
 
@@ -147,18 +148,21 @@ public class DepositorLift implements Component {
 
     @Override
     public void update() {
-        if (BrainSTEMRobot.mode ==  BrainSTEMRobot.Mode.STRAIGHT) {
-            extendTicks = EXTEND_NORMAL_TICKS;
-            liftTicks = LIFT_LEVELTWO_TICKS;
-        } else if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.CAP) {
-            extendTicks = EXTEND_OUT_TICKS;
-            liftTicks = LIFT_LEVELTWO_TICKS;
-        } else if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.SHARED) {
-            extendTicks = EXTEND_SHARED_TICKS;
-            liftTicks = LIFT_LEVELTWO_TICKS;
-        } else {
-            setHeight(depositHeight);
+        if (prevMode != BrainSTEMRobot.mode) {
+            if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.STRAIGHT) {
+                extendTicks = EXTEND_NORMAL_TICKS;
+                liftTicks = LIFT_LEVELTWO_TICKS;
+            } else if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.CAP) {
+                extendTicks = EXTEND_OUT_TICKS;
+                liftTicks = LIFT_LEVELTWO_TICKS;
+            } else if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.SHARED) {
+                extendTicks = EXTEND_SHARED_TICKS;
+                liftTicks = LIFT_LEVELTWO_TICKS;
+            } else {
+                setHeight(depositHeight);
+            }
         }
+        prevMode = BrainSTEMRobot.mode;
         if (BrainSTEMRobot.mode != BrainSTEMRobot.Mode.CAP && BrainSTEMRobot.mode != BrainSTEMRobot.Mode.SHARED) {
             switch (depositorGoal) {
                 case DEFAULT:
@@ -497,7 +501,6 @@ public class DepositorLift implements Component {
 
     //Lift
     public void manualLiftUp() {
-        Log.d("BrainSTEM", "manual lift up");
 //        close();
         lift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         lift.setPower(LIFT_UP_POWER);

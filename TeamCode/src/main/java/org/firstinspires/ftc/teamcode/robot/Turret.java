@@ -32,11 +32,11 @@ public class Turret implements Component {
     private DigitalChannel limit;
     private ServoImplEx lock;
 
-    private static final int RESET_TICKS_BLUE = 7;
-    private static final int RESET_TICKS_RED = -7;
+    private static final int RESET_TICKS_BLUE = -10;
+    private static final int RESET_TICKS_RED = 10;
 
     private static final int DEPOSIT_TICKS_RED = 710;
-    private static final int DEPOSIT_TICKS_BLUE = -DEPOSIT_TICKS_RED;
+    private static final int DEPOSIT_TICKS_BLUE = -610;
 
     private static final int SHARED_TICKS_BLUE = 710;
     private static final int SHARED_TICKS_RED = -SHARED_TICKS_BLUE;
@@ -121,6 +121,7 @@ public class Turret implements Component {
     }
 
     public void spinTurretResetShared() {
+        resetTicks = color == AllianceColor.BLUE ? RESET_TICKS_BLUE : RESET_TICKS_RED;
         turretDepositTicks = color == AllianceColor.BLUE ? SHARED_TICKS_BLUE : SHARED_TICKS_RED;
         turret.setTargetPosition(resetTicks);
         turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);

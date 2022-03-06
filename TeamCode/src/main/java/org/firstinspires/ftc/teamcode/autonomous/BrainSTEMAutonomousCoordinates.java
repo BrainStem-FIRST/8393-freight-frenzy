@@ -27,9 +27,9 @@ public class BrainSTEMAutonomousCoordinates {
         if (color == AllianceColor.RED) {
             start = new Pose2d(start.getX(), -start.getY(), flipHeading(start.getHeading()));
             collect = new Pose2d(collect.getX(), -collect.getY(), flipHeading(collect.getHeading()));
+            depositStartTangent = flipHeading(depositStartTangent);
         }
         park = collect;
-        depositStartTangent = flipHeading(depositStartTangent);
     }
 
     public Pose2d start() {
