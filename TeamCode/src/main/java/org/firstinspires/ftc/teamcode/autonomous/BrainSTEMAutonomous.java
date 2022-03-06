@@ -94,7 +94,11 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 
         robot.depositorLift.openPartial();
 
-        for (int i = 0; i < cycleTimes; i++) {
+        for (int i = 1; i <= cycleTimes; i++) {
+            if (i == 3) {
+                coordinates.shiftCollectYHeading(color == AllianceColor.BLUE ? -5 : 5,
+                        color == AllianceColor.BLUE ? Math.toRadians(-8) : Math.toRadians(8));
+            }
             firstTimeRetract = true;
             sleep(WAIT_FOR_OPEN);
             waitForRetractCanceller.reset();
@@ -105,7 +109,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             }
 
             TrajectorySequence collectTrajectory = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
-                    .splineTo(coordinates.collect().vec(), coordinates.collectTangent())
+                    .lineToSplineHeading(coordinates.collect())
                     .build();
 
             robot.drive.followTrajectorySequenceAsync(collectTrajectory);
@@ -119,7 +123,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             boolean forward = true;
             while ((!robot.collector.isFreightCollectedColor() ||
                     robot.drive.getPoseEstimate().getX() <= coordinates.collectXMinThreshold()) &&
-                        robot.drive.getPoseEstimate().getX() <= coordinates.collectXMaxThreshold()) {
+                    robot.drive.getPoseEstimate().getX() <= coordinates.collectXMaxThreshold()) {
                 robot.drive.update();
                 if (!robot.drive.isTrajectoryRunning()) {
                     if (forward) {
@@ -153,20 +157,31 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             robot.collector.setGoal(Collector.Goal.RETRACT);
             robot.drive.endTrajectory();
             robot.drive.update();
-            coordinates.updateCollect(robot.drive.getPoseEstimate().getX());
+            coordinates.updateCollectX(robot.drive.getPoseEstimate().getX());
 
             if (endEarly) {
                 break;
             }
 
-            TrajectorySequence depositTrajectory = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
-                    .setReversed(true)
-                    .addTemporalMarker(0.65, 0, () -> {
-                        waitForDeployCanceller.reset();
-                        robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
-                    })
-                    .splineTo(coordinates.start().vec(), coordinates.depositTangent())
-                    .build();
+            TrajectorySequence depositTrajectory;
+            if (cycleTimes >= 3) {
+                depositTrajectory = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate(), coordinates.depositStartTangent())
+                        .addTemporalMarker(0.65, 0, () -> {
+                            waitForDeployCanceller.reset();
+                            robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
+                        })
+                        .splineToLinearHeading(coordinates.start(), coordinates.depositEndTangent())
+                        .build();
+            } else {
+                depositTrajectory = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
+                        .setReversed(true)
+                        .addTemporalMarker(0.65, 0, () -> {
+                            waitForDeployCanceller.reset();
+                            robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
+                        })
+                        .splineTo(coordinates.start().vec(), coordinates.depositEndTangent())
+                        .build();
+            }
 
             robot.drive.followTrajectorySequenceAsync(depositTrajectory);
             while(robot.drive.isTrajectoryRunning()) {

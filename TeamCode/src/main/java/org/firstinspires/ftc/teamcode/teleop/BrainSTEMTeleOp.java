@@ -83,7 +83,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             BrainSTEMRobot.mode = BrainSTEMRobot.Mode.CAP;
             robot.turret.unlock();
         } else if (sharedHubButton.getState()) {
-//            BrainSTEMRobot.mode = BrainSTEMRobot.Mode.SHARED;
+            BrainSTEMRobot.mode = BrainSTEMRobot.Mode.SHARED;
             robot.turret.unlock();
         } else if (straightModeButton.getState()) {
             BrainSTEMRobot.mode = BrainSTEMRobot.Mode.STRAIGHT;
@@ -136,7 +136,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             if (depositorGateCapButton.getState()) {
                 robot.depositorLift.openCap();
             } else {
-                robot.depositorLift.close();
+                robot.depositorLift.closeCap();
             }
 
         } else {
@@ -144,7 +144,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
                     new Pose2d(
                             -gamepad1.left_stick_y + (-gamepad2.left_stick_y * 0.1),
                             -gamepad1.left_stick_x + (-gamepad2.left_stick_x * 0.2),
-                            (-gamepad1.right_stick_x * 0.9) + + (-gamepad2.right_stick_x * 0.05)
+                            (-gamepad1.right_stick_x * 0.9) + (-gamepad2.right_stick_x * 0.1)
                     )
             );
 
@@ -192,7 +192,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 
             if (depositButton.getState()) {
                 if (extended) {
-                    if(fullDepositButton.getState()) {
+                    if(fullDepositButton.getState() || BrainSTEMRobot.mode == BrainSTEMRobot.Mode.SHARED) {
                         robot.depositorLift.openFull();
                     } else {
                         robot.depositorLift.openPartial();
@@ -213,8 +213,10 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             switch(BrainSTEMRobot.mode) {
                 case ANGLED:
                     if (extendAdjustOutButton.getState()) {
+                        Log.d("BrainSTEM", "Adjusting out");
                         robot.depositorLift.adjustExtend(EXTEND_ADJUST_INTERVAL);
                     } else if (extendAdjustInButton.getState()) {
+                        Log.d("BrainSTEM", "Adjusting in");
                         robot.depositorLift.adjustExtend(-EXTEND_ADJUST_INTERVAL);
                     }
                     if (turretAdjustRightButton.getState()) {

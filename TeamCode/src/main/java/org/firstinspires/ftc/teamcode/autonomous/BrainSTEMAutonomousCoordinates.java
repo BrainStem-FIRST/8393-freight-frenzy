@@ -12,10 +12,12 @@ public class BrainSTEMAutonomousCoordinates {
     private Pose2d start = new Pose2d(16.25, 64.25, Math.toRadians(0));
 
     private Pose2d collect = new Pose2d(43, start.getY(), Math.toRadians(0)); //x=43
+
     private Pose2d park;
 
     private double collectTangent = Math.toRadians(0);
-    private double depositTangent = Math.toRadians(180);
+    private double depositStartTangent = Math.toRadians(135);
+    private double depositEndTangent = Math.toRadians(180);
     private double collectIncrement = 3;
 
     private double collectXMinThreshold = 38;
@@ -27,6 +29,7 @@ public class BrainSTEMAutonomousCoordinates {
             collect = new Pose2d(collect.getX(), -collect.getY(), flipHeading(collect.getHeading()));
         }
         park = collect;
+        depositStartTangent = flipHeading(depositStartTangent);
     }
 
     public Pose2d start() {
@@ -53,12 +56,19 @@ public class BrainSTEMAutonomousCoordinates {
         return collectXMaxThreshold;
     }
 
-    public double depositTangent() {
-        return depositTangent;
+    public double depositStartTangent() {
+        return depositStartTangent;
+    }
+    public double depositEndTangent() {
+        return depositEndTangent;
     }
 
-    public void updateCollect(double x) {
-        collect = new Pose2d(x, collect.getY(),collect.getHeading());
+    public void updateCollectX(double x) {
+        collect = new Pose2d(x, collect.getY(), collect.getHeading());
+    }
+
+    public void shiftCollectYHeading(double y, double heading) {
+        collect = new Pose2d(collect.getX(), collect.getY() + y, collect.getHeading() + heading);
     }
 
     private double flipHeading(double heading) { // radians
