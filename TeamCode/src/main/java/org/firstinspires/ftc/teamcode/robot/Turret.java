@@ -32,11 +32,14 @@ public class Turret implements Component {
     private DigitalChannel limit;
     private ServoImplEx lock;
 
-    private static final int RESET_TICKS_BLUE = 7;
-    private static final int RESET_TICKS_RED = -7;
-    //TODO: fix turret encoder values
-    private static final int DEPOSIT_TICKS_RED = (int) (470 * 1.596 / 1.3798);
-    private static final int DEPOSIT_TICKS_BLUE = (int) (-470 * 1.596 / 1.3798);
+    private static final int RESET_TICKS_BLUE = -10;
+    private static final int RESET_TICKS_RED = 10;
+
+    private static final int DEPOSIT_TICKS_RED = 710;
+    private static final int DEPOSIT_TICKS_BLUE = -610;
+
+    private static final int SHARED_TICKS_BLUE = 710;
+    private static final int SHARED_TICKS_RED = -SHARED_TICKS_BLUE;
 
     private static final int CURRENT_THRESHOLD = 6000;
 
@@ -71,11 +74,11 @@ public class Turret implements Component {
     @Override
     public void reset() {
         stopTurret();
-        if (isAuto) {
-            resetTicks = 0;
-        } else {
-            resetTicks = color == AllianceColor.BLUE ? RESET_TICKS_BLUE : RESET_TICKS_RED;
-        }
+//        if (isAuto) {
+//            resetTicks = 0;
+//        } else {
+//            resetTicks = color == AllianceColor.BLUE ? RESET_TICKS_BLUE : RESET_TICKS_RED;
+//        }
     }
 
     @Override
@@ -90,8 +93,11 @@ public class Turret implements Component {
     public void spinTurretDeposit() {
         isTurretZero = false;
         turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        if (turretDepositTicks == 0) {
+        if (turretDepositTicks == 0 && BrainSTEMRobot.mode != BrainSTEMRobot.Mode.SHARED) {
             turretDepositTicks = color == AllianceColor.BLUE ? DEPOSIT_TICKS_BLUE : DEPOSIT_TICKS_RED;
+        } else if (turretDepositTicks == 0) {
+            //shared hub
+            turretDepositTicks = color == AllianceColor.BLUE ? SHARED_TICKS_BLUE : SHARED_TICKS_RED;
         }
         turret.setTargetPosition(turretDepositTicks);
         turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -112,11 +118,15 @@ public class Turret implements Component {
     public void spinTurretReset() {
         turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         turret.setPower(color == AllianceColor.BLUE ? TURRET_POWER : -TURRET_POWER);
-//        turretDepositTicks = color == AllianceColor.BLUE ? DEPOSIT_TICKS_BLUE : DEPOSIT_TICKS_RED;
-//        turret.setTargetPosition(resetTicks);
-//        turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//        turret.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, TURRET_PID);
-//        turret.setPower(-TURRET_POWER);
+    }
+
+    public void spinTurretResetShared() {
+        resetTicks = color == AllianceColor.BLUE ? RESET_TICKS_BLUE : RESET_TICKS_RED;
+        turretDepositTicks = color == AllianceColor.BLUE ? SHARED_TICKS_BLUE : SHARED_TICKS_RED;
+        turret.setTargetPosition(resetTicks);
+        turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        turret.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, TURRET_PID);
+        turret.setPower(-TURRET_POWER);
     }
 
     public void spinTurretCap(Direction direction) {
@@ -135,13 +145,17 @@ public class Turret implements Component {
     }
 
     public void stopTurret() {
+        isTurretZero = true;
         turret.setPower(0);
     }
 
     public void stopTurretFloat() {
-        isTurretZero = true;
         turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         stopTurret();
+    }
+
+    public void resetTurretTicks() {
+        turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
 
     public int encoderPosition() {

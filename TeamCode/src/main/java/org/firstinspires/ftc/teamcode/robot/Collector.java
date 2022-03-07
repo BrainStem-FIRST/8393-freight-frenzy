@@ -28,7 +28,7 @@ public class Collector implements Component {
     private static final double COLLECT_POWER = 1;
     private static final float COLOR_THRESHOLD = 110;
     private static final double SCALE_FACTOR = 255;
-    private static final int CURRENT_THRESHOLD = 1200;
+    private static final int CURRENT_THRESHOLD = 1600;
 
     private RollingAverage currentRollingAverage = new RollingAverage(5);
     private int sign = 1;
@@ -39,6 +39,7 @@ public class Collector implements Component {
     private TimerCanceller offCanceller = new TimerCanceller(800);
 
     private boolean isAuto;
+    private boolean fullRetract = true;
 
     public Collector(HardwareMap map, boolean isAuto) {
         this.isAuto = isAuto;
@@ -83,10 +84,10 @@ public class Collector implements Component {
             case RETRACT:
                 retract();
                 retractCanceller.reset();
-                if (!isAuto) setGoal(Goal.RETRACTACTION);
+                if (fullRetract) setGoal(Goal.RETRACTACTION);
                 break;
             case RETRACTACTION:
-                if(isAuto || retractCanceller.isConditionMet()) {
+                if(!fullRetract || retractCanceller.isConditionMet()) {
                     open();
                     offCanceller.reset();
                     setGoal(Goal.OFF);
@@ -186,5 +187,13 @@ public class Collector implements Component {
 
     public boolean isFreightCollected() {
         return isFreightCollectedColor() || isFreightCollectedCurrentDraw();
+    }
+
+    public void setRetractFull(boolean f) {
+        fullRetract = f;
+    }
+
+    public boolean getRetractFull() {
+        return fullRetract;
     }
 }

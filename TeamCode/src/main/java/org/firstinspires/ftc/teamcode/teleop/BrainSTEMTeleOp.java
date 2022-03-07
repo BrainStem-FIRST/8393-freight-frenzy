@@ -39,7 +39,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 
     protected AllianceColor color = null;
 
-    private int extendedCount = 1;
+    private boolean extended = false;
     private boolean straightAdjustFirstTime = true;
     private boolean deployFirstTime = false, retractFirstTime = false;
     private boolean isDeployCap = false;
@@ -63,6 +63,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         robot = new BrainSTEMRobot(this, color, false);
         robot.reset();
+        robot.turret.lock();
         BrainSTEMRobot.mode = BrainSTEMRobot.Mode.ANGLED;
         while (!opModeIsActive() && !isStopRequested()) {
             telemetry.addData("Status", "Initialized");
@@ -82,7 +83,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             BrainSTEMRobot.mode = BrainSTEMRobot.Mode.CAP;
             robot.turret.unlock();
         } else if (sharedHubButton.getState()) {
-//            BrainSTEMRobot.mode = BrainSTEMRobot.Mode.SHARED;
+            BrainSTEMRobot.mode = BrainSTEMRobot.Mode.SHARED;
             robot.turret.unlock();
         } else if (straightModeButton.getState()) {
             BrainSTEMRobot.mode = BrainSTEMRobot.Mode.STRAIGHT;
@@ -96,7 +97,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             telemetry.addLine("in cap mode");
             robot.drive.setWeightedDrivePower(
                     new Pose2d(
-                            (-gamepad1.left_stick_y * 0.5) + (-gamepad2.left_stick_y * 0.1),
+                            (-gamepad1.left_stick_y * 0.5) + (-gamepad2.left_stick_y * 0.15),
                             (-gamepad1.left_stick_x * 0.5) + (-gamepad2.left_stick_x * 0.2),
                             (-gamepad1.right_stick_x * 0.5) + (-gamepad2.right_stick_x * 0.05)
                     )
@@ -135,7 +136,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             if (depositorGateCapButton.getState()) {
                 robot.depositorLift.openCap();
             } else {
-                robot.depositorLift.close();
+                robot.depositorLift.closeCap();
             }
 
         } else {
@@ -143,7 +144,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
                     new Pose2d(
                             -gamepad1.left_stick_y + (-gamepad2.left_stick_y * 0.1),
                             -gamepad1.left_stick_x + (-gamepad2.left_stick_x * 0.2),
-                            (-gamepad1.right_stick_x * 0.9) + + (-gamepad2.right_stick_x * 0.05)
+                            (-gamepad1.right_stick_x * 0.9) + (-gamepad2.right_stick_x * 0.1)
                     )
             );
 
@@ -190,29 +191,23 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             }
 
             if (depositButton.getState()) {
-                switch(extendedCount) {
-                    case 1:
-                        robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
-                        break;
-                    case 2:
-                        robot.depositorLift.setGoal(DepositorLift.DepositorGoal.EXTENDOUT);
-                        break;
-                    case 3:
-                        if(fullDepositButton.getState()) {
-                            robot.depositorLift.openFull();
-                        } else {
-                            robot.depositorLift.openPartial();
-                        }
-                        break;
+                if (extended) {
+                    if(fullDepositButton.getState() || BrainSTEMRobot.mode == BrainSTEMRobot.Mode.SHARED) {
+                        robot.depositorLift.openFull();
+                    } else {
+                        robot.depositorLift.openPartial();
+                    }
+                    extended = false;
+                } else {
+                    robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
+                    extended = true;
                 }
-                extendedCount ++;
-                if (extendedCount == 4) extendedCount = 1;
             }
 
             if (driver1.retract) {
                 straightAdjustFirstTime = true;
                 robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
-                extendedCount = 1;
+                extended = false;
             }
 
             switch(BrainSTEMRobot.mode) {

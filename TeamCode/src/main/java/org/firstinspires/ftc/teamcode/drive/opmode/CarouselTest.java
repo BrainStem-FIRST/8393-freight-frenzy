@@ -14,7 +14,7 @@ public class CarouselTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         CarouselSpin spin = new CarouselSpin(hardwareMap, AllianceColor.RED);
-        double power = 0.1;
+        double power = 0.25;
         StickyButton button = new StickyButton();
 
         telemetry.addData("Status:", "ready");
@@ -23,9 +23,9 @@ public class CarouselTest extends LinearOpMode {
 
         while (opModeIsActive()) {
             button.update(gamepad1.a);
-            spin.setPower(-power);
+            spin.setPower(power);
             if (button.getState()) {
-                power += 0.1;
+                power -= 0.05;
             }
             telemetry.addData("power", power);
             telemetry.update();

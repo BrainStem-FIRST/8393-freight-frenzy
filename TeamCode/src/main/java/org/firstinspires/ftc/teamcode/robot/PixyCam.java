@@ -24,13 +24,13 @@ public class PixyCam implements Component {
     private static final double RIGHT_X_THRESHOLD_BLUE = 0;
     */
 
-    private static final double LEFT_X_THRESHOLD_RED = 2.29;
-    private static final double CENTER_X_THRESHOLD_RED = 2.41;
-    private static final double RIGHT_X_THRESHOLD_RED = 2.65;
+    private static final double LEFT_X_THRESHOLD_RED = 0.75;
+    private static final double CENTER_X_THRESHOLD_RED = 1.08;
+    private static final double RIGHT_X_THRESHOLD_RED = 1.46;
 
-    private static final double LEFT_X_THRESHOLD_BLUE = 2.65;
-    private static final double CENTER_X_THRESHOLD_BLUE = 2.985;
-    private static final double RIGHT_X_THRESHOLD_BLUE = 3.0;
+    private static final double LEFT_X_THRESHOLD_BLUE = 1.72;
+    private static final double CENTER_X_THRESHOLD_BLUE = 2.17;
+    private static final double RIGHT_X_THRESHOLD_BLUE = 2.2;
 
     private static final double MINIMUM_X = 0.1;
 
@@ -126,9 +126,10 @@ public class PixyCam implements Component {
 
     public void teamShippingElementUpdate() {
         double val = pixyCamAnalog.getVoltage();
-        if (color == AllianceColor.RED || pixyCamAnalog.getVoltage() > 2.4) {
-            tse_x = val;
-        }
+        tse_x = val;
+//        if (color == AllianceColor.RED || pixyCamAnalog.getVoltage() > 2.4) {
+//            tse_x = val;
+//        }
     }
 
     public void setThreshold(Direction direction, double threshold) {

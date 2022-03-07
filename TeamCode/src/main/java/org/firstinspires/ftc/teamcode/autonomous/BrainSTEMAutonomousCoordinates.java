@@ -1,11 +1,7 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
-import android.util.Log;
-
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.util.Angle;
-
-import java.util.ArrayList;
 
 public class BrainSTEMAutonomousCoordinates {
     /*
@@ -16,18 +12,22 @@ public class BrainSTEMAutonomousCoordinates {
     private Pose2d start = new Pose2d(16.25, 64.25, Math.toRadians(0));
 
     private Pose2d collect = new Pose2d(43, start.getY(), Math.toRadians(0)); //x=43
+
     private Pose2d park;
 
     private double collectTangent = Math.toRadians(0);
-    private double depositTangent = Math.toRadians(180);
+    private double depositStartTangent = Math.toRadians(135);
+    private double depositEndTangent = Math.toRadians(180);
     private double collectIncrement = 3;
 
-    private double collectXThreshold = 38;
+    private double collectXMinThreshold = 38;
+    private double collectXMaxThreshold = 60;
 
     public BrainSTEMAutonomousCoordinates(AllianceColor color) {
         if (color == AllianceColor.RED) {
             start = new Pose2d(start.getX(), -start.getY(), flipHeading(start.getHeading()));
             collect = new Pose2d(collect.getX(), -collect.getY(), flipHeading(collect.getHeading()));
+            depositStartTangent = flipHeading(depositStartTangent);
         }
         park = collect;
     }
@@ -48,16 +48,27 @@ public class BrainSTEMAutonomousCoordinates {
         return collectTangent;
     }
 
-    public double collectXThreshold() {
-        return collectXThreshold;
+    public double collectXMinThreshold() {
+        return collectXMinThreshold;
     }
 
-    public double depositTangent() {
-        return depositTangent;
+    public double collectXMaxThreshold() {
+        return collectXMaxThreshold;
     }
 
-    public void updateCollect(double x) {
-        collect = new Pose2d(x, collect.getY(),collect.getHeading());
+    public double depositStartTangent() {
+        return depositStartTangent;
+    }
+    public double depositEndTangent() {
+        return depositEndTangent;
+    }
+
+    public void updateCollectX(double x) {
+        collect = new Pose2d(x, collect.getY(), collect.getHeading());
+    }
+
+    public void shiftCollectYHeading(double y, double heading) {
+        collect = new Pose2d(collect.getX(), collect.getY() + y, collect.getHeading() + heading);
     }
 
     private double flipHeading(double heading) { // radians

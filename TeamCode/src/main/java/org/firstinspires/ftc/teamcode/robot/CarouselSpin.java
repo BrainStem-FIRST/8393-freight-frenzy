@@ -18,7 +18,7 @@ public class CarouselSpin implements Component {
     private static final int COUNT_MAX = 10;
 
     //- for blue, + for red
-    private double spinPower = 1;
+    private double spinPower = 0.25;
 
     private TimerCanceller rampupCanceller = new TimerCanceller(100);
 
