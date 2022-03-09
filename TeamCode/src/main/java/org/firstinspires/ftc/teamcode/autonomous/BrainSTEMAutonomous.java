@@ -15,11 +15,13 @@ import org.firstinspires.ftc.teamcode.util.Direction;
 import org.firstinspires.ftc.teamcode.util.TimerCanceller;
 
 import java.text.DecimalFormat;
+import java.util.Timer;
 
 public class BrainSTEMAutonomous extends LinearOpMode {
     private TimerCanceller waitForDeployCanceller = new TimerCanceller(1500);
     private static final int WAIT_FOR_OPEN = 300;
     private TimerCanceller waitForRetractCanceller = new TimerCanceller(200);
+    private TimerCanceller waitToDeployCanceller = new TimerCanceller(650);
     private ElapsedTime autoTime = new ElapsedTime();
     private double TIME_THRESHOLD = 25.5;
     protected AllianceColor color = AllianceColor.BLUE;
@@ -27,6 +29,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
     private BarcodePattern pattern = BarcodePattern.LEVELTWO;
     private int cycleTimes = 5;
     private boolean firstTimeRetract = true;
+    private boolean firstTimeDeposit = true;
     private boolean endEarly = false;
     private MovingStatistics stats = new MovingStatistics(10);
     private DecimalFormat tseDF = new DecimalFormat("###.###");
@@ -36,13 +39,14 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 //        robot.pixyCam.start();
 
         robot.reset();
+        if (color == AllianceColor.BLUE)
         while (!opModeIsActive() && !isStopRequested()) {
             robot.turret.lock();
             robot.collector.tiltInit();
             robot.pixyCam.teamShippingElementUpdate();
             stats.add(robot.pixyCam.tse_x);
             pattern = robot.pixyCam.tsePos(stats.getMean());
-            switch(pattern) {
+            switch (pattern) {
                 case LEVELONE:
                     robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LEVELONE);
                     break;
@@ -53,6 +57,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                     robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LEVELTHREE);
                     break;
             }
+
             if (gamepad1.x) robot.pixyCam.setThreshold(Direction.LEFT, robot.pixyCam.tse_x);
             if (gamepad1.y) robot.pixyCam.setThreshold(Direction.CENTER, robot.pixyCam.tse_x);
             if (gamepad1.b) robot.pixyCam.setThreshold(Direction.RIGHT, robot.pixyCam.tse_x);
@@ -84,6 +89,11 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         BrainSTEMAutonomousCoordinates coordinates = new BrainSTEMAutonomousCoordinates(color);
         robot.drive.setPoseEstimate(coordinates.start());
 
+        if (color == AllianceColor.BLUE) {
+            robot.turret.blueAutoOverride(true);
+            robot.depositorLift.blueAutoOverride(true);
+        }
+
         //deposit preload
         waitForDeployCanceller.reset();
         robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
@@ -100,6 +110,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                         color == AllianceColor.BLUE ? Math.toRadians(-8) : Math.toRadians(8));
             }
             firstTimeRetract = true;
+            firstTimeDeposit = true;
             sleep(WAIT_FOR_OPEN);
             waitForRetractCanceller.reset();
             robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
@@ -114,6 +125,8 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 
             robot.drive.followTrajectorySequenceAsync(collectTrajectory);
             robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LEVELTHREE);
+            robot.turret.blueAutoOverride(false);
+            robot.depositorLift.blueAutoOverride(false);
             /*
             Keep running loop while:
             (color boolean is false or not past pose threshold) and not past second threshold
@@ -171,23 +184,16 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             TrajectorySequence depositTrajectory;
             if (i >= 3) {
                 depositTrajectory = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate(), coordinates.depositStartTangent())
-                        .addTemporalMarker(0.65, 0, () -> {
-                            waitForDeployCanceller.reset();
-                            robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
-                        })
-                        .splineToLinearHeading(coordinates.start(), coordinates.depositEndTangent())
+                        .splineToLinearHeading(coordinates.deposit(), coordinates.depositEndTangent())
                         .build();
             } else {
                 depositTrajectory = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
                         .setReversed(true)
-                        .addTemporalMarker(0.65, 0, () -> {
-                            waitForDeployCanceller.reset();
-                            robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
-                        })
-                        .lineToSplineHeading(coordinates.start())
+                        .lineToSplineHeading(coordinates.deposit())
                         .build();
             }
 
+            waitToDeployCanceller.reset();
             robot.drive.followTrajectorySequenceAsync(depositTrajectory);
             while(robot.drive.isTrajectoryRunning()) {
                 robot.drive.update();
@@ -197,7 +203,20 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                     robot.collector.setGoal(Collector.Goal.RETRACTACTION);
                     firstTimeRetract = false;
                 }
+
+                if (firstTimeDeposit && waitToDeployCanceller.isConditionMet() && robot.collector.getGoal() == Collector.Goal.DEFAULT) {
+                    waitForDeployCanceller.reset();
+                    robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
+                    firstTimeDeposit = false;
+                }
             }
+//            while (firstTimeDeposit) {
+//                if (firstTimeDeposit && waitToDeployCanceller.isConditionMet() && robot.collector.getGoal() == Collector.Goal.DEFAULT) {
+//                    waitForDeployCanceller.reset();
+//                    robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
+//                    firstTimeDeposit = false;
+//                }
+//            }
 
             while(!waitForDeployCanceller.isConditionMet()) {
                 robot.update();
