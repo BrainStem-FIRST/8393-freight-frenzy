@@ -36,7 +36,8 @@ public class Turret implements Component {
     private static final int RESET_TICKS_RED = 10;
 
     private static final int DEPOSIT_TICKS_RED = 710;
-    private static final int DEPOSIT_TICKS_BLUE = -610;
+    private static final int DEPOSIT_TICKS_BLUE = -580;
+    private static final int DEPOSIT_TICKS_BLUE_AUTO = -700;
 
     private static final int SHARED_TICKS_BLUE = 710;
     private static final int SHARED_TICKS_RED = -SHARED_TICKS_BLUE;
@@ -54,6 +55,7 @@ public class Turret implements Component {
     private AllianceColor color;
     private boolean isAuto = false;
     private boolean isTurretZero = true;
+    private boolean blueAutoOverride = false;
 
     public Turret (HardwareMap map, AllianceColor color, boolean isAuto) {
         this.color = color;
@@ -93,7 +95,9 @@ public class Turret implements Component {
     public void spinTurretDeposit() {
         isTurretZero = false;
         turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        if (turretDepositTicks == 0 && BrainSTEMRobot.mode != BrainSTEMRobot.Mode.SHARED) {
+        if (blueAutoOverride) {
+            turretDepositTicks = DEPOSIT_TICKS_BLUE_AUTO;
+        } else if (turretDepositTicks == 0 && BrainSTEMRobot.mode != BrainSTEMRobot.Mode.SHARED) {
             turretDepositTicks = color == AllianceColor.BLUE ? DEPOSIT_TICKS_BLUE : DEPOSIT_TICKS_RED;
         } else if (turretDepositTicks == 0) {
             //shared hub
@@ -117,6 +121,7 @@ public class Turret implements Component {
 
     public void spinTurretReset() {
         turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        turretDepositTicks = color == AllianceColor.BLUE ? DEPOSIT_TICKS_BLUE : DEPOSIT_TICKS_RED;
         turret.setPower(color == AllianceColor.BLUE ? TURRET_POWER : -TURRET_POWER);
     }
 
@@ -152,6 +157,10 @@ public class Turret implements Component {
     public void stopTurretFloat() {
         turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         stopTurret();
+    }
+
+    public void blueAutoOverride(boolean bao) {
+        blueAutoOverride = bao;
     }
 
     public void resetTurretTicks() {

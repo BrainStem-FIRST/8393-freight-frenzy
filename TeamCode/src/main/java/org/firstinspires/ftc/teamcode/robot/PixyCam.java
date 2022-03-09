@@ -28,8 +28,8 @@ public class PixyCam implements Component {
     private static final double CENTER_X_THRESHOLD_RED = 1.08;
     private static final double RIGHT_X_THRESHOLD_RED = 1.46;
 
-    private static final double LEFT_X_THRESHOLD_BLUE = 1.72;
-    private static final double CENTER_X_THRESHOLD_BLUE = 2.17;
+    private static final double LEFT_X_THRESHOLD_BLUE = 1.285;
+    private static final double CENTER_X_THRESHOLD_BLUE = 1.82;
     private static final double RIGHT_X_THRESHOLD_BLUE = 2.2;
 
     private static final double MINIMUM_X = 0.1;

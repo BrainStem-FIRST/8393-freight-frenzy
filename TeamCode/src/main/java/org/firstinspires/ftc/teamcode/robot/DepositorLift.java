@@ -14,6 +14,8 @@ import org.firstinspires.ftc.teamcode.util.CachingMotor;
 import org.firstinspires.ftc.teamcode.util.CachingServo;
 import org.firstinspires.ftc.teamcode.util.TimerCanceller;
 
+import java.util.Timer;
+
 public class DepositorLift implements Component {
     /*
     Out: isDeploying = true
@@ -57,7 +59,7 @@ public class DepositorLift implements Component {
     private static final double LIFT_DOWN_POWER = -0.8;
 
     private static final int LIFT_CLEAR_TICKS = 380;
-    private static final int LIFT_LEVELONE_TICKS = 200;
+    private static final int LIFT_LEVELONE_TICKS = 125;
     private static final int LIFT_LEVELTWO_TICKS = 500;
     private static final int LIFT_LEVELTHREE_TICKS = 900;
     private static final int LIFT_CAP_TICKS = 1015;
@@ -76,10 +78,13 @@ public class DepositorLift implements Component {
     private static final int EXTEND_OUT_TICKS = 300;
     private static final int EXTEND_NORMAL_TICKS = 350;
     private static final int EXTEND_SHARED_TICKS = 550;
-    private static final int EXTEND_LEVELONE_TICKS = 1200;
-    private static final int EXTEND_LEVELTWO_TICKS = 1260;
-    private static final int EXTEND_LEVELTHREE_TICKS = 1320;
+    private static final int EXTEND_LEVELONE_TICKS = 1180;
+    private static final int EXTEND_LEVELTWO_TICKS = 1240;
+    private static final int EXTEND_LEVELTHREE_TICKS = 1300;
     private static final int EXTEND_CAP_TICKS = 1475;
+    private static final int EXTEND_LEVELONE_TICKS_AUTOBLUE = 1080;
+    private static final int EXTEND_LEVELTWO_TICKS_AUTOBLUE = 1188;
+    private static final int EXTEND_LEVELTHREE_TICKS_AUTOBLUE = 1298;
     private int extendTicks = EXTEND_LEVELTHREE_TICKS;
 
     private static final double EXTEND_CURRENT_THRESHOLD = 7000;
@@ -89,6 +94,7 @@ public class DepositorLift implements Component {
     private TimerCanceller waitForLiftCanceller = new TimerCanceller(200);
     private TimerCanceller waitForExtendCanceller = new TimerCanceller(300);
     private TimerCanceller waitForGateCanceller = new TimerCanceller(300);
+    private TimerCanceller extendBackCancellerLift = new TimerCanceller(300);
     private TimerCanceller extendBackCancellerTurret = new TimerCanceller(700);
     private TimerCanceller extendBackCancellerMotorTimeout = new TimerCanceller(1800);
     private TimerCanceller extendBackCancellerCurrentDrawTimeout = new TimerCanceller(750);
@@ -109,8 +115,9 @@ public class DepositorLift implements Component {
     private boolean isAuto = false;
     private boolean extendStop = false;
     private boolean turbo = false;
+    private boolean blueAutoOverride = false;
     private Turret turret;
-    private BrainSTEMRobot.Mode prevMode = BrainSTEMRobot.Mode.ANGLED;
+    private BrainSTEMRobot.Mode prevMode = BrainSTEMRobot.mode;
     private int i = 0;
     private int j = 0;
 
@@ -148,18 +155,22 @@ public class DepositorLift implements Component {
 
     @Override
     public void update() {
-        if (prevMode != BrainSTEMRobot.mode) {
-            if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.STRAIGHT) {
-                extendTicks = EXTEND_NORMAL_TICKS;
-                liftTicks = LIFT_LEVELTWO_TICKS;
-            } else if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.CAP) {
-                extendTicks = EXTEND_OUT_TICKS;
-                liftTicks = LIFT_LEVELTWO_TICKS;
-            } else if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.SHARED) {
-                extendTicks = EXTEND_SHARED_TICKS;
-                liftTicks = LIFT_LEVELTWO_TICKS;
-            } else {
-                setHeight(depositHeight);
+        if (blueAutoOverride) {
+            setTicksAutoBlue();
+        } else {
+            if (prevMode != BrainSTEMRobot.mode) {
+                if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.STRAIGHT) {
+                    extendTicks = EXTEND_NORMAL_TICKS;
+                    liftTicks = LIFT_LEVELTWO_TICKS;
+                } else if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.CAP) {
+                    extendTicks = EXTEND_OUT_TICKS;
+                    liftTicks = LIFT_LEVELTWO_TICKS;
+                } else if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.SHARED) {
+                    extendTicks = EXTEND_SHARED_TICKS;
+                    liftTicks = LIFT_LEVELTWO_TICKS;
+                } else {
+                    setHeight(depositHeight);
+                }
             }
         }
         prevMode = BrainSTEMRobot.mode;
@@ -216,6 +227,7 @@ public class DepositorLift implements Component {
                     if (waitForGateCanceller.isConditionMet()) {
                         rotateClear();
                         extend.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                        extendBackCancellerLift.reset();
                         extendBackCancellerTurret.reset();
                         extend.setPower(EXTEND_BACK_POWER);
                         extendStop = true;
@@ -223,8 +235,10 @@ public class DepositorLift implements Component {
                     }
                     break;
                 case EXTENDBACKACTION:
-                    if (extendBackCancellerTurret.isConditionMet()) {
+                    if (extendBackCancellerLift.isConditionMet()) {
                         lift.setTargetPosition(LIFT_CLEAR_TICKS);
+                    }
+                    if (extendBackCancellerTurret.isConditionMet()) {
                         turret.spinTurretReset();
                         if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.STRAIGHT) {
                             turretTimeout = turretTimeoutStraight;
@@ -653,6 +667,23 @@ public class DepositorLift implements Component {
         }
     }
 
+    public void setTicksAutoBlue() {
+        switch(depositHeight) {
+            case LEVELONE:
+                liftTicks = LIFT_LEVELONE_TICKS;
+                extendTicks = EXTEND_LEVELONE_TICKS_AUTOBLUE;
+                break;
+            case LEVELTWO:
+                liftTicks = LIFT_LEVELTWO_TICKS;
+                extendTicks = EXTEND_LEVELTWO_TICKS_AUTOBLUE;
+                break;
+            case LEVELTHREE:
+                liftTicks = LIFT_LEVELTHREE_TICKS;
+                extendTicks = EXTEND_LEVELTHREE_TICKS_AUTOBLUE;
+                break;
+        }
+    }
+
     //Sensors
     public boolean isTouchPressed() {
         return touch.isPressed();
@@ -661,5 +692,9 @@ public class DepositorLift implements Component {
     //Setters/Getters
     public void setHold(boolean isHolding) {
         hold = isHolding;
+    }
+
+    public void blueAutoOverride(boolean bao) {
+        blueAutoOverride = bao;
     }
 }

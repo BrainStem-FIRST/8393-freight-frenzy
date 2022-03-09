@@ -9,11 +9,12 @@ public class BrainSTEMAutonomousCoordinates {
     Change to red occurs in update.
      */
 
-    private Pose2d start = new Pose2d(16.25, 64.25, Math.toRadians(0));
+    private Pose2d start = new Pose2d(8, 64.25, Math.toRadians(0));
 
     private Pose2d collect = new Pose2d(43, start.getY(), Math.toRadians(0)); //x=43
 
     private Pose2d park;
+
 
     private double collectTangent = Math.toRadians(0);
     private double depositStartTangent = Math.toRadians(135);
@@ -22,10 +23,11 @@ public class BrainSTEMAutonomousCoordinates {
 
     private double collectXMinThreshold = 38;
     private double collectXMaxThreshold = 60;
+    private double depositX = 16;
 
     public BrainSTEMAutonomousCoordinates(AllianceColor color) {
         if (color == AllianceColor.RED) {
-            start = new Pose2d(start.getX(), -start.getY(), flipHeading(start.getHeading()));
+            start = new Pose2d(depositX, -start.getY(), flipHeading(start.getHeading()));
             collect = new Pose2d(collect.getX(), -collect.getY(), flipHeading(collect.getHeading()));
             depositStartTangent = flipHeading(depositStartTangent);
         }
@@ -38,6 +40,10 @@ public class BrainSTEMAutonomousCoordinates {
 
     public Pose2d collect() {
         return collect;
+    }
+
+    public Pose2d deposit() {
+        return new Pose2d(depositX, start.getY(), start.getHeading());
     }
 
     public Pose2d park() {

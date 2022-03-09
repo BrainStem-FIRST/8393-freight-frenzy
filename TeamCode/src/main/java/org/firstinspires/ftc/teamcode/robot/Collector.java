@@ -36,7 +36,7 @@ public class Collector implements Component {
     private boolean gateOverride = false;
     private TimerCanceller deployCanceller = new TimerCanceller(75);
     private TimerCanceller retractCanceller = new TimerCanceller(200);
-    private TimerCanceller offCanceller = new TimerCanceller(800);
+    private TimerCanceller offCanceller = new TimerCanceller(600);
 
     private boolean isAuto;
     private boolean fullRetract = true;
