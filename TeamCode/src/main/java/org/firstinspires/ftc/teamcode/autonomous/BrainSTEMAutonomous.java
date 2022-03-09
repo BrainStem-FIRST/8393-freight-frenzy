@@ -139,14 +139,15 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                         count++;
                     }
                 }
+                telemetry.clearAll();
+                telemetry.addData("x RR", robot.drive.getPoseEstimate().getX());
+                telemetry.addData("y RR", robot.drive.getPoseEstimate().getY());
+                telemetry.addData("pose heading RR", robot.drive.getPoseEstimate().getHeading());
 
-//                telemetry.addData("x RR", robot.drive.getPoseEstimate().getX());
-//                telemetry.addData("y RR", robot.drive.getPoseEstimate().getY());
-//                telemetry.addData("pose heading RR", robot.drive.getPoseEstimate().getHeading());
-//
-//                telemetry.addData("x COOL", robot.cool.getPoseEstimate().getX());
-//                telemetry.addData("y COOL", robot.cool.getPoseEstimate().getY());
-//                telemetry.addData("pose heading COOL", robot.cool.getPoseEstimate().getHeading());
+                telemetry.addData("x COOL", robot.cool.getPoseEstimate().getX());
+                telemetry.addData("y COOL", robot.cool.getPoseEstimate().getY());
+                telemetry.addData("pose heading COOL", robot.cool.getPoseEstimate().getHeading());
+                telemetry.update();
             }
             Log.d("BrainSTEM", "Time of collect number " + i + " : " + autoTime.seconds());
             if (autoTime.seconds() > TIME_THRESHOLD) {

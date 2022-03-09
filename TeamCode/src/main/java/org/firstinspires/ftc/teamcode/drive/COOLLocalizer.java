@@ -17,7 +17,6 @@ public class COOLLocalizer implements Localizer {
 
     private static T265Camera slamra = null;
 
-    private final FtcDashboard dashboard = FtcDashboard.getInstance();
 
     public double xCorrection = 1;
     public double yCorrection = 1;
@@ -32,9 +31,9 @@ public class COOLLocalizer implements Localizer {
             slamra = new T265Camera(new Transform2d(), 0.0, map.appContext);
         }
 
-        //slamra.setPose(new com.arcrobotics.ftclib.geometry.Pose2d(new Translation2d(16.25, 64.25), new Rotation2d(Math.toRadians(0))));
-
-//        slamra.start();
+        //slamra.setPose(new com.arcrobotics.ftclib.geometry.Pose2d(new Translation2d(23.75, 64.25), new Rotation2d(Math.toRadians(0))));
+        slamra.stop();
+        slamra.start();
 
 
     }
