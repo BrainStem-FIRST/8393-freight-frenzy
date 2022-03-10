@@ -134,7 +134,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             }
 
             if (depositorGateCapButton.getState()) {
-                robot.depositorLift.openCap();
+                robot.depositorLift.close();
             } else {
                 robot.depositorLift.closeCap();
             }
