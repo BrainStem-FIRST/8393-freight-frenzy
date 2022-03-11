@@ -39,7 +39,6 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 //        robot.pixyCam.start();
 
         robot.reset();
-        if (color == AllianceColor.BLUE)
         while (!opModeIsActive() && !isStopRequested()) {
             robot.turret.lock();
             robot.collector.tiltInit();
@@ -89,10 +88,10 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         BrainSTEMAutonomousCoordinates coordinates = new BrainSTEMAutonomousCoordinates(color);
         robot.drive.setPoseEstimate(coordinates.start());
 
-        if (color == AllianceColor.BLUE) {
-            robot.turret.blueAutoOverride(true);
-            robot.depositorLift.blueAutoOverride(true);
-        }
+//        if (color == AllianceColor.BLUE) {
+//            robot.turret.blueAutoOverride(true);
+//            robot.depositorLift.blueAutoOverride(true);
+//        }
 
         //deposit preload
         waitForDeployCanceller.reset();
@@ -125,8 +124,8 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 
             robot.drive.followTrajectorySequenceAsync(collectTrajectory);
             robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LEVELTHREE);
-            robot.turret.blueAutoOverride(false);
-            robot.depositorLift.blueAutoOverride(false);
+//            robot.turret.blueAutoOverride(false);
+//            robot.depositorLift.blueAutoOverride(false);
             /*
             Keep running loop while:
             (color boolean is false or not past pose threshold) and not past second threshold

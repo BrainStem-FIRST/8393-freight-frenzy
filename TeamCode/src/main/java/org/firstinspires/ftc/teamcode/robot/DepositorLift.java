@@ -58,7 +58,7 @@ public class DepositorLift implements Component {
     private static final double LIFT_DOWN_POWER_CAP = -0.05;
     private static final double LIFT_DOWN_POWER = -0.8;
 
-    private static final int LIFT_CLEAR_TICKS = 380;
+    private static final int LIFT_CLEAR_TICKS = 480;
     private static final int LIFT_LEVELONE_TICKS = 125;
     private static final int LIFT_LEVELTWO_TICKS = 500;
     private static final int LIFT_LEVELTHREE_TICKS = 900;
@@ -78,7 +78,7 @@ public class DepositorLift implements Component {
     private static final int EXTEND_OUT_TICKS = 300;
     private static final int EXTEND_NORMAL_TICKS = 350;
     private static final int EXTEND_SHARED_TICKS = 550;
-    private static final int EXTEND_LEVELONE_TICKS = 1180;
+    private static final int EXTEND_LEVELONE_TICKS = 1230;
     private static final int EXTEND_LEVELTWO_TICKS = 1240;
     private static final int EXTEND_LEVELTHREE_TICKS = 1300;
     private static final int EXTEND_CAP_TICKS = 1475;
@@ -142,7 +142,7 @@ public class DepositorLift implements Component {
         extend.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         extend.setTargetPositionTolerance(3);
 
-        gate.setPwmRange(new PwmControl.PwmRange(1180,1800));
+        gate.setPwmRange(new PwmControl.PwmRange(1530,2150));
 
         rotate.setPwmRange(new PwmControl.PwmRange(935,2305));
     }
@@ -465,6 +465,7 @@ public class DepositorLift implements Component {
                     }
                     break;
                 case LIFTDOWN:
+                    openCollect();
                     lift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                     liftTimeout.reset();
                     setGoal(LiftGoal.LIFTDOWNACTION);
@@ -476,7 +477,6 @@ public class DepositorLift implements Component {
                         lift.setPower(0);
                         turret.resetTurretTicks();
                         rotateCollect();
-                        openCollect();
                         setGoal(LiftGoal.DEFAULT);
                     }
                     break;
@@ -582,22 +582,22 @@ public class DepositorLift implements Component {
 
     //Gate
     public void close() {
-        gate.setPosition(0);
+        gate.setPosition(1);
     }
     public void closeCap() {
-        gate.setPosition(0.15);
+        gate.setPosition(0.82);
     }
     public void openCap() {
-        gate.setPosition(0.37);
+        gate.setPosition(0.63);
     }
     public void openCollect() {
-        gate.setPosition(0.69);
+        gate.setPosition(0.31);
     }
     public void openPartial() {
-        gate.setPosition(0.435);
+        gate.setPosition(0.565);
     }
     public void openFull() {
-        gate.setPosition(1);
+        gate.setPosition(0);
     }
     public void test(double position) {
         gate.setPosition(position);

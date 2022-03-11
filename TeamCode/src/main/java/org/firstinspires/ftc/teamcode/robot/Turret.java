@@ -36,7 +36,7 @@ public class Turret implements Component {
     private static final int RESET_TICKS_RED = 10;
 
     private static final int DEPOSIT_TICKS_RED = 710;
-    private static final int DEPOSIT_TICKS_BLUE = -580;
+    private static final int DEPOSIT_TICKS_BLUE = -640;
     private static final int DEPOSIT_TICKS_BLUE_AUTO = -700;
 
     private static final int SHARED_TICKS_BLUE = 710;
