@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.robot;
 
 import android.util.Log;
 
-import com.arcrobotics.ftclib.hardware.ServoEx;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
@@ -35,7 +34,7 @@ public class Turret implements Component {
     private static final int RESET_TICKS_BLUE = -10;
     private static final int RESET_TICKS_RED = 10;
 
-    private static final int DEPOSIT_TICKS_RED = 710;
+    private static final int DEPOSIT_TICKS_RED = 740;
     private static final int DEPOSIT_TICKS_BLUE = -640;
     private static final int DEPOSIT_TICKS_BLUE_AUTO = -700;
 
@@ -48,7 +47,7 @@ public class Turret implements Component {
     private static final double TURRET_POWER = 0.8;
     private static final double TURRET_POWER_SLOW = 0.4;
     private static final double TURRET_POWER_MANUALRESET = 0.3;
-    private static final PIDFCoefficients TURRET_PID = new PIDFCoefficients(20,0,1,0);
+    private static final PIDFCoefficients TURRET_PID = new PIDFCoefficients(20,0,0.5,0);
 
     private int turretDepositTicks = 0;
     private int resetTicks = 0;

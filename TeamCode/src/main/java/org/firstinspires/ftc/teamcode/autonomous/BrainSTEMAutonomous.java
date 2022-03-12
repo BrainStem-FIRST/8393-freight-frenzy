@@ -139,7 +139,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                     robot.drive.getPoseEstimate().getX() <= coordinates.collectXMaxThreshold()) {
                 robot.drive.update();
                 if (!robot.drive.isTrajectoryRunning()) {
-                    if (count >= 2) {
+                    if (count >= 1) {
                         robot.drive.followTrajectoryAsync(robot.drive.trajectoryBuilder(robot.drive.getPoseEstimate()).back(4).build());
                         count = 0;
                     } else if (forward) {
@@ -174,7 +174,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             robot.collector.setGoal(Collector.Goal.RETRACT);
             robot.drive.endTrajectory();
             robot.drive.update();
-            coordinates.updateCollectX(robot.drive.getPoseEstimate().getX());
+            coordinates.updateCollectX(robot.drive.getPoseEstimate().getX() + 1.5);
 
             if (endEarly) {
                 break;

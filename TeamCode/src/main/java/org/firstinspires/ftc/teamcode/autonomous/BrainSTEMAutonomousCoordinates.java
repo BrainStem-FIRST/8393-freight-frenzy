@@ -9,7 +9,7 @@ public class BrainSTEMAutonomousCoordinates {
     Change to red occurs in update.
      */
 
-    private Pose2d start = new Pose2d(14.75, 64.25, Math.toRadians(0)); //was 8 for alternate blue start
+    private Pose2d start = new Pose2d(15.5, 64.25, Math.toRadians(0)); //was 8 for alternate blue start
 
     private Pose2d collect = new Pose2d(43, start.getY(), Math.toRadians(0)); //x=43
 
@@ -31,7 +31,7 @@ public class BrainSTEMAutonomousCoordinates {
             collect = new Pose2d(collect.getX(), -collect.getY(), flipHeading(collect.getHeading()));
             depositStartTangent = flipHeading(depositStartTangent);
         }
-        park = collect;
+        park = new Pose2d(collect.getX() + 5, collect.getY(), collect.getHeading());
     }
 
     public Pose2d start() {
