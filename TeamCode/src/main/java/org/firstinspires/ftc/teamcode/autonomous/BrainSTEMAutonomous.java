@@ -20,7 +20,7 @@ import java.util.Timer;
 public class BrainSTEMAutonomous extends LinearOpMode {
     private TimerCanceller waitForDeployCanceller = new TimerCanceller(1500);
     private static final int WAIT_FOR_OPEN = 300;
-    private TimerCanceller waitForRetractCanceller = new TimerCanceller(200);
+    private TimerCanceller waitForRetractCanceller = new TimerCanceller(400);
     private TimerCanceller waitToDeployCanceller = new TimerCanceller(650);
     private ElapsedTime autoTime = new ElapsedTime();
     private double TIME_THRESHOLD = 25.5;
@@ -48,6 +48,9 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             switch (pattern) {
                 case LEVELONE:
                     robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LEVELONE);
+                    if (color == AllianceColor.BLUE) {
+                        robot.turret.blueAutoOverride(true);
+                    }
                     break;
                 case LEVELTWO:
                     robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LEVELTWO);
@@ -57,15 +60,15 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                     break;
             }
 
-            if (gamepad1.x) robot.pixyCam.setThreshold(Direction.LEFT, robot.pixyCam.tse_x);
+//            if (gamepad1.x) robot.pixyCam.setThreshold(Direction.LEFT, robot.pixyCam.tse_x);
             if (gamepad1.y) robot.pixyCam.setThreshold(Direction.CENTER, robot.pixyCam.tse_x);
-            if (gamepad1.b) robot.pixyCam.setThreshold(Direction.RIGHT, robot.pixyCam.tse_x);
+//            if (gamepad1.b) robot.pixyCam.setThreshold(Direction.RIGHT, robot.pixyCam.tse_x);
 
             robot.update();
             telemetry.addLine("Ready for start");
-            telemetry.addData("Gamepad 1 X: Set Left Threshold", tseDF.format(robot.pixyCam.getThreshold(Direction.LEFT)));
+            telemetry.addData("Left Threshold", tseDF.format(robot.pixyCam.getThreshold(Direction.LEFT)));
             telemetry.addData("Gamepad 1 Y: Set Center Threshold", tseDF.format(robot.pixyCam.getThreshold(Direction.CENTER)));
-            telemetry.addData("Gamepad 1 B: Set Right Threshold", tseDF.format(robot.pixyCam.getThreshold(Direction.RIGHT)));
+            telemetry.addData("Right Threshold", tseDF.format(robot.pixyCam.getThreshold(Direction.RIGHT)));
             telemetry.addData("Barcode Pattern", pattern);
             telemetry.addData("Current Team Shipping Element X", tseDF.format(robot.pixyCam.tse_x));
             telemetry.addData("Mean Team Shipping Element X", tseDF.format(stats.getMean()));
@@ -103,6 +106,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 
         robot.depositorLift.openPartial();
 
+        robot.turret.blueAutoOverride(false);
         for (int i = 1; i <= cycleTimes; i++) {
             if (i == 3) {
                 coordinates.shiftCollectYHeading(color == AllianceColor.BLUE ? -5 : 5,
@@ -139,14 +143,14 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                     robot.drive.getPoseEstimate().getX() <= coordinates.collectXMaxThreshold()) {
                 robot.drive.update();
                 if (!robot.drive.isTrajectoryRunning()) {
-                    if (count >= 1) {
+                    if (count >= 2) {
                         robot.drive.followTrajectoryAsync(robot.drive.trajectoryBuilder(robot.drive.getPoseEstimate()).back(4).build());
                         count = 0;
                     } else if (forward) {
                         robot.drive.followTrajectoryAsync(robot.drive.trajectoryBuilder(robot.drive.getPoseEstimate()).forward(4).build());
                         forward = false;
                     } else {
-                        robot.drive.followTrajectoryAsync(robot.drive.trajectoryBuilder(robot.drive.getPoseEstimate()).back(2).build());
+                        robot.drive.followTrajectoryAsync(robot.drive.trajectoryBuilder(robot.drive.getPoseEstimate()).back(1).build());
                         forward = true;
                         count++;
                     }
@@ -175,6 +179,10 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             robot.drive.endTrajectory();
             robot.drive.update();
             coordinates.updateCollectX(robot.drive.getPoseEstimate().getX() + 1.5);
+            if (color == AllianceColor.BLUE && i <= 2) {
+                robot.drive.setPoseEstimate(
+                        robot.drive.getPoseEstimate().plus(new Pose2d(0,-0.5,0)));
+            }
 
             if (endEarly) {
                 break;

@@ -36,7 +36,7 @@ public class Turret implements Component {
 
     private static final int DEPOSIT_TICKS_RED = 740;
     private static final int DEPOSIT_TICKS_BLUE = -640;
-    private static final int DEPOSIT_TICKS_BLUE_AUTO = -700;
+    private static final int DEPOSIT_TICKS_BLUE_AUTO_L1 = -665;
 
     private static final int SHARED_TICKS_BLUE = 710;
     private static final int SHARED_TICKS_RED = -SHARED_TICKS_BLUE;
@@ -95,7 +95,7 @@ public class Turret implements Component {
         isTurretZero = false;
         turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         if (blueAutoOverride) {
-            turretDepositTicks = DEPOSIT_TICKS_BLUE_AUTO;
+            turretDepositTicks = DEPOSIT_TICKS_BLUE_AUTO_L1;
         } else if (turretDepositTicks == 0 && BrainSTEMRobot.mode != BrainSTEMRobot.Mode.SHARED) {
             turretDepositTicks = color == AllianceColor.BLUE ? DEPOSIT_TICKS_BLUE : DEPOSIT_TICKS_RED;
         } else if (turretDepositTicks == 0) {

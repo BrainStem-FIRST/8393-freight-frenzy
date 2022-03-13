@@ -24,15 +24,18 @@ public class PixyCam implements Component {
     private static final double RIGHT_X_THRESHOLD_BLUE = 0;
     */
 
-    private static final double LEFT_X_THRESHOLD_RED = 0.75;
-    private static final double CENTER_X_THRESHOLD_RED = 1.08;
-    private static final double RIGHT_X_THRESHOLD_RED = 1.46;
+    private static final double LEFT_X_THRESHOLD_RED = 1.26;
+    private static final double CENTER_X_THRESHOLD_RED = 1.52;
+    private static final double RIGHT_X_THRESHOLD_RED = 1.94;
+    private static final double RED_DIFFERENCE = 0.33;
 
-    private static final double LEFT_X_THRESHOLD_BLUE = 1.285;
-    private static final double CENTER_X_THRESHOLD_BLUE = 1.82;
-    private static final double RIGHT_X_THRESHOLD_BLUE = 2.2;
 
-    private static final double MINIMUM_X = 0.1;
+    private static final double LEFT_X_THRESHOLD_BLUE = 2.0;
+    private static final double CENTER_X_THRESHOLD_BLUE = 2.5;
+    private static final double RIGHT_X_THRESHOLD_BLUE = 2.9;
+    private static final double BLUE_DIFFERENCE = 0.45;
+
+    private static final double MINIMUM_X = 1.12;
 
     private double leftXThreshold;
     private double centerXThreshold;
@@ -126,24 +129,34 @@ public class PixyCam implements Component {
 
     public void teamShippingElementUpdate() {
         double val = pixyCamAnalog.getVoltage();
-        tse_x = val;
-//        if (color == AllianceColor.RED || pixyCamAnalog.getVoltage() > 2.4) {
-//            tse_x = val;
-//        }
+        if (val > MINIMUM_X) {
+            tse_x = val;
+        }
     }
 
     public void setThreshold(Direction direction, double threshold) {
-        switch (direction) {
-            case LEFT:
-                leftXThreshold = threshold;
+        centerXThreshold = threshold;
+        switch(color) {
+            case RED:
+                leftXThreshold = centerXThreshold - RED_DIFFERENCE;
+                rightXThreshold = centerXThreshold + RED_DIFFERENCE;
                 break;
-            case CENTER:
-                centerXThreshold = threshold;
-                break;
-            case RIGHT:
-                rightXThreshold = threshold;
+            case BLUE:
+                leftXThreshold = centerXThreshold - BLUE_DIFFERENCE;
+                rightXThreshold = centerXThreshold + BLUE_DIFFERENCE;
                 break;
         }
+//        switch (direction) {
+//            case LEFT:
+//                leftXThreshold = threshold;
+//                break;
+//            case CENTER:
+//                centerXThreshold = threshold;
+//                break;
+//            case RIGHT:
+//                rightXThreshold = threshold;
+//                break;
+//        }
     }
 
     public double getThreshold(Direction direction) {
