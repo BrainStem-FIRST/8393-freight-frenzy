@@ -157,8 +157,8 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                 telemetry.addData("y RR", robot.drive.getPoseEstimate().getY());
                 telemetry.addData("pose heading RR", robot.drive.getPoseEstimate().getHeading());
 
-                telemetry.addData("x COOL", robot.cool.getPoseEstimate().getX());
-                telemetry.addData("y COOL", robot.cool.getPoseEstimate().getY());
+                telemetry.addData("x COOL", robot.cool.getPoseEstimate().getX()+13.5);
+                telemetry.addData("y COOL", robot.cool.getPoseEstimate().getY()+64.24);
                 telemetry.addData("pose heading COOL", robot.cool.getPoseEstimate().getHeading());
                 telemetry.update();
             }
@@ -198,7 +198,14 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             robot.drive.followTrajectorySequenceAsync(depositTrajectory);
             while(robot.drive.isTrajectoryRunning()) {
                 robot.drive.update();
+                telemetry.addData("x RR", robot.drive.getPoseEstimate().getX());
+                telemetry.addData("y RR", robot.drive.getPoseEstimate().getY());
+                telemetry.addData("pose heading RR", robot.drive.getPoseEstimate().getHeading());
 
+                telemetry.addData("x COOL", robot.cool.getPoseEstimate().getX()+13.5);
+                telemetry.addData("y COOL", robot.cool.getPoseEstimate().getY()+64.25);
+                telemetry.addData("pose heading COOL", robot.cool.getPoseEstimate().getHeading());
+                telemetry.update();
                 if (firstTimeRetract && robot.depositorLift.getLiftGoal() == DepositorLift.LiftGoal.DEFAULT
                         && robot.turret.isTurretZero() && !robot.collector.getRetractFull()) {
                     robot.collector.setGoal(Collector.Goal.RETRACTACTION);
@@ -224,8 +231,8 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             }
             robot.depositorLift.openPartial();
             //TODO: relocalize with COOL
-//            robot.drive.setPoseEstimate(robot.cool.getPoseEstimate());
-        }
+        }            robot.drive.setPoseEstimate(new Pose2d(robot.cool.getPoseEstimate().getX()+13.5, robot.cool.getPoseEstimate().getY()+64.25, robot.cool.getPoseEstimate().getHeading()));
+
 
         if (!endEarly) {
             sleep(WAIT_FOR_OPEN);
