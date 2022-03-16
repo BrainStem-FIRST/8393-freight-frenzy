@@ -7,20 +7,20 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.arcrobotics.ftclib.geometry.Rotation2d;
-import com.arcrobotics.ftclib.geometry.Transform2d;
-import com.arcrobotics.ftclib.geometry.Translation2d;
+//import com.arcrobotics.ftclib.geometry.Rotation2d;
+//import com.arcrobotics.ftclib.geometry.Transform2d;
+//import com.arcrobotics.ftclib.geometry.Translation2d;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
-import com.spartronics4915.lib.T265Camera;
+//import com.spartronics4915.lib.T265Camera;
 
 public class CameraT265 implements Component{
 
-    private static T265Camera slamra = null;
+//    private static T265Camera slamra = null;
 
     private final FtcDashboard dashboard = FtcDashboard.getInstance();
 

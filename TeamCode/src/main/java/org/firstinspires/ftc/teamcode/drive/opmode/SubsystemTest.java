@@ -28,12 +28,12 @@ public class SubsystemTest extends LinearOpMode {
             button.update(gamepad1.x);
             button1.update(gamepad1.b);
             if (button.getState()) {
-                robot.collector.close();
-                telemetry.addLine("Closed");
+                robot.depositorLift.rotateDeposit();
+                telemetry.addLine("Deposit");
 //                robot.turret.spinTurretDeposit();
             } else {
-                robot.collector.open();
-                telemetry.addLine("Open");
+                robot.depositorLift.rotateCollect();
+                telemetry.addLine("Collect");
             }
             if (button1.getState()) {
 //                robot.turret.spinTurretReset();

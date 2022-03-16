@@ -99,7 +99,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
                     new Pose2d(
                             (-gamepad1.left_stick_y * 0.5) + (-gamepad2.left_stick_y * 0.15),
                             (-gamepad1.left_stick_x * 0.5) + (-gamepad2.left_stick_x * 0.2),
-                            (-gamepad1.right_stick_x * 0.5) + (-gamepad2.right_stick_x * 0.05)
+                            (-gamepad1.right_stick_x * 0.5) + (-gamepad2.right_stick_x * 0.1)
                     )
             );
 
@@ -134,9 +134,9 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             }
 
             if (depositorGateCapButton.getState()) {
-                robot.depositorLift.openCap();
+                robot.depositorLift.close();
             } else {
-                robot.depositorLift.closeCap();
+                robot.depositorLift.openCap();
             }
 
         } else {
@@ -212,6 +212,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 
             switch(BrainSTEMRobot.mode) {
                 case ANGLED:
+                case SHARED:
                     if (extendAdjustOutButton.getState()) {
                         robot.depositorLift.adjustExtend(EXTEND_ADJUST_INTERVAL);
                     } else if (extendAdjustInButton.getState()) {
