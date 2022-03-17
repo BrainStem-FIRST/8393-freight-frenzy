@@ -15,27 +15,37 @@ import org.firstinspires.ftc.teamcode.util.Direction;
 import org.firstinspires.ftc.teamcode.util.TimerCanceller;
 
 import java.text.DecimalFormat;
-import java.util.Timer;
 
-public class BrainSTEMAutonomous extends LinearOpMode {
-    private TimerCanceller waitForDeployCanceller = new TimerCanceller(1500);
+public class Autonomous extends LinearOpMode {
     private static final int WAIT_FOR_OPEN = 300;
+    private static final int WAIT_FOR_CAROUSEL = 3000;
+
+    private TimerCanceller waitForDeployCanceller = new TimerCanceller(1500);
     private TimerCanceller waitForRetractCanceller = new TimerCanceller(400);
     private TimerCanceller waitToDeployCanceller = new TimerCanceller(650);
+
     private ElapsedTime autoTime = new ElapsedTime();
     private double TIME_THRESHOLD = 25.5;
+
     protected AllianceColor color = AllianceColor.BLUE;
     protected StartLocation startLocation = StartLocation.WAREHOUSE;
-    private BarcodePattern pattern = BarcodePattern.LEVELTWO;
+
     private int cycleTimes = 5;
+
     private boolean firstTimeRetract = true;
     private boolean firstTimeDeposit = true;
     private boolean endEarly = false;
-    private MovingStatistics stats = new MovingStatistics(10);
+
+    private BarcodePattern pattern = BarcodePattern.LEVELTWO;
+
+    private MovingStatistics tseXStats = new MovingStatistics(10);
     private DecimalFormat tseDF = new DecimalFormat("###.###");
 
+    private BrainSTEMRobot robot;
+    private Coordinates coordinates;
+
     public void runOpMode() throws InterruptedException {
-        BrainSTEMRobot robot = new BrainSTEMRobot(this, color, true);
+        robot = new BrainSTEMRobot(this, color, true);
 //        robot.pixyCam.start();
 
         robot.reset();
@@ -43,12 +53,13 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             robot.turret.lock();
             robot.collector.tiltInit();
             robot.pixyCam.teamShippingElementUpdate();
-            stats.add(robot.pixyCam.tse_x);
-            pattern = robot.pixyCam.tsePos(stats.getMean());
+            tseXStats.add(robot.pixyCam.tse_x);
+            pattern = BarcodePattern.LEVELONE;
+//            pattern = robot.pixyCam.tsePos(tseXStats.getMean());
             switch (pattern) {
                 case LEVELONE:
                     robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LEVELONE);
-                    if (color == AllianceColor.BLUE) {
+                    if (color == AllianceColor.BLUE && startLocation == StartLocation.WAREHOUSE) {
                         robot.turret.blueAutoOverride(true);
                     }
                     break;
@@ -71,7 +82,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             telemetry.addData("Right Threshold", tseDF.format(robot.pixyCam.getThreshold(Direction.RIGHT)));
             telemetry.addData("Barcode Pattern", pattern);
             telemetry.addData("Current Team Shipping Element X", tseDF.format(robot.pixyCam.tse_x));
-            telemetry.addData("Mean Team Shipping Element X", tseDF.format(stats.getMean()));
+            telemetry.addData("Mean Team Shipping Element X", tseDF.format(tseXStats.getMean()));
             telemetry.addData("Color Sensor Brightness", robot.collector.getBrightness());
             telemetry.addData("Is Freight Detected? ", robot.collector.isFreightCollectedColor());
 //            telemetry.addData("Health", robot.pixie.getHealth());
@@ -88,39 +99,63 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 //        robot.pixyCam.stop();
 
         telemetry.clearAll();
-        BrainSTEMAutonomousCoordinates coordinates = new BrainSTEMAutonomousCoordinates(color);
+        telemetry.update();
+        coordinates = new Coordinates(color, startLocation);
         robot.drive.setPoseEstimate(coordinates.start());
 
-//        if (color == AllianceColor.BLUE) {
-//            robot.turret.blueAutoOverride(true);
-//            robot.depositorLift.blueAutoOverride(true);
-//        }
+        if (startLocation == StartLocation.CAROUSEL) {
+            robot.depositorLift.carouselAutoOverride(true);
+            robot.turret.carouselAutoOverride(true);
+            TrajectorySequence preloadTrajectory = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate(), coordinates.carouselStartTangent())
+                    .lineToLinearHeading(coordinates.deposit())
+                    .build();
+            robot.drive.followTrajectorySequence(preloadTrajectory);
+            robot.turret.updateHeadingError(
+                    robot.drive.getPoseEstimate().getHeading() - coordinates.deposit().getHeading());
+        }
 
-        //deposit preload
+        depositSubsystems();
+        switch(startLocation) {
+            case WAREHOUSE:
+                warehouse();
+                break;
+            case CAROUSEL:
+                carousel();
+                break;
+        }
+    }
+
+    public void depositSubsystems() {
         waitForDeployCanceller.reset();
         robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
 
-        while(!waitForDeployCanceller.isConditionMet()) {
+        while (!waitForDeployCanceller.isConditionMet()) {
             robot.update();
         }
 
         robot.depositorLift.openPartial();
 
         robot.turret.blueAutoOverride(false);
+    }
+
+    public void retractSubsystems() {
+        sleep(WAIT_FOR_OPEN);
+        waitForRetractCanceller.reset();
+        robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
+        while (!waitForRetractCanceller.isConditionMet()) {
+            robot.update();
+        }
+    }
+
+    public void warehouse() {
         for (int i = 1; i <= cycleTimes; i++) {
             if (i == 3) {
-                coordinates.shiftCollectYHeading(color == AllianceColor.BLUE ? -5 : 5,
-                        color == AllianceColor.BLUE ? Math.toRadians(-8) : Math.toRadians(8));
+                coordinates.shiftCollectYHeading();
             }
             firstTimeRetract = true;
             firstTimeDeposit = true;
-            sleep(WAIT_FOR_OPEN);
-            waitForRetractCanceller.reset();
-            robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
             robot.collector.setGoal(Collector.Goal.DEPLOY);
-            while (!waitForRetractCanceller.isConditionMet()) {
-                robot.update();
-            }
+            retractSubsystems();
 
             TrajectorySequence collectTrajectory = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
                     .lineToSplineHeading(coordinates.collect())
@@ -128,8 +163,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 
             robot.drive.followTrajectorySequenceAsync(collectTrajectory);
             robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LEVELTHREE);
-//            robot.turret.blueAutoOverride(false);
-//            robot.depositorLift.blueAutoOverride(false);
+
             /*
             Keep running loop while:
             (color boolean is false or not past pose threshold) and not past second threshold
@@ -156,13 +190,6 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                     }
                 }
 
-//                telemetry.addData("x RR", robot.drive.getPoseEstimate().getX());
-//                telemetry.addData("y RR", robot.drive.getPoseEstimate().getY());
-//                telemetry.addData("pose heading RR", robot.drive.getPoseEstimate().getHeading());
-//
-//                telemetry.addData("x COOL", robot.cool.getPoseEstimate().getX());
-//                telemetry.addData("y COOL", robot.cool.getPoseEstimate().getY());
-//                telemetry.addData("pose heading COOL", robot.cool.getPoseEstimate().getHeading());
             }
             Log.d("BrainSTEM", "Time of collect number " + i + " : " + autoTime.seconds());
             if (autoTime.seconds() > TIME_THRESHOLD) {
@@ -178,7 +205,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
             robot.collector.setGoal(Collector.Goal.RETRACT);
             robot.drive.endTrajectory();
             robot.drive.update();
-            coordinates.updateCollectX(robot.drive.getPoseEstimate().getX() + 1.5);
+            coordinates.updateCollectX(robot.drive.getPoseEstimate().getX());
             if (color == AllianceColor.BLUE && i <= 2) {
                 robot.drive.setPoseEstimate(
                         robot.drive.getPoseEstimate().plus(new Pose2d(0,-0.5,0)));
@@ -217,13 +244,6 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                     firstTimeDeposit = false;
                 }
             }
-//            while (firstTimeDeposit) {
-//                if (firstTimeDeposit && waitToDeployCanceller.isConditionMet() && robot.collector.getGoal() == Collector.Goal.DEFAULT) {
-//                    waitForDeployCanceller.reset();
-//                    robot.depositorLift.setGoal(DepositorLift.DepositorGoal.DEPLOY);
-//                    firstTimeDeposit = false;
-//                }
-//            }
 
             while(!waitForDeployCanceller.isConditionMet()) {
                 robot.update();
@@ -234,14 +254,9 @@ public class BrainSTEMAutonomous extends LinearOpMode {
         }
 
         if (!endEarly) {
-            sleep(WAIT_FOR_OPEN);
-            waitForRetractCanceller.reset();
-            robot.depositorLift.setGoal(DepositorLift.DepositorGoal.RETRACT);
-            while (!waitForRetractCanceller.isConditionMet()) {
-                robot.update();
-            }
+            retractSubsystems();
 
-            TrajectorySequence parkTrajectory = robot.drive.trajectorySequenceBuilder(coordinates.start())
+            TrajectorySequence parkTrajectory = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
                     .splineTo(coordinates.park().vec(), coordinates.collectTangent())
                     .build();
 
@@ -250,5 +265,59 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                 robot.drive.update();
             }
         }
+    }
+
+    public void carousel() {
+        retractSubsystems();
+
+        robot.collector.deploy();
+        TrajectorySequence toCarouselTrajectory = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
+                .splineToLinearHeading(coordinates.spinCarousel(), coordinates.carouselEndTangent())
+                .build();
+
+        robot.drive.followTrajectorySequence(toCarouselTrajectory);
+
+        //spin carousel
+        robot.drive.setMotorPowers(0.05, 0.05, 0.05, 0.05);
+        robot.carouselSpin.onAuto();
+        while(opModeIsActive());
+        sleep(WAIT_FOR_CAROUSEL);
+        robot.drive.setMotorPowers(0,0,0,0);
+        robot.carouselSpin.off();
+
+
+        robot.collector.on();
+
+        TrajectorySequence collectTrajectory = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
+                .lineToLinearHeading(coordinates.collectEndCarousel())
+                .build();
+
+        robot.drive.followTrajectorySequence(collectTrajectory);
+
+        if (robot.collector.isFreightCollectedColor()) {
+            robot.collector.setRetractFull(true);
+            robot.collector.setGoal(Collector.Goal.RETRACT);
+
+            TrajectorySequence depositTrajectory = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
+                    .setReversed(true)
+                    .lineToLinearHeading(coordinates.deposit())
+                    .build();
+
+            robot.drive.followTrajectorySequenceAsync(depositTrajectory);
+            while(robot.collector.getGoal() != Collector.Goal.DEFAULT) {
+                robot.update();
+            }
+            robot.drive.waitForIdle();
+
+            depositSubsystems();
+            retractSubsystems();
+        }
+
+        TrajectorySequence parkTrajectory = robot.drive.trajectorySequenceBuilder
+                (robot.drive.getPoseEstimate(), coordinates.carouselParkTangentStart())
+                .splineToLinearHeading(coordinates.park(), coordinates.carouselEndTangent())
+                .build();
+
+        robot.drive.followTrajectorySequence(parkTrajectory);
     }
 }

@@ -9,33 +9,19 @@ import org.firstinspires.ftc.teamcode.util.TimerCanceller;
 
 @Config
 public class CarouselSpin implements Component {
-    private enum Goal {
-        START, STARTACTION, STOP
-    }
     private CRServo spinLeft;
     private CRServo spinRight;
 
-    private static final int COUNT_MAX = 10;
-
     //- for blue, + for red
-    private double spinPower = 0.25;
-
-    private TimerCanceller rampupCanceller = new TimerCanceller(100);
-
-    private boolean isOn = false;
-    private boolean previous = false;
-    private boolean firstOn = false;
+    private double spinPowerAuto = 0.1;
+    private double spinPowerTeleOp = 0.25;
 
     private AllianceColor color;
-    private int counter = 0;
-    private Goal goal;
 
     public CarouselSpin(HardwareMap map, AllianceColor color) {
         this.color = color;
         spinLeft = map.crservo.get("spinLeft");
         spinRight = map.crservo.get("spinRight");
-
-//        spin.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     @Override
@@ -45,27 +31,6 @@ public class CarouselSpin implements Component {
 
     @Override
     public void update() {
-//        switch(goal) {
-//            case START:
-//                rampupCanceller.reset();
-//                if (counter >= COUNT_MAX) {
-//                    goal = Goal.STOP;
-//                } else {
-//                    goal = Goal.STARTACTION;
-//                }
-//                break;
-//            case STARTACTION:
-//                spin.setPower(color == AllianceColor.BLUE ? spinPower : -spinPower);
-//                if (rampupCanceller.isConditionMet()) {
-//                    spinPower += 0.1;
-//                    counter++;
-//                    goal = Goal.START;
-//                }
-//                break;
-//            case STOP:
-//                spin.setPower(0);
-//                break;
-//        }
     }
 
     @Override
@@ -73,18 +38,19 @@ public class CarouselSpin implements Component {
         return null;
     }
 
-    public void on() {
-        spinLeft.setPower(color == AllianceColor.BLUE ? -spinPower : spinPower);
-        spinRight.setPower(color == AllianceColor.BLUE ? -spinPower : spinPower);
-//        this.color = color;
-//        rampupCanceller.reset();
-//        goal = Goal.START;
+    public void onTeleOp() {
+        spinLeft.setPower(color == AllianceColor.BLUE ? -spinPowerTeleOp : spinPowerTeleOp);
+        spinRight.setPower(color == AllianceColor.BLUE ? -spinPowerTeleOp : spinPowerTeleOp);
+    }
+
+    public void onAuto() {
+        spinLeft.setPower(color == AllianceColor.BLUE ? -spinPowerAuto : spinPowerAuto);
+        spinRight.setPower(color == AllianceColor.BLUE ? -spinPowerAuto : spinPowerAuto);
     }
 
     public void off() {
         spinLeft.setPower(0);
         spinRight.setPower(0);
-//        goal = Goal.STOP;
     }
 
     public void setPower(double power) {
