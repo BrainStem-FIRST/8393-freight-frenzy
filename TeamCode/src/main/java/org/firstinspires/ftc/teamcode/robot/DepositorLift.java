@@ -85,6 +85,10 @@ public class DepositorLift implements Component {
     private static final int EXTEND_LEVELONE_TICKS_AUTOBLUE = 1080;
     private static final int EXTEND_LEVELTWO_TICKS_AUTOBLUE = 1188;
     private static final int EXTEND_LEVELTHREE_TICKS_AUTOBLUE = 1298;
+    private static final int EXTEND_LEVELONE_TICKS_CAROUSEL = 610;
+    private static final int EXTEND_LEVELTWO_TICKS_CAROUSEL = 695;
+    private static final int EXTEND_LEVELTHREE_TICKS_CAROUSEL = 780;
+
     private int extendTicks = EXTEND_LEVELTHREE_TICKS;
 
     private static final double EXTEND_CURRENT_THRESHOLD = 7000;
@@ -116,6 +120,7 @@ public class DepositorLift implements Component {
     private boolean extendStop = false;
     private boolean turbo = false;
     private boolean blueAutoOverride = false;
+    private boolean carouselAutoOverride = false;
     private Turret turret;
     private BrainSTEMRobot.Mode prevMode = BrainSTEMRobot.mode;
     private int i = 0;
@@ -157,6 +162,8 @@ public class DepositorLift implements Component {
     public void update() {
         if (blueAutoOverride) {
             setTicksAutoBlue();
+        } else if (carouselAutoOverride) {
+            setTicksCarousel();
         } else {
             if (prevMode != BrainSTEMRobot.mode) {
                 if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.STRAIGHT) {
@@ -690,6 +697,23 @@ public class DepositorLift implements Component {
         }
     }
 
+    public void setTicksCarousel() {
+        switch(depositHeight) {
+            case LEVELONE:
+                liftTicks = LIFT_LEVELONE_TICKS;
+                extendTicks = EXTEND_LEVELONE_TICKS_CAROUSEL;
+                break;
+            case LEVELTWO:
+                liftTicks = LIFT_LEVELTWO_TICKS;
+                extendTicks = EXTEND_LEVELTWO_TICKS_CAROUSEL;
+                break;
+            case LEVELTHREE:
+                liftTicks = LIFT_LEVELTHREE_TICKS;
+                extendTicks = EXTEND_LEVELTHREE_TICKS_CAROUSEL;
+                break;
+        }
+    }
+
     //Sensors
     public boolean isTouchPressed() {
         return touch.isPressed();
@@ -702,5 +726,9 @@ public class DepositorLift implements Component {
 
     public void blueAutoOverride(boolean bao) {
         blueAutoOverride = bao;
+    }
+
+    public void carouselAutoOverride(boolean cao) {
+        carouselAutoOverride = cao;
     }
 }

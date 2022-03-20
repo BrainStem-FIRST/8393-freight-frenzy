@@ -256,7 +256,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
         }
 
         if (driver2.carousel) {
-            robot.carouselSpin.on();
+            robot.carouselSpin.onTeleOp();
         } else {
             robot.carouselSpin.off();
         }

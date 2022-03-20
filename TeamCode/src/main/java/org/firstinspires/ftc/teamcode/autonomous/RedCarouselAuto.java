@@ -1,11 +1,9 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
-@Autonomous
-@Disabled
-public class RedCarouselAuto extends BrainSTEMAutonomous {
+@com.qualcomm.robotcore.eventloop.opmode.Autonomous
+public class RedCarouselAuto extends Autonomous {
     public RedCarouselAuto() {
         super();
         color = AllianceColor.RED;

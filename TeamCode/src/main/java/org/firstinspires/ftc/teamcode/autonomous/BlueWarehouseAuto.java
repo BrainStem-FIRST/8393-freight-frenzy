@@ -1,9 +1,7 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-
-@Autonomous
-public class BlueWarehouseAuto extends BrainSTEMAutonomous {
+@com.qualcomm.robotcore.eventloop.opmode.Autonomous
+public class BlueWarehouseAuto extends Autonomous {
     public BlueWarehouseAuto() {
         super();
         color = AllianceColor.BLUE;
