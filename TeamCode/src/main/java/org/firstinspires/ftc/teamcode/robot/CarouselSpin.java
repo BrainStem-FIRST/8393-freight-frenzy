@@ -58,7 +58,7 @@ public class CarouselSpin implements Component {
         spinRight.setPower(power);
     }
 
-    public double getPower() {
-        return spinLeft.getPower();
+    public double[] getPower() {
+        return new double[]{spinLeft.getPower(), spinRight.getPower()};
     }
 }
