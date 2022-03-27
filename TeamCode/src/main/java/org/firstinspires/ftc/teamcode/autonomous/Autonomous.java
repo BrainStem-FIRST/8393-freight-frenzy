@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.autonomous;
 import android.util.Log;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.MovingStatistics;
@@ -18,7 +19,7 @@ import java.text.DecimalFormat;
 
 public class Autonomous extends LinearOpMode {
     private static final int WAIT_FOR_OPEN = 300;
-    private static final int WAIT_FOR_CAROUSEL = 3000;
+    private static final int WAIT_FOR_CAROUSEL = 5500;
 
     private TimerCanceller waitForDeployCanceller = new TimerCanceller(1500);
     private TimerCanceller waitForRetractCanceller = new TimerCanceller(400);
@@ -36,7 +37,7 @@ public class Autonomous extends LinearOpMode {
     private boolean firstTimeDeposit = true;
     private boolean endEarly = false;
 
-    private BarcodePattern pattern = BarcodePattern.LEVELTWO;
+    private BarcodePattern pattern = BarcodePattern.LEVELTHREE;
 
     private MovingStatistics tseXStats = new MovingStatistics(10);
     private DecimalFormat tseDF = new DecimalFormat("###.###");
@@ -54,7 +55,6 @@ public class Autonomous extends LinearOpMode {
             robot.collector.tiltInit();
             robot.pixyCam.teamShippingElementUpdate();
             tseXStats.add(robot.pixyCam.tse_x);
-            pattern = BarcodePattern.LEVELONE;
 //            pattern = robot.pixyCam.tsePos(tseXStats.getMean());
             switch (pattern) {
                 case LEVELONE:
@@ -269,6 +269,7 @@ public class Autonomous extends LinearOpMode {
 
     public void carousel() {
         retractSubsystems();
+        robot.depositorLift.setHeight(DepositorLift.DepositorHeight.LEVELTHREE);
 
         robot.collector.deploy();
         TrajectorySequence toCarouselTrajectory = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
@@ -277,41 +278,42 @@ public class Autonomous extends LinearOpMode {
 
         robot.drive.followTrajectorySequence(toCarouselTrajectory);
 
-        //spin carousel
-        robot.drive.setMotorPowers(0.05, 0.05, 0.05, 0.05);
-        robot.carouselSpin.onAuto();
-        while(opModeIsActive());
-        sleep(WAIT_FOR_CAROUSEL);
-        robot.drive.setMotorPowers(0,0,0,0);
-        robot.carouselSpin.off();
+        robot.drive.followTrajectory(robot.drive.trajectoryBuilder(robot.drive.getPoseEstimate(),
+                        robot.drive.newVelocityConstraint(15, Math.toRadians(20)),
+                robot.drive.newAccelerationConstraint(15))
+                .forward(3).build());
 
+        //spin carousel
+        robot.carouselSpin.onAuto();
+        sleep(WAIT_FOR_CAROUSEL);
+        robot.carouselSpin.off();
 
         robot.collector.on();
 
-        TrajectorySequence collectTrajectory = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
+        Trajectory collectTrajectory = robot.drive.trajectoryBuilder(robot.drive.getPoseEstimate(),
+                robot.drive.newVelocityConstraint(25, Math.toRadians(100)),
+                robot.drive.newAccelerationConstraint(20))
                 .lineToLinearHeading(coordinates.collectEndCarousel())
                 .build();
 
-        robot.drive.followTrajectorySequence(collectTrajectory);
+        robot.drive.followTrajectory(collectTrajectory);
 
-        if (robot.collector.isFreightCollectedColor()) {
-            robot.collector.setRetractFull(true);
-            robot.collector.setGoal(Collector.Goal.RETRACT);
+        robot.collector.setRetractFull(true);
+        robot.collector.setGoal(Collector.Goal.RETRACT);
 
-            TrajectorySequence depositTrajectory = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
-                    .setReversed(true)
-                    .lineToLinearHeading(coordinates.deposit())
-                    .build();
+        TrajectorySequence depositTrajectory = robot.drive.trajectorySequenceBuilder(robot.drive.getPoseEstimate())
+                .setReversed(true)
+                .lineToLinearHeading(coordinates.deposit())
+                .build();
 
-            robot.drive.followTrajectorySequenceAsync(depositTrajectory);
-            while(robot.collector.getGoal() != Collector.Goal.DEFAULT) {
-                robot.update();
-            }
-            robot.drive.waitForIdle();
-
-            depositSubsystems();
-            retractSubsystems();
+        robot.drive.followTrajectorySequenceAsync(depositTrajectory);
+        while(robot.collector.getGoal() != Collector.Goal.DEFAULT) {
+            robot.update();
         }
+        robot.drive.waitForIdle();
+
+        depositSubsystems();
+        retractSubsystems();
 
         TrajectorySequence parkTrajectory = robot.drive.trajectorySequenceBuilder
                 (robot.drive.getPoseEstimate(), coordinates.carouselParkTangentStart())
@@ -319,5 +321,8 @@ public class Autonomous extends LinearOpMode {
                 .build();
 
         robot.drive.followTrajectorySequence(parkTrajectory);
+        while(opModeIsActive()) {
+            robot.collector.retract();
+        }
     }
 }

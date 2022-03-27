@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.robot;
 
 import android.graphics.Color;
+import android.util.Log;
 
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -82,6 +83,7 @@ public class Collector implements Component {
                 }
                 break;
             case RETRACT:
+                Log.d("BrainSTEM", "goal=RETRACT");
                 retract();
                 retractCanceller.reset();
                 if (fullRetract) setGoal(Goal.RETRACTACTION);

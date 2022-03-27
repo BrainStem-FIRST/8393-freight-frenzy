@@ -31,9 +31,9 @@ public class Coordinates {
     //Carousel variables
     private Pose2d startCarousel = new Pose2d(-31.5, 64.5, Math.toRadians(0));
     private Pose2d depositCarousel = new Pose2d(-34, 49, Math.toRadians(90));
-    private Pose2d spinCarousel = new Pose2d(-59, 49, Math.toRadians(120));
-    private Pose2d collectEndCarousel = new Pose2d(-36, 56.75, Math.toRadians(90));
-    private Pose2d parkCarousel = new Pose2d(-62.5, 36, Math.toRadians(0));
+    private Pose2d spinCarousel = new Pose2d(-60.5, 52, Math.toRadians(120));
+    private Pose2d collectEndCarousel = new Pose2d(-36, 56.75, Math.toRadians(45));
+    private Pose2d parkCarousel = new Pose2d(-68, 34, Math.toRadians(0));
 
     private double carouselStartTangent = Math.toRadians(270);
     private double carouselEndTangent = Math.toRadians(180);
