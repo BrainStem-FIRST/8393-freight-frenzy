@@ -51,7 +51,8 @@ public class Autonomous extends LinearOpMode {
 
         robot.reset();
         while (!opModeIsActive() && !isStopRequested()) {
-            robot.turret.lock();
+            //red side should be rightlock
+            robot.turret.lock(color);
             robot.collector.tiltInit();
             robot.pixyCam.teamShippingElementUpdate();
             tseXStats.add(robot.pixyCam.tse_x);
@@ -189,7 +190,6 @@ public class Autonomous extends LinearOpMode {
                         count++;
                     }
                 }
-
             }
             Log.d("BrainSTEM", "Time of collect number " + i + " : " + autoTime.seconds());
             if (autoTime.seconds() > TIME_THRESHOLD) {
@@ -231,7 +231,6 @@ public class Autonomous extends LinearOpMode {
             robot.drive.followTrajectorySequenceAsync(depositTrajectory);
             while(robot.drive.isTrajectoryRunning()) {
                 robot.drive.update();
-
                 if (firstTimeRetract && robot.depositorLift.getLiftGoal() == DepositorLift.LiftGoal.DEFAULT
                         && robot.turret.isTurretZero() && !robot.collector.getRetractFull()) {
                     robot.collector.setGoal(Collector.Goal.RETRACTACTION);
@@ -250,7 +249,7 @@ public class Autonomous extends LinearOpMode {
             }
             robot.depositorLift.openPartial();
             //TODO: relocalize with COOL
-//            robot.drive.setPoseEstimate(robot.cool.getPoseEstimate());
+            //robot.drive.setPoseEstimate(new Pose2d(robot.cool.getPoseEstimate().getX()+13.5, robot.cool.getPoseEstimate().getY()+64.25, robot.cool.getPoseEstimate().getHeading()));
         }
 
         if (!endEarly) {
