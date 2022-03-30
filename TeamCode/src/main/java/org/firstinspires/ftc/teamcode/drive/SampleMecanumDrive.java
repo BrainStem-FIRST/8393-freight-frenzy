@@ -66,12 +66,14 @@ public class SampleMecanumDrive extends MecanumDrive implements Component {
     public static double VX_WEIGHT = 1;
     public static double VY_WEIGHT = 1;
     public static double OMEGA_WEIGHT = 1;
-    private double trackWidth = TRACK_WIDTH;
 
     private TrajectorySequenceRunner trajectorySequenceRunner;
 
     private static final TrajectoryVelocityConstraint VEL_CONSTRAINT = getVelocityConstraint(MAX_VEL, MAX_ANG_VEL, TRACK_WIDTH);
     private static final TrajectoryAccelerationConstraint ACCEL_CONSTRAINT = getAccelerationConstraint(MAX_ACCEL);
+
+    private static final TrajectoryVelocityConstraint SLOW_VEL_CONSTRAINT = getVelocityConstraint(15, Math.toRadians(20), TRACK_WIDTH);
+    private static final TrajectoryAccelerationConstraint SLOW_ACCEL_CONSTRAINT = getAccelerationConstraint(15);
 
     private TrajectoryFollower follower;
 
@@ -168,12 +170,6 @@ public class SampleMecanumDrive extends MecanumDrive implements Component {
 
     public TrajectoryBuilder trajectoryBuilder(Pose2d startPose) {
         return new TrajectoryBuilder(startPose, VEL_CONSTRAINT, ACCEL_CONSTRAINT);
-    }
-
-    public TrajectoryBuilder trajectoryBuilder(Pose2d startPose,
-                                               TrajectoryVelocityConstraint tvc,
-                                               TrajectoryAccelerationConstraint tac) {
-        return new TrajectoryBuilder(startPose, tvc, tac);
     }
 
     public TrajectoryBuilder trajectoryBuilder(Pose2d startPose, boolean reversed) {
@@ -365,12 +361,12 @@ public class SampleMecanumDrive extends MecanumDrive implements Component {
         return new ProfileAccelerationConstraint(maxAccel);
     }
 
-    public TrajectoryVelocityConstraint newVelocityConstraint(double vel, double avel) {
-        return getVelocityConstraint(vel, avel, trackWidth);
+    public TrajectoryVelocityConstraint slowVelocityConstraint() {
+        return SLOW_VEL_CONSTRAINT;
     }
 
-    public TrajectoryAccelerationConstraint newAccelerationConstraint(double accel) {
-        return getAccelerationConstraint(accel);
+    public TrajectoryAccelerationConstraint slowAccelerationConstraint() {
+        return SLOW_ACCEL_CONSTRAINT;
     }
 
     public void endTrajectory() {

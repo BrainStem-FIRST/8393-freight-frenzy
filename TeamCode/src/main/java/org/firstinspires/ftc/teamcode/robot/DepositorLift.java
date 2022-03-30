@@ -86,7 +86,7 @@ public class DepositorLift implements Component {
     private static final int EXTEND_LEVELTWO_TICKS_AUTOBLUE = 1188;
     private static final int EXTEND_LEVELTHREE_TICKS_AUTOBLUE = 1298;
     private static final int EXTEND_LEVELONE_TICKS_CAROUSEL = 610;
-    private static final int EXTEND_LEVELTWO_TICKS_CAROUSEL = 680;
+    private static final int EXTEND_LEVELTWO_TICKS_CAROUSEL = 695;
     private static final int EXTEND_LEVELTHREE_TICKS_CAROUSEL = 780;
 
     private int extendTicks = EXTEND_LEVELTHREE_TICKS;
