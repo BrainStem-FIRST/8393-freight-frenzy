@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.robot;
 
-import android.graphics.Color;
 import android.util.Log;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -77,8 +76,7 @@ public class Turret implements Component {
         turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         turret.setTargetPositionTolerance(7);
 
-        // right lock is 888, left is 2112, center is 1500
-        lock.setPwmRange(new PwmControl.PwmRange(888, 2112));
+        lock.setPwmRange(new PwmControl.PwmRange(1990, 2123));
     }
 
     @Override
@@ -211,25 +209,12 @@ public class Turret implements Component {
         return getCurrentDraw() > CURRENT_THRESHOLD;
     }
 
-    public void leftLock() {
-        lock.setPosition(1);
-    }
-
-    public void rightLock() { lock.setPosition(0);}
-
-    public void lock(AllianceColor allianceColor) {
-        if(allianceColor == AllianceColor.BLUE)
-        {
-            leftLock();
-        }
-        else
-        {
-            rightLock();
-        }
+    public void lock() {
+        lock.setPosition(0);
     }
 
     public void unlock() {
-        lock.setPosition(0.5);
+        lock.setPosition(1);
     }
 
     public void updateHeadingError(double he) {

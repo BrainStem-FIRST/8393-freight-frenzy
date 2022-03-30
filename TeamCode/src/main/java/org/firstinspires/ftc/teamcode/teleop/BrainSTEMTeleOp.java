@@ -63,7 +63,7 @@ public class BrainSTEMTeleOp extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         robot = new BrainSTEMRobot(this, color, false);
         robot.reset();
-        robot.turret.lock(color);
+        robot.turret.lock();
         BrainSTEMRobot.mode = BrainSTEMRobot.Mode.ANGLED;
         while (!opModeIsActive() && !isStopRequested()) {
             telemetry.addData("Status", "Initialized");
@@ -87,10 +87,10 @@ public class BrainSTEMTeleOp extends LinearOpMode {
             robot.turret.unlock();
         } else if (straightModeButton.getState()) {
             BrainSTEMRobot.mode = BrainSTEMRobot.Mode.STRAIGHT;
-            robot.turret.lock(color);
+            robot.turret.lock();
         } else {
             BrainSTEMRobot.mode = BrainSTEMRobot.Mode.ANGLED;
-            robot.turret.lock(color);
+            robot.turret.lock();
         }
         if (BrainSTEMRobot.mode == BrainSTEMRobot.Mode.CAP) {
             robot.depositorLift.setHold(true);
@@ -164,9 +164,9 @@ public class BrainSTEMTeleOp extends LinearOpMode {
 
             if (driver1.gateOverride) {
                 telemetry.addLine("overriding");
-                //robot.collector.setGateOverride(true);
+                robot.collector.setGateOverride(true);
             } else {
-                //robot.collector.setGateOverride(false);
+                robot.collector.setGateOverride(false);
             }
 
             if (driver1.reverseCollect) {

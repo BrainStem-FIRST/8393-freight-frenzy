@@ -16,20 +16,10 @@ public class CollectorTest extends LinearOpMode {
         Telemetry dashboardTelemetry = FtcDashboard.getInstance().getTelemetry();
         dashboardTelemetry.addData("Status", "Ready");
         dashboardTelemetry.update();
-        boolean firstTime = true;
         waitForStart();
 
-        collector.setGoal(Collector.Goal.DEPLOY);
-
         while (opModeIsActive()) {
-            collector.update();
-
-            if(collector.isFreightCollectedColor() && firstTime == true)
-            {
-                collector.setGoal(Collector.Goal.RETRACT);
-                firstTime = false;
-
-            }
+            collector.on();
             dashboardTelemetry.addData("Current draw", collector.getCurrentDrawAverage());
             dashboardTelemetry.addData("Collected (current draw)?", collector.isFreightCollectedCurrentDraw());
             dashboardTelemetry.addLine();

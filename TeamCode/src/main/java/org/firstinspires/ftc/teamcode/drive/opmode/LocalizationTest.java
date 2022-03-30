@@ -2,13 +2,13 @@ package org.firstinspires.ftc.teamcode.drive.opmode;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.arcrobotics.ftclib.geometry.Rotation2d;
-import com.arcrobotics.ftclib.geometry.Transform2d;
-import com.arcrobotics.ftclib.geometry.Translation2d;
+//import com.arcrobotics.ftclib.geometry.Rotation2d;
+//import com.arcrobotics.ftclib.geometry.Transform2d;
+//import com.arcrobotics.ftclib.geometry.Translation2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.spartronics4915.lib.T265Camera;
+//import com.spartronics4915.lib.T265Camera;
 
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.SampleTankDrive;
@@ -22,7 +22,7 @@ import org.firstinspires.ftc.teamcode.drive.SampleTankDrive;
  */
 @TeleOp(group = "drive")
 public class LocalizationTest extends LinearOpMode {
-    private static T265Camera slamra = null;
+//    private static T265Camera slamra = null;
 
 
     public double xCorrection = -(24.0/22.2);
@@ -36,19 +36,20 @@ public class LocalizationTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
-        if (slamra == null) {
-            slamra = new T265Camera(new Transform2d(), 0.0, hardwareMap.appContext);
-        }
-
-        slamra.stop();
+//        if (slamra == null) {
+//            slamra = new T265Camera(new Transform2d(), 0.0, hardwareMap.appContext);
+//        }
+//
+//        slamra.stop();
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
 
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         //drive.setPoseEstimate(new Pose2d(16.25, 64.25, Math.toRadians(0)));
 
+        //slamra.setPose(new com.arcrobotics.ftclib.geometry.Pose2d(new Translation2d(16.25, 64.25), new Rotation2d(Math.toRadians(0))));
 
-        slamra.start();
+//        slamra.start();
 
         waitForStart();
 
@@ -63,20 +64,20 @@ public class LocalizationTest extends LinearOpMode {
 
             drive.update();
 
-            T265Camera.CameraUpdate up = slamra.getLastReceivedCameraUpdate();
+//            T265Camera.CameraUpdate up = slamra.getLastReceivedCameraUpdate();
 
 
-            if (up == null) return;
-
-
-
-            // We divide by 0.0254 to convert meters to inches
-            Translation2d translation = new Translation2d(up.pose.getTranslation().getX() / 0.0254, up.pose.getTranslation().getY() / 0.0254);
-            Rotation2d rotation = up.pose.getRotation();
-
-            x = translation.getX() * xCorrection;
-            y = translation.getY() * yCorrection;
-            heading = up.pose.getHeading() * headingCorrection;
+//            if (up == null) return;
+//
+//
+//
+//            // We divide by 0.0254 to convert meters to inches
+//            Translation2d translation = new Translation2d(up.pose.getTranslation().getX() / 0.0254, up.pose.getTranslation().getY() / 0.0254);
+//            Rotation2d rotation = up.pose.getRotation();
+//
+//            x = translation.getX() * xCorrection;
+//            y = translation.getY() * yCorrection;
+//            heading = up.pose.getHeading() * headingCorrection;
 
 
             Pose2d poseEstimate = drive.getPoseEstimate();

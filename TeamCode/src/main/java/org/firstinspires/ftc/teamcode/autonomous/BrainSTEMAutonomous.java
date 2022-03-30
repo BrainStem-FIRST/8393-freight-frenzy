@@ -40,7 +40,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
 
         robot.reset();
         while (!opModeIsActive() && !isStopRequested()) {
-            robot.turret.lock(color);
+            robot.turret.lock();
             robot.collector.tiltInit();
             robot.pixyCam.teamShippingElementUpdate();
             stats.add(robot.pixyCam.tse_x);
@@ -160,8 +160,8 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                 telemetry.addData("y RR", robot.drive.getPoseEstimate().getY());
                 telemetry.addData("pose heading RR", robot.drive.getPoseEstimate().getHeading());
 
-                telemetry.addData("x COOL", robot.cool.getPoseEstimate().getX()+15.5);
-                telemetry.addData("y COOL", robot.cool.getPoseEstimate().getY()+64.25);
+                telemetry.addData("x COOL", robot.cool.getPoseEstimate().getX()+13.5);
+                telemetry.addData("y COOL", robot.cool.getPoseEstimate().getY()+64.24);
                 telemetry.addData("pose heading COOL", robot.cool.getPoseEstimate().getHeading());
                 telemetry.update();
             }
@@ -209,7 +209,7 @@ public class BrainSTEMAutonomous extends LinearOpMode {
                 telemetry.addData("y RR", robot.drive.getPoseEstimate().getY());
                 telemetry.addData("pose heading RR", robot.drive.getPoseEstimate().getHeading());
 
-                telemetry.addData("x COOL", robot.cool.getPoseEstimate().getX()+15.5);
+                telemetry.addData("x COOL", robot.cool.getPoseEstimate().getX()+13.5);
                 telemetry.addData("y COOL", robot.cool.getPoseEstimate().getY()+64.25);
                 telemetry.addData("pose heading COOL", robot.cool.getPoseEstimate().getHeading());
                 telemetry.update();
